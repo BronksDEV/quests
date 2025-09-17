@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prova — Ciências da Natureza (2ª Série)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <style>
+    input[name="studentName"] { text-transform: uppercase; }
+    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+    .check-wrap { width:96px; height:96px; border-radius:999px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; margin:0 auto; }
+    .check-svg { width:64px; height:64px; stroke:#16A34A; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .draw { stroke-dasharray: 150; stroke-dashoffset: 150; animation: draw 700ms ease-in-out forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+    .confetti { width:100%; height:40px; overflow:hidden; position:relative; margin-top:8px; }
+    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+    .option-label { cursor:pointer; }
+    input[type="radio"] { accent-color: #2563eb; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 no-select">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="mb-4">
+      <h1 class="text-2xl font-bold">Bloco de Avaliação — Ciências da Natureza e suas Tecnologias (2ª Série)</h1>
+      <p class="text-sm text-gray-600 mt-1">2 tentativas.</p>
+    </header>
+
+    <!-- SEÇÃO DE IDENTIFICAÇÃO -->
+    <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
+      <div class="mb-5 flex items-center gap-3">
+        <div class="bg-blue-100 p-2 rounded-full">
+          <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+          </svg>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2>
+      </div>
+
+      <form id="infoForm" class="space-y-4">
+        <div>
+          <label for="studentName" class="text-sm font-medium text-gray-700 sr-only">Nome Completo</label>
+          <div class="relative">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+              </svg>
+            </div>
+            <input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)" required />
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="studentClass" class="text-sm font-medium text-gray-700 sr-only">Turma</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
+                <option value="" disabled selected>Selecione a Turma</option>
+                <option value="A">Turma A</option>
+                <option value="B">Turma B</option>
+              </select>
+               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+                </svg>
+              </div>
+            </div>
+          </div>
+          <div>
+            <label for="studentId" class="text-sm font-medium text-gray-700 sr-only">Matrícula</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" />
+                  <path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" />
+                  <path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" />
+                </svg>
+              </div>
+              <input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula" required />
+            </div>
+          </div>
+        </div>
+        <p id="infoMsg" class="text-sm text-red-600 col-span-1 sm:col-span-2"></p>
+        <div class="col-span-1 sm:col-span-2 mt-2">
+            <button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95">
+                <span>Iniciar Avaliação</span>
+                 <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+            </button>
+        </div>
+      </form>
+    </section>
+
+<!-- Quiz -->
+<main id="quizArea" class="hidden">
+  <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
+    
+    <!-- Item 1 - Biologia -->
+    <fieldset id="q1" class="border rounded p-4">
+        <legend class="font-semibold">Item 1</legend>
+        <p class="mt-2 text-sm">Animais vertebrados são aqueles que possuem uma coluna vertebral e um crânio (caixa craniana) que protege o cérebro. Essa estrutura esquelética interna é composta por ossos ou cartilagens e fornece suporte, proteção aos órgãos internos e um local para a fixação dos músculos, permitindo uma grande variedade de movimentos.</p>
+        <p class="mt-2 text-sm font-semibold">Qual o nome dado a estrutura esquelética interna dos animais vertebrados?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) Exoesqueleto.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) Citoesqueleto.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) Hidroesqueleto.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) Endoesqueleto.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) Pseudoesqueleto.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 2 - Biologia -->
+    <fieldset id="q2" class="border rounded p-4">
+        <legend class="font-semibold">Item 2</legend>
+        <p class="mt-2 text-sm">As classes são categorias taxonômicas que agrupam filos de animais com características semelhantes.</p>
+        <p class="mt-2 text-sm font-semibold">Quais são as cinco classes de animais vertebrados?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) Fungos, bactérias e protozoários.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) Anelídeos, moluscos, equinodermos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) Anelídeos, anfíbios, repteis e mamíferos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) Peixes, anfíbios, répteis, aves e mamíferos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) Insetos, aracnídeos, crustáceos e miriápodes.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 3 - Biologia -->
+    <fieldset id="q3" class="border rounded p-4">
+        <legend class="font-semibold">Item 3</legend>
+        <p class="mt-2 text-sm">O Reino Animalia é um dos cinco reinos dos seres vivos e abrange uma grande variedade de espécies [...]. No entanto, todos esses seres apresentam três características em comum.</p>
+        <p class="mt-2 text-sm font-semibold">Quais são elas?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) a presença de notocorda, fendas faríngeas e tubo nervoso.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) a presença de mais de uma célula, nutrição heterotrófica e célula eucarionte.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) a presença de tecidos verdadeiros, nutrição autotrófica, células procarióticas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) a presença de sistemas, respiração pulmonar e nutrição autotrófica.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) nutrição heterotrófica, unicelular ou pluricelular e presença de tecidos verdadeiros.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 4 - Biologia -->
+    <fieldset id="q4" class="border rounded p-4">
+        <legend class="font-semibold">Item 4</legend>
+        <p class="mt-2 text-sm">Observe as imagens abaixo, que representam diferentes tipos de simetria em animais.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <p class="mt-2 text-sm">Imagine uma estrela-do-mar adulta e um caranguejo. Qual alternativa classifica corretamente a simetria de cada um desses animais na fase adulta?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Estrela-do-mar: Simetria bilateral; Caranguejo: Simetria radial.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) Estrela-do-mar: Assimetria; Caranguejo: Simetria bilateral.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) Estrela-do-mar: Simetria radial; Caranguejo: Simetria bilateral.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) Estrela-do-mar: Simetria bilateral; Caranguejo: Assimetria.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) Estrela-do-mar: Simetria pentarradial; Caranguejo: Simetria radial.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 5 - Biologia -->
+    <fieldset id="q5" class="border rounded p-4">
+        <legend class="font-semibold">Item 5</legend>
+        <p class="mt-2 text-sm">(UFSC-Adaptada) A simetria bilateral é um tipo de organização corporal que permite a divisão do organismo em duas metades espelhadas por um único plano. Essa característica é frequentemente associada a um estilo de vida mais ativo e direcional.</p>
+        <p class="mt-2 text-sm font-semibold">Qual das seguintes características está mais diretamente relacionada à simetria bilateral e ao estilo de vida que ela favorece?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) Capacidade de detectar estímulos vindos de todas as direções simultaneamente.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) Ausência de uma região cefálica (cabeça) definida.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) Concentração de órgãos sensoriais na região anterior do corpo (cefalização).</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) Adaptação para organismos sésseis ou flutuantes.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) Possibilidade de múltiplas divisões que resultam em partes idênticas.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 6 - Biologia -->
+    <fieldset id="q6" class="border rounded p-4">
+        <legend class="font-semibold">Item 6</legend>
+        <p class="mt-2 text-sm">(Enem-2011) O poema ["Os Bichinhos e O Homem Arca de Noé"] sugere a existência de relações de afinidade entre os animais citados e nós, seres humanos.</p>
+        <p class="mt-2 text-sm font-semibold">Respeitando a liberdade poética dos autores, a unidade taxonômica que expressa a afinidade existente entre nós e estes animais é:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) o filo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) o reino.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) a classe.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) a família.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) a espécie.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 7 - Biologia -->
+    <fieldset id="q7" class="border rounded p-4">
+        <legend class="font-semibold">Item 7</legend>
+        <p class="mt-2 text-sm">(PUC-RJ) O lobo-guará e a onça são dois exemplares da nossa fauna que estão ameaçados de extinção. O diagrama a seguir mostra as principais categorias taxonômicas a que pertencem estes animais:</p>
+        <p class="mt-2 text-sm">Lobo-guará: Cordado > mamífero > carnívoro > canídeo > Chrysocyon > C. brachyurus</p>
+        <p class="mt-2 text-sm">Onça parda: Cordado > mamífero > carnívoro > felídeo > Felis > F. concolor</p>
+        <p class="mt-2 text-sm font-semibold">A análise do diagrama permite dizer que os dois animais estão próximos na mesma categoria até:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) filo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) classe.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) família.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) gênero.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) ordem.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 8 - Biologia -->
+    <fieldset id="q8" class="border rounded p-4">
+        <legend class="font-semibold">Item 8</legend>
+        <p class="mt-2 text-sm">A respiração é um processo fisiológico fundamental para a vida da maioria dos organismos, [...].</p>
+        <p class="mt-2 text-sm font-semibold">Qual das seguintes associações entre animal e sua principal estrutura respiratória está correta?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) Peixe (Vertebrado): Traqueias.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) Minhoca (Invertebrado): Pulmões.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) Inseto (Invertebrado): Brânquias.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) Baleia (Vertebrado): Sacos aéreos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) Anfíbio adulto (Vertebrado): Pele e pulmões.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 9 - Biologia -->
+    <fieldset id="q9" class="border rounded p-4">
+        <legend class="font-semibold">Item 9</legend>
+        <p class="mt-2 text-sm">A termorregulação é a capacidade de um organismo manter sua temperatura corporal. Sobre essa característica fisiológica, analise as afirmações:</p>
+        <p class="mt-2 text-sm">I. Mamíferos e aves são endotérmicos, produzindo calor internamente para manter a temperatura corporal constante.</p>
+        <p class="mt-2 text-sm">II. Peixes, anfíbios e répteis são ectotérmicos, ou seja, sua temperatura corporal varia com a do ambiente.</p>
+        <p class="mt-2 text-sm">III. A maioria dos invertebrados é endotérmica, com mecanismos complexos para regular a temperatura.</p>
+        <p class="mt-2 text-sm font-semibold">Quais afirmativas estão corretas?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) Apenas I</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) Apenas II</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) Apenas III</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) I e II</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) I, II e III</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 10 - Biologia -->
+    <fieldset id="q10" class="border rounded p-4">
+        <legend class="font-semibold">Item 10</legend>
+        <p class="mt-2 text-sm">Os répteis são vertebrados que possuem pele coberta por escamas e geralmente se reproduzem por ovos com casca coriácea ou calcária. Essa característica é uma adaptação importante ao ambiente terrestre.</p>
+        <p class="mt-2 text-sm font-semibold">Considerando as características reprodutivas dos répteis podemos afirmar que:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) todos os répteis realizam fecundação externa, como ocorre nos anfíbios.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) a presença de casca coriácea nos ovos evita a perda de água, permitindo a reprodução em ambientes secos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) répteis e peixes compartilham a mesma adaptação reprodutiva quanto à dependência de água para o desenvolvimento embrionário.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) a fecundação interna nos répteis é rara e ocorre apenas em espécies aquáticas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) o desenvolvimento embrionário dos répteis é semelhante ao dos mamíferos placentários.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 11 - Biologia -->
+    <fieldset id="q11" class="border rounded p-4">
+        <legend class="font-semibold">Item 11</legend>
+        <p class="mt-2 text-sm">Os mamíferos são animais vertebrados com características únicas que os diferenciam de outras classes.</p>
+        <p class="mt-2 text-sm font-semibold">Qual das alternativas abaixo apresenta apenas características presentes em todos os mamíferos?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) Presença de pelos, glândulas mamárias e respiração traqueal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) Presença de pelos, glândulas mamárias e respiração cutânea.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) Presença de pelos, glândulas mamárias e um coração com quatro cavidades.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) Presença de escamas, respiração cutânea e glândulas mamárias.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) Presença de pelos e penas, respiração pulmonar e glândulas mamárias.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 12 - Biologia -->
+    <fieldset id="q12" class="border rounded p-4">
+        <legend class="font-semibold">Item 12</legend>
+        <p class="mt-2 text-sm">(Enem - 2020) Grupos de proteção ao meio ambiente conseguem resgatar muitas aves aquáticas vítimas de vazamentos de petróleo. Essas aves são lavadas [...] para a retirada completa do óleo de seu corpo [...]. Mesmo após esses cuidados, o retorno ao ambiente não pode ser imediato, pois elas precisam recuperar a capacidade de flutuação.</p>
+        <p class="mt-2 text-sm font-semibold">Para flutuar, essas aves precisam:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) recuperar o tônus muscular.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) restaurar a massa corporal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) substituir as penas danificadas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) restabelecer a capacidade de homeotermia.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) refazer a camada de cera impermeabilizante das penas.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 13 - Biologia -->
+    <fieldset id="q13" class="border rounded p-4">
+        <legend class="font-semibold">Item 13</legend>
+        <p class="mt-2 text-sm">As aves são animais vertebrados com corpo coberto de penas, bico, respiração pulmonar eficiente e a grande maioria capacidade de voar.</p>
+        <p class="mt-2 text-sm font-semibold">O bico e as penas, são características relacionadas principalmente a:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) obtenção de alimento e regulação da temperatura corporal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) fecundação externa e desenvolvimento larval aquático.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) respiração pulmonar e circulação sanguínea.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) produção de leite para alimentar os filhotes.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) ausência de ossos e corpo mole.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 14 - Biologia -->
+    <fieldset id="q14" class="border rounded p-4">
+        <legend class="font-semibold">Item 14</legend>
+        <p class="mt-2 text-sm">O voo das aves é possibilitado por adaptações esqueléticas, como ossos ocos, asas fortes e musculatura peitoral desenvolvida, além de um metabolismo elevado.</p>
+        <p class="mt-2 text-sm font-semibold">A principal função de ossos desse tipo é:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) substituir a locomoção terrestre.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) permitir que as aves respirem embaixo d'água.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) reduzir o peso corporal e gerar força para o voo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) favorecer a reprodução por fecundação externa.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) garantir que as aves sobrevivam em ambientes frios sem voar.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 15 - Física -->
+    <fieldset id="q15" class="border rounded p-4">
+        <legend class="font-semibold">Item 15</legend>
+        <p class="mt-2 text-sm">O gráfico a seguir apresenta a transformação gasosa de uma certa massa de gás do estado A para o estado B. Nessas condições, em que a temperatura constante, o volume Vₓ é igual a:</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) 9/7 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) 14/9 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) 18/7 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) 28/9 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) 63/2 m³.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 16 - Física -->
+    <fieldset id="q16" class="border rounded p-4">
+        <legend class="font-semibold">Item 16</legend>
+        <p class="mt-2 text-sm">Considerando que a energia interna de um gás perfeito monoatômico é a soma das energias cinéticas de todas as suas moléculas e que, a variação dessa energia interna está associada diretamente a variação da temperatura do respectivo gás, pode-se dizer que se a temperatura desse gás:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) aumenta, a sua energia interna diminui.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) diminui, a sua energia interna aumenta.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) aumenta, a sua energia interna não varia.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) mantém-se constante, a sua energia interna não varia.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) diminui, mantém-se constante a sua energia interna.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 17 - Física -->
+    <fieldset id="q17" class="border rounded p-4">
+        <legend class="font-semibold">Item 17</legend>
+        <p class="mt-2 text-sm">Uma certa quantidade de gás ideal realiza um trabalho de 900 J, durante uma transformação isobárica, quando recebe 1500 J de calor do meio externo.</p>
+        <p class="mt-2 text-sm font-semibold">Durante esse processo, a sua energia interna varia:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) – 900 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) -600 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) 600 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) 900 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) 1 200 J.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 18 - Física -->
+    <fieldset id="q18" class="border rounded p-4">
+        <legend class="font-semibold">Item 18</legend>
+        <p class="mt-2 text-sm">O gráfico a seguir apresenta um ciclo de transformações de uma certa massa de gás ideal encerrada em um cilindro.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <p class="mt-2 text-sm font-semibold">A variação de energia interna a se realizar o ciclo ABCA, em joules é:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) – 80 . 10⁵.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) -40 . 10⁵.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) zero.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) 40 . 10⁵.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) 80 . 10⁵.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 19 - Física -->
+    <fieldset id="q19" class="border rounded p-4">
+        <legend class="font-semibold">Item 19</legend>
+        <p class="mt-2 text-sm">O estado de um gás perfeito é caracterizado por três grandezas físicas, denominadas como variáveis de estado que são:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) o volume, a pressão e o tempo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) o volume, a pressão e a distância.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) a pressão, a temperatura e o tempo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) a temperatura, a distância e o tempo.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) o volume, a pressão e a temperatura.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 20 - Física -->
+    <fieldset id="q20" class="border rounded p-4">
+        <legend class="font-semibold">Item 20</legend>
+        <p class="mt-2 text-sm">Em uma transformação isobárica, um gás perfeito passa de um estado A, em que suas variáveis são: Pa = 4,0 atm; Va = 6,00 litros; Ta = 127°C, para um estado B, onde sua temperatura é Tb = 227°C e a pressão é pB = 4,0 atm.</p>
+        <p class="mt-2 text-sm font-semibold">Pode-se dizer que, nessas condições o volume Vb em litros, deverá ser:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) 0,50.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) 0,75.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) 5,00.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) 7,50.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) 15,0.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 21 - Física -->
+    <fieldset id="q21" class="border rounded p-4">
+        <legend class="font-semibold">Item 21</legend>
+        <p class="mt-2 text-sm">(UNIMONTES – MG) Em uma compressão isotérmica, o trabalho realizado sobre o gás é 800 J.</p>
+        <p class="mt-2 text-sm font-semibold">O calor cedido pelo gás no processo e a variação da energia interna, em joules, são iguais, respectivamente, a:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) 800, 800.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) zero, 800.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) zero, zero.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) 800, -800.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) – 800, zero.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 22 - Física -->
+    <fieldset id="q22" class="border rounded p-4">
+        <legend class="font-semibold">Item 22</legend>
+        <p class="mt-2 text-sm">Um gás, mantido em volume constante, liberou 1000 J de calor para sua vizinhança. Então, pode-se afirmar que:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) a energia interna do gás diminui.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) a energia interna do gás não mudou.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) o trabalho realizado pelo gás foi de 1000 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) a energia interna do gás cresceu de 1000 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) o trabalho realizado sobre o gás foi de 1000 J.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 23 - Física -->
+    <fieldset id="q23" class="border rounded p-4">
+        <legend class="font-semibold">Item 23</legend>
+        <p class="mt-2 text-sm">(UNESPAR – PA 2015) Sabendo-se que um gás ideal contido em um sistema de cilindro e êmbolo recebe uma quantidade de calor igual a 6000 calorias, e considerando que o aumento da energia interna seja de 2000 calorias, é correto afirmar que o trabalho realizado pelo sistema é de:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) 3000 cal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) 4000 cal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) 5000 cal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) 8000 cal.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) 12000 cal.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 24 - Física -->
+    <fieldset id="q24" class="border rounded p-4">
+        <legend class="font-semibold">Item 24</legend>
+        <p class="mt-2 text-sm">Em uma transformação isobárica, um gás realizou um trabalho mecânico de 1 . 10⁴J sob uma pressão de 2 . 10⁵N/m². Se o volume inicial do gás é de 6 m³, qual o seu volume final após a expansão?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) 5,00 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) 6,00 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) 6,05 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) 6,50 m³.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) 6,75 m³.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 25 - Física -->
+    <fieldset id="q25" class="border rounded p-4">
+        <legend class="font-semibold">Item 25</legend>
+        <p class="mt-2 text-sm">(UECE – CE) Do ponto de vista da primeira lei da termodinâmica, o balanço de energia de um dado sistema é dado em termos de três grandezas:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) Trabalho, calor e densidade.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) Calor, energia interna e volume.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) Pressão, volume e temperatura.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) Trabalho, calor e energia interna.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) Pressão, volume e energia interna.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 26 - Física -->
+    <fieldset id="q26" class="border rounded p-4">
+        <legend class="font-semibold">Item 26</legend>
+        <p class="mt-2 text-sm">(UFSM - RS Adaptada) Marque a alternativa que completa corretamente a frase a seguir: Quando um gás ideal sofre uma expansão isotérmica,</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) não troca energia na forma de calor com o meio exterior.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) não troca energia na forma de trabalho com o meio exterior.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) o trabalho realizado pelo gás é igual à variação da energia interna do gás.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) a energia recebida pelo gás na forma de calor é igual à variação da energia interna do gás.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) a energia recebida pelo gás na forma de calor é igual ao trabalho realizado pelo gás na expansão.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 27 - Física -->
+    <fieldset id="q27" class="border rounded p-4">
+        <legend class="font-semibold">Item 27</legend>
+        <p class="mt-2 text-sm">(UFSM – RS) Enquanto se expande, um gás recebe o calor Q = 100J e realiza o trabalho W = 70J.</p>
+        <p class="mt-2 text-sm font-semibold">Ao final do processo, podemos afirmar que a energia interna do gás:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) aumentou 170 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) aumentou 100 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) aumentou 30 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) diminuiu 70 J.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) diminuiu 30 J.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 28 - Química -->
+    <fieldset id="q28" class="border rounded p-4">
+        <legend class="font-semibold">Item 28</legend>
+        <p class="mt-2 text-sm">(Mackenzie – SP) Analisando o gráfico representativo do caminho da reação A + B → C, pode-se dizer que o valor da energia de ativação, em kcal/mol, e o tipo de reação são, respectivamente:</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) 8 e exotérmica.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) 20 e exotérmica.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) 20 e endotérmica.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) 28 e endotérmica.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) 30 e endotérmica.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 29 - Química -->
+    <fieldset id="q29" class="border rounded p-4">
+        <legend class="font-semibold">Item 29</legend>
+        <p class="mt-2 text-sm font-semibold">A rapidez com que ocorre uma reação química depende da:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) baixa pressão.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) diminuição da temperatura.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) orientação das moléculas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) diminuição da superfície de contato.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) ausência de energia no rearranjo dos átomos.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 30 - Química -->
+    <fieldset id="q30" class="border rounded p-4">
+        <legend class="font-semibold">Item 30</legend>
+        <p class="mt-2 text-sm">(Puccamp-SP) Considere as duas fogueiras representadas abaixo, feitas, lado a lado, com o mesmo tipo e quantidade de lenha.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <p class="mt-2 text-sm font-semibold">A rapidez da combustão da lenha será:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) maior na fogueira 2, pois a lenha está menos compactada, o que permite maior retenção de calor pela madeira.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) maior na fogueira 1, pois a lenha está mais compactada, o que evita a vaporização de componentes voláteis.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) igual nas duas fogueiras, uma vez que a quantidade de lenha é a mesma e estão no mesmo ambiente.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) maior na fogueira 1, pois a superfície de contato com o ar é maior.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) maior na fogueira 2, pois a superfície de contato com o ar é maior.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 31 - Química -->
+    <fieldset id="q31" class="border rounded p-4">
+        <legend class="font-semibold">Item 31</legend>
+        <p class="mt-2 text-sm">(UFPE – PE) Você está cozinhando batata e fazendo carne grelhada, tudo em fogo baixo, num fogão a gás.</p>
+        <p class="mt-2 text-sm font-semibold">Se você passar as duas bocas do fogão para fogo alto, o que acontecerá com o tempo de preparo?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) Não será afetado.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) Diminuirá para os dois alimentos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) Diminuirá para a carne e aumentará para as batatas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) Diminuirá para as batatas e não será alterado para a carne.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) Diminuirá para a carne e permanecerá o mesmo para as batatas.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 32 - Química -->
+    <fieldset id="q32" class="border rounded p-4">
+        <legend class="font-semibold">Item 32</legend>
+        <p class="mt-2 text-sm">(UFRS – RS) A deterioração de alimentos é ocasionada por diversos agentes [...]. Alguns alimentos produzidos industrialmente, como embutidos à base de carne triturada, apresentam curto prazo de validade.</p>
+        <p class="mt-2 text-sm font-semibold">Essa característica deve-se a um fator cinético relacionado com:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) a presença de agentes conservantes.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) o acondicionamento em embalagem hermética.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) a elevada concentração de aditivos alimentares.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) reações químicas que ocorrem a baixas temperaturas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) a grande superfície de contato entre os componentes do produto.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 33 - Química -->
+    <fieldset id="q33" class="border rounded p-4">
+        <legend class="font-semibold">Item 33</legend>
+        <p class="mt-2 text-sm">(PUC - RS) Relacione os fenômenos descritos na coluna I com os fatores que influenciam na velocidade dos mesmos, citados na coluna II.</p>
+        <p class="mt-2 text-sm"><b>Coluna I</b><br>1. Queimados se alastrando rapidamente quando está ventando.<br>2. Conservação dos alimentos no refrigerador.<br>3. Efervescência da água oxigenada na higiene de ferimentos.<br>4. Lascas de madeira queimando mais rapidamente que uma tora de madeira.</p>
+        <p class="mt-2 text-sm"><b>Coluna II</b><br>a) superfície de contato<br>b) catalisador<br>c) concentração<br>d) temperatura</p>
+        <p class="mt-2 text-sm font-semibold">A alternativa que contém a associação correta entre as duas colunas é:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) 1 - c; 2 - d; 3 - b; 4 - a</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) 1 - d; 2 - c; 3 - b; 4 - a</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) 1 - a; 2 - b; 3 - c; 4 - d</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) 1 - b; 2 - c; 3 - d; 4 - a</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) 1 - c; 2 - d; 3 - a; 4 – b</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 34 - Química -->
+    <fieldset id="q34" class="border rounded p-4">
+        <legend class="font-semibold">Item 34</legend>
+        <p class="mt-2 text-sm">A velocidade de uma reação química depende de vários fatores.</p>
+        <p class="mt-2 text-sm font-semibold">Qual das opções abaixo não influencia diretamente a velocidade de uma reação?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) Temperatura.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) Massa molar dos produtos.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) Presença de catalisadores.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) Concentração dos reagentes.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) Superfície de contato dos reagentes.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 35 - Química -->
+    <fieldset id="q35" class="border rounded p-4">
+        <legend class="font-semibold">Item 35</legend>
+        <p class="mt-2 text-sm">(Enem – adaptada) A moagem de sólidos pode aumentar a velocidade de reação, pois:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) Aumenta a pressão do sistema.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) Eleva a energia dos reagentes.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) Diminui a energia de ativação.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) Diminui a quantidade de catalisador necessário.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) Aumenta a superfície de contato, favorecendo mais colisões.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 36 - Química -->
+    <fieldset id="q36" class="border rounded p-4">
+        <legend class="font-semibold">Item 36</legend>
+        <p class="mt-2 text-sm">Em uma cozinha, o açúcar se dissolve mais rápido na água quente do que na água fria.</p>
+        <p class="mt-2 text-sm font-semibold">Esse fato pode ser explicado porque:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) A temperatura mais alta aumenta a energia cinética das moléculas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) A densidade do açúcar aumenta com a temperatura.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) A energia de ativação é maior na água quente.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) A água quente forma ligações com o açúcar.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) A água fria tem menor polaridade.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 37 - Química -->
+    <fieldset id="q37" class="border rounded p-4">
+        <legend class="font-semibold">Item 37</legend>
+        <p class="mt-2 text-sm">Seja a reação: X → Y + Z. A variação na concentração de X em função do tempo é: </p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <p class="mt-2 text-sm font-semibold">A velocidade média da reação no intervalo de 2 a 5 minutos é:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) 0,3 mol/L.min.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) 0,1 mol/L.min.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) 0,5 mol/L.min.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) 1,0 mol/L.min.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) 1,5 mol/L.min.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 38 - Química -->
+    <fieldset id="q38" class="border rounded p-4">
+        <legend class="font-semibold">Item 38</legend>
+        <p class="mt-2 text-sm">O amadurecimento de frutas tropicais ocorre mais lentamente em ambientes refrigerados porque:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) A umidade do ar é menor.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) A pressão atmosférica aumenta.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) A luz do refrigerador inibe enzimas.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) O etileno reage mais rapidamente com o ar frio.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) As reações químicas são mais lentas em baixas temperaturas.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 39 - Química -->
+    <fieldset id="q39" class="border rounded p-4">
+        <legend class="font-semibold">Item 39</legend>
+        <p class="mt-2 text-sm">Estudou-se a cinética da reação: S(s) + O₂(g) → SO₂(g) [...] As curvas I, II e III do gráfico abaixo representam as variações das concentrações dos componentes com o tempo [...].</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
+        <p class="mt-2 text-sm font-semibold">As variações das concentrações de S, de O₂ e de SO₂ são representadas, respectivamente, pelas curvas:</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) I, II e III.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) II, III e I.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) III, I e II.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) I, III e II.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) III, II e I.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 40 - Química -->
+    <fieldset id="q40" class="border rounded p-4">
+        <legend class="font-semibold">Item 40</legend>
+        <p class="mt-2 text-sm">A reação genérica ocorre em um recipiente fechado: A(g) + B(g) ⇌ C(g). No equilíbrio, as concentrações são: [A] = 0,2 mol/L, [B] = 0,4 mol/L e [C] = 0,1 mol/L.</p>
+        <p class="mt-2 text-sm font-semibold">Qual o valor da constante de equilíbrio Kc?</p>
+        <div class="mt-2 space-y-1 options">
+            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) 2,00.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) 1,25.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) 0,75.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) 0,50.</span></label>
+            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) 0,25.</span></label>
+        </div>
+    </fieldset>
+
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-600"></div>
+      <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
+    </div>
+  </form>
+</main>
+
+<footer class="mt-6 text-xs text-gray-500 text-center">
+  COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
+</footer>
+</div>
+
+<div id="modalRoot" style="display:none;"></div>
+
+<script>
+/*******************************
+ * CONFIGURAÇÕES
+ *******************************/
+const SERIES = "2_SERIE_NATUREZA"; 
+const TOTAL_QUESTIONS = 40;
+const MAX_ATTEMPTS = 2;
+const LOCK_DAYS = 1;
+const PROGRESS_KEY = `progress_${SERIES}`;
+
+/*******************************************************
+ * GABARITO - CIÊNCIAS DA NATUREZA - 2º ANO
+ *******************************************************/
+const TRUE_GABARITO = {
+  q1: 'D', q2: 'D', q3: 'B', q4: 'C', q5: 'C', q6: 'B', q7: 'E', q8: 'E', q9: 'D', q10: 'B',
+  q11: 'C', q12: 'E', q13: 'A', q14: 'C', q15: 'B', q16: 'D', q17: 'C', q18: 'C', q19: 'E', q20: 'D',
+  q21: 'E', q22: 'A', q23: 'B', q24: 'C', q25: 'D', q26: 'E', q27: 'C', q28: 'D', q29: 'C', q30: 'E',
+  q31: 'B', q32: 'E', q33: 'A', q34: 'B', q35: 'E', q36: 'A', q37: 'B', q38: 'E', q39: 'E', q40: 'B'
+};
+/*******************************
+ * HELPERS & PROTEÇÕES
+ *******************************/
+function qs(sel, ctx = document) { return ctx.querySelector(sel); }
+function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
+function nowISO() { return new Date().toISOString(); }
+
+function simpleFingerprint() {
+  const s = [navigator.userAgent, screen.width + 'x' + screen.height, Intl.DateTimeFormat().resolvedOptions().timeZone || '', navigator.language || ''].join('||');
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) { h = ((h << 5) + h) + s.charCodeAt(i); h = h & 0xFFFFFFFF; }
+  return 'fp_' + (h >>> 0).toString(36);
+}
+function storageKey(matricula) { return `exam_${SERIES}_` + matricula; }
+function storageFpKey(matricula) { return `examfp_${SERIES}_` + matricula; }
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') e.preventDefault();
+  if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') || e.key === 'F12') e.preventDefault();
+});
+
+/*******************************
+ * ELEMENTS
+ *******************************/
+const studentNameInput = qs('#studentName');
+const studentIdInput = qs('#studentId');
+const studentClassInput = qs('#studentClass');
+const startBtn = qs('#startBtn');
+const infoMsg = qs('#infoMsg');
+const quizArea = qs('#quizArea');
+const quizForm = qs('#quizForm');
+const modalRoot = qs('#modalRoot');
+
+function validMatricula(s) { return /^\d{10}-\d{1}$/.test(s); }
+if (studentNameInput) studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
+
+/*******************************
+ * Salvar e Restaurar Progresso
+ *******************************/
+function saveProgress() {
+    if (quizArea.classList.contains('hidden')) return;
+    const matricula = studentIdInput.value.trim();
+    if (!matricula) return;
+
+    const formData = new FormData(quizForm);
+    const currentAnswers = {};
+    for (let [key, value] of formData.entries()) {
+        currentAnswers[key] = value;
+    }
+    const progressData = { matricula: matricula, answers: currentAnswers };
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
+}
+
+function restoreProgress() {
+    const savedProgress = localStorage.getItem(PROGRESS_KEY);
+    if (!savedProgress) return;
+    const progress = JSON.parse(savedProgress);
+    if (!progress || !progress.matricula) return;
+
+    const key = storageKey(progress.matricula);
+    const record = JSON.parse(localStorage.getItem(key));
+
+    if (record && !record.finalized) {
+        studentIdInput.value = record.matricula;
+        studentNameInput.value = record.name;
+        studentClassInput.value = record.turma;
+        
+        qs('#studentInfo').classList.add('hidden');
+        quizArea.classList.remove('hidden');
+        showToast('Seu progresso foi restaurado com sucesso!', 'info');
+
+        Object.entries(progress.answers).forEach(([questionName, answerValue]) => {
+            const radioInput = qs(`input[name="${questionName}"][value="${answerValue}"]`);
+            if (radioInput) {
+                radioInput.checked = true;
+            }
+        });
+
+        if (record.attempts === 1 && record.retakeAllowed && record.wrongQuestions) {
+            prepareSecondAttemptView(record.matricula, record.wrongQuestions, false);
+        }
+    } else {
+        localStorage.removeItem(PROGRESS_KEY);
+    }
+}
+
+/*******************************
+ * INICIAR PROVA
+ *******************************/
+if (startBtn) startBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (infoMsg) infoMsg.textContent = '';
+  const name = (studentNameInput && studentNameInput.value.trim().toUpperCase()) || '';
+  const id = (studentIdInput && studentIdInput.value.trim()) || '';
+  const turma = (studentClassInput && studentClassInput.value) || '';
+
+  if (!name) { infoMsg.textContent = 'Nome obrigatório.'; return; }
+  if (!turma) { infoMsg.textContent = 'Por favor, selecione sua turma.'; return; }
+  if (!validMatricula(id)) { infoMsg.textContent = 'Matrícula inválida. Formato: 2412767146-8'; return; }
+  
+  const key = storageKey(id);
+  let record = JSON.parse(localStorage.getItem(key)) || null;
+
+  if (record && record.attempts >= MAX_ATTEMPTS) {
+    const lockedAt = record.lockedAt || null;
+    if (lockedAt) {
+      const diffDays = (Date.now() - new Date(lockedAt).getTime()) / (1000 * 60 * 60 * 24);
+      if (diffDays < LOCK_DAYS) {
+        if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas. Bloqueado por ${LOCK_DAYS} dias.`;
+        return;
+      } else {
+        localStorage.removeItem(key); record = null;
+      }
+    } else {
+       if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas.`;
+       return;
+    }
+  }
+
+  if (!record) {
+    record = { name: name, matricula: id, turma: turma, attempts: 0, history: [], wrongQuestions: [], createdAt: nowISO() };
+  } else {
+    record.name = name; record.turma = turma;
+  }
+  localStorage.setItem(key, JSON.stringify(record));
+  localStorage.setItem(storageFpKey(id), simpleFingerprint());
+  
+  const progressData = { matricula: id, answers: {} };
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
+
+  if (qs('#studentInfo')) qs('#studentInfo').classList.add('hidden');
+  if (quizArea) quizArea.classList.remove('hidden');
+
+  if (record.attempts === 1 && Array.isArray(record.wrongQuestions) && record.wrongQuestions.length > 0 && record.retakeAllowed) {
+    prepareSecondAttemptView(id, record.wrongQuestions);
+  } else {
+    qsa('fieldset[id^="q"]', quizForm).forEach(fs => { fs.style.display = ''; fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = true); });
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+/*******************************
+ * SUBMIT
+ *******************************/
+if (quizForm) quizForm.addEventListener('submit', function (ev) {
+  ev.preventDefault();
+  const id = (studentIdInput && studentIdInput.value.trim()) || '';
+  const key = storageKey(id);
+  const record = JSON.parse(localStorage.getItem(key) || '{}');
+  if (!record || !record.matricula) { alert('Erro: registro do aluno não encontrado. Reinicie a página.'); return; }
+
+  const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
+  const answers = {};
+  let allAnswered = true;
+  visibleFieldsets.forEach(fs => {
+    const name = fs.id;
+    const sel = qs(`input[name="${name}"]:checked`, fs);
+    answers[name] = sel ? sel.value : '';
+    if (!sel) allAnswered = false;
+  });
+
+  if (!allAnswered) {
+    showToast('Por favor, responda todas as questões visíveis.', 'warn');
+    return;
+  }
+
+  record.attempts++;
+  const attemptEntry = { attempt: record.attempts, answers: answers, ts: nowISO() };
+  record.history = record.history || [];
+  record.history.push(attemptEntry);
+
+  if (record.attempts === 1) {
+    const wrong = [];
+    Object.keys(TRUE_GABARITO).forEach(qKey => {
+      if (attemptEntry.answers[qKey] !== TRUE_GABARITO[qKey]) {
+        wrong.push(parseInt(qKey.replace('q', '')));
+      }
+    });
+    record.wrongQuestions = wrong;
+    record.retakeAllowed = wrong.length > 0;
+    record.correctCount = TOTAL_QUESTIONS - wrong.length;
+    record.gradedAt = nowISO();
+    
+    if (wrong.length === 0) {
+      localStorage.removeItem(PROGRESS_KEY);
+    }
+    
+    localStorage.setItem(key, JSON.stringify(record));
+    showModalResultPartial(record);
+  } else if (record.attempts >= 2) {
+    const firstAttemptAnswers = record.history[0] ? record.history[0].answers : {};
+    const finalAnswers = { ...firstAttemptAnswers, ...answers };
+    let correctFinal = 0;
+    Object.keys(TRUE_GABARITO).forEach(qKey => {
+      if (finalAnswers[qKey] === TRUE_GABARITO[qKey]) {
+        correctFinal++;
+      }
+    });
+    record.correctCount = correctFinal;
+    record.finalized = true;
+    record.finalAnswers = finalAnswers;
+    record.lockedAt = nowISO();
+    localStorage.setItem(key, JSON.stringify(record));
+    
+    localStorage.removeItem(PROGRESS_KEY);
+    
+    showModalResultFinal(record);
+  }
+
+  if (quizArea) quizArea.classList.add('hidden');
+});
+
+/*******************************
+ * POPUPS / MODAIS / TOASTS
+ *******************************/
+function createModal(htmlContent) {
+  if (!modalRoot) return;
+  modalRoot.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'modal-backdrop';
+  wrapper.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${htmlContent}</div>`;
+  modalRoot.appendChild(wrapper);
+  modalRoot.style.display = 'flex';
+  wrapper.addEventListener('click', (e) => {
+    if (e.target === wrapper) {
+       const record = JSON.parse(localStorage.getItem(storageKey(studentIdInput.value.trim())) || '{}');
+       if (record.finalized || !record.retakeAllowed || record.correctCount === TOTAL_QUESTIONS) {
+         closeModal();
+       }
+    }
+  });
+}
+
+function closeModal() { if (modalRoot) { modalRoot.style.display = 'none'; modalRoot.innerHTML = ''; } }
+
+function showToast(text, type = 'info') {
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600);
+  setTimeout(() => t.remove(), 3000);
+}
+
+function showModalResultPartial(record) {
+  const correct = record.correctCount || 0;
+  const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
+  const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
+  const allCorrect = correct === TOTAL_QUESTIONS;
+  
+  let message, btnHtml;
+
+  if (allCorrect) {
+    message = 'Parabéns — você acertou todas as questões!';
+    btnHtml = `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
+    record.finalized = true; 
+    record.finalAnswers = record.history[0].answers;
+    localStorage.setItem(storageKey(record.matricula), JSON.stringify(record));
+  } else if (canRetake) {
+    message = 'Você pode refazer apenas as questões que errou — boa sorte!';
+    btnHtml = `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Refazer (2ª tentativa)</button>`;
+  } else {
+    message = 'Você usou todas as suas tentativas.';
+    btnHtml = `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
+  }
+
+  const html = `
+    <div class="text-center">
+      <h2 class="text-xl font-semibold">Resultado Parcial — ${pct}%</h2>
+      <p class="mt-2 text-sm text-gray-600">Acertos: ${correct} / ${TOTAL_QUESTIONS}</p>
+      <div class="confetti"><span>•</span><span>•</span><span>•</span><span>•</span></div>
+      <p class="mt-3 text-sm">${message}</p>
+      ${btnHtml}
+      <div class="mt-4 text-left text-xs text-gray-500">
+        <strong>Questões erradas:</strong> ${record.wrongQuestions && record.wrongQuestions.length ? record.wrongQuestions.map(n => 'Q' + n).join(', ') : 'nenhuma'}
+      </div>
+    </div>
+  `;
+  createModal(html);
+  
+  const retakeBtn = qs('#modalRetake');
+  if (retakeBtn) retakeBtn.addEventListener('click', () => {
+    closeModal();
+    prepareSecondAttemptView(record.matricula, record.wrongQuestions);
+    if (quizArea) quizArea.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  const exportBtn = qs('#modalExport');
+  if (exportBtn) exportBtn.addEventListener('click', () => {
+      triggerExport(record.matricula);
+  });
+}
+
+function showModalResultFinal(record) {
+    const correct = record.correctCount || 0;
+    const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
+    let message = '';
+    if (pct === 100) message = 'Perfeito! Você acertou todas as questões.';
+    else if (pct >= 80) message = 'Ótimo trabalho! Continue revisando.';
+    else if (pct >= 60) message = 'Bom esforço! Reveja os conteúdos das questões erradas.';
+    else message = 'Mantenha o foco! Use a correção como roteiro de estudo.';
+
+    const wrongQuestionsFinal = Object.keys(TRUE_GABARITO).filter(qKey => record.finalAnswers[qKey] !== TRUE_GABARITO[qKey]).map(qKey => 'Q' + qKey.replace('q', ''));
+
+    const html = `
+    <div class="text-center">
+        <h2 class="text-xl font-semibold">Resultado Final — ${pct}%</h2>
+        <p class="mt-2 text-sm text-gray-600">Acertos Finais: ${correct} / ${TOTAL_QUESTIONS}</p>
+        <div class="confetti"><span>•</span><span>•</span><span>•</span><span>•</span></div>
+        <p class="mt-3 text-sm">${message}</p>
+        <div class="mt-4">
+            <button id="modalExportPdf" class="bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado</button>
+        </div>
+        <div class="mt-4 text-left text-xs text-gray-500">
+            <strong>Questões erradas na avaliação final:</strong> ${wrongQuestionsFinal.length ? wrongQuestionsFinal.join(', ') : 'nenhuma'}
+        </div>
+    </div>`;
+    createModal(html);
+
+    const exportBtn = qs('#modalExportPdf');
+    if(exportBtn) exportBtn.addEventListener('click', () => {
+        triggerExport(record.matricula);
+    });
+}
+
+/*******************************
+ * Preparar 2ª tentativa
+ *******************************/
+function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) {
+  if (!Array.isArray(wrongQuestions) || wrongQuestions.length === 0) return;
+  
+  qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
+    const qnum = parseInt(fs.id.replace('q', ''));
+    if (wrongQuestions.includes(qnum)) {
+      fs.style.display = '';
+      fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; });
+      if (shouldShuffle) {
+          shuffleOptions(fs);
+      }
+    } else {
+      fs.style.display = 'none';
+      fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
+    }
+  });
+  if(shouldShuffle) {
+      showToast('Responda apenas as questões que você errou.', 'info');
+  }
+}
+
+function shuffleOptions(fieldset) {
+    const container = fieldset.querySelector('.options');
+    if (!container) return;
+    const labels = Array.from(container.children);
+    for (let i = labels.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        container.appendChild(labels[j]);
+    }
+}
+
+/*******************************************************
+ * Exportar PDF
+ *******************************************************/
+function triggerExport(matricula) {
+    const key = storageKey(matricula);
+    const record = JSON.parse(localStorage.getItem(key) || '{}');
+    if (!record.matricula || !record.finalized || !record.turma) {
+        showToast('Informações do aluno incompletas. Não é possível enviar.', 'warn');
+        return;
+    }
+
+    const exportButton = qs('#modalExportPdf') || qs('#modalExport');
+    if (exportButton) {
+        exportButton.disabled = true;
+        exportButton.textContent = "Salvando...";
+    }
+
+    const answersToDisplay = record.finalAnswers || (record.history[0] ? record.history[0].answers : {});
+
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = "padding: 20px; font-family: Arial, sans-serif;";
+    wrapper.innerHTML = `
+        <h1 style="font-size:18px; text-align:center; margin-bottom: 20px;">Resultado — Ciências da Natureza (1ª Série)</h1>
+        <div style="margin-bottom: 20px;">
+            <p><strong>Aluno:</strong> ${record.name}</p>
+            <p><strong>Matrícula:</strong> ${record.matricula}</p>
+            <p><strong>Turma:</strong> ${record.turma}</p>
+        </div>
+        <h2 style="font-size: 16px;">Resumo do Desempenho Final</h2>
+        <p><strong>Pontuação Final:</strong> ${record.correctCount || 0} de ${TOTAL_QUESTIONS} acertos (${Math.round(((record.correctCount || 0) / TOTAL_QUESTIONS) * 100)}%)</p>
+        <h2 style="margin-top: 20px; font-size: 16px;">Detalhes das Respostas</h2>
+        <table style="width:100%; border-collapse:collapse; margin-top: 10px;" border="1">
+            <thead>
+                <tr style="background-color: #f2f2f2;">
+                    <th style="padding: 8px;">Questão</th>
+                    <th style="padding: 8px;">Gabarito</th>
+                    <th style="padding: 8px;">Sua Resposta</th>
+                    <th style="padding: 8px;">Resultado</th>
+                </tr>
+            </thead>
+            <tbody>
+            ${[...Array(TOTAL_QUESTIONS).keys()].map(i => {
+                const qKey = 'q' + (i + 1);
+                const truth = TRUE_GABARITO[qKey] || '-';
+                const finalAns = answersToDisplay[qKey] || 'N/R';
+                const isCorrect = truth === finalAns;
+                const resultText = isCorrect ? 'Correto' : 'Incorreto';
+                return `<tr style="background-color: ${isCorrect ? '#e6ffed' : '#ffe6e6'};"><td style="text-align:center; padding: 8px;">${i + 1}</td><td style="text-align:center; padding: 8px;">${truth}</td><td style="text-align:center; padding: 8px;">${finalAns}</td><td style="text-align:center; padding: 8px;">${resultText}</td></tr>`;
+            }).join('')}
+            </tbody>
+        </table>
+        <p style="margin-top:20px; font-size:10px; color:#555; text-align:center;">Relatório gerado pelo Sistema de Avaliação Online.</p>
+    `;
+    
+    const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${record.name}.pdf`;
+    
+    const opt = { margin: 0.5, filename: filePath, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
+    
+    html2pdf().set(opt).from(wrapper).output('datauristring').then(function (pdfBase64) {
+        
+        const payload = {
+            pdfData: pdfBase64,
+            filePath: filePath
+        };
+
+        fetch('/.netlify/functions/save-pdf', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        })
+        .then(response => {
+            if (!response.ok) {
+                 return response.text().then(text => { throw new Error(text || 'Erro no servidor') });
+            }
+            return response.json();
+        })
+        .then(result => {
+            showToast('Prova enviada com sucesso!', 'success');
+            if (exportButton) exportButton.textContent = "Enviado!";
+        })
+        .catch(error => {
+            console.error('Erro ao enviar PDF:', error);
+            showToast(`Erro ao enviar: ${error.message}. Tente baixar.`, 'error');
+            if (exportButton) {
+                exportButton.disabled = false;
+                exportButton.textContent = "Tentar Enviar Novamente";
+            }
+            html2pdf().set(opt).from(wrapper).save();
+        });
+    });
+}
+
+/*******************************
+ * INSERÇÃO AUTOMÁTICA DE IMAGENS + LIGHTBOX
+ *******************************/
+function insertImagesAuto(folder = '../assets/img2nat') { // ATUALIZADO: CAMINHO CORRIGIDO PARA A PASTA NAT
+  const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
+  if (!placeholders.length) return;
+
+  function tryLoad(candidates) {
+    return new Promise((resolve, reject) => {
+      let i = 0;
+      function next() {
+        if (i >= candidates.length) return reject();
+        const url = candidates[i++];
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => next();
+        img.src = url;
+      }
+      next();
+    });
+  }
+
+  placeholders.forEach((ph) => {
+    const fs = ph.closest('fieldset');
+    if (!fs) return;
+    const qid = fs.id.replace('q', '');
+    const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
+    const candidates = exts.map(ext => `${folder}/q${qid}.${ext}`);
+
+    tryLoad(candidates).then(src => {
+      ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`;
+    }).catch(() => {
+      ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada para a questão ${qid} na pasta <code>${folder}</code>.</div>`;
+    });
+  });
+  
+  if (!qs('#lb')) {
+    const lb = document.createElement('div');
+    lb.id = 'lb';
+    lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;';
+    lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
+    document.body.appendChild(lb);
+    lb.addEventListener('click', () => {
+        lb.style.display = 'none';
+        qs('#lb-img').src = '';
+    });
+  }
+
+  document.addEventListener('click', function(e) {
+    const t = e.target;
+    if (t && t.classList.contains('clickable-img')) {
+      qs('#lb-img').src = t.src;
+      qs('#lb').style.display = 'flex';
+    }
+  });
+}
+
+/*******************************
+ * On load
+ *******************************/
+window.addEventListener('load', () => {
+  restoreProgress();
+  
+  if (quizForm) {
+    quizForm.addEventListener('change', saveProgress);
+  }
+
+  try { 
+    insertImagesAuto('../assets/img2nat'); // ATUALIZADO: CAMINHO CORRIGIDO PARA A PASTA NAT
+  } catch (e) { 
+    console.error('Erro ao inserir imagens:', e); 
+  }
+});
+</script>
+
+</body>
+</html>
