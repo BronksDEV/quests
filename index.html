@@ -87,32 +87,49 @@
     
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-const examSchedule = [
-            // Provas já configuradas (sem alterações)
-            { area: 'Ciências Humanas', id: 'humanas', exams: [
-                { series: '1ª Série', file: 'cie/prova1.html', startDate: '2025-08-01', endDate: '2025-09-17', password: 'CEJA2025@' },
-                { series: '2ª Série', file: 'cie/prova2.html', startDate: '2025-09-01', endDate: '2025-09-17', password: 'CEJA2025@' },
-                { series: '3ª Série', file: 'cie/prova3.html', startDate: '2025-01-01', endDate: '2025-09-17', password: 'CEJA2025@' },
-            ]},
-            // Provas de Matemática
-            { area: 'Matemática', id: 'matematica', exams: [
-                { series: '1ª Série', file: 'mat/prova_mat_1.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
-                { series: '2ª Série', file: 'mat/prova_mat_2.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
-                { series: '3ª Série', file: 'mat/prova_mat_3.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
-            ]},
-            // Provas de Linguagens (fictícias)
-            { area: 'Linguagens', id: 'linguagens', exams: [
-                { series: '1ª Série', file: 'ling/prova_ling_1.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
-                { series: '2ª Série', file: 'ling/prova_ling_2.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
-                { series: '3ª Série', file: 'ling/prova_ling_3.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
-            ]},
-            // Provas de Ciências da Natureza (fictícias)
-            { area: 'Ciências da Natureza', id: 'natureza', exams: [
-                { series: '1ª Série', file: 'nat/prova_nat_1.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
-                { series: '2ª Série', file: 'nat/prova_nat_2.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
-                { series: '3ª Série', file: 'nat/prova_nat_3.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
-            ]},
+        const examSchedule = [
+            // 1. Ciências Humanas (Primeiro)
+            { 
+                area: 'Ciências Humanas', 
+                id: 'humanas', 
+                exams: [
+                    { series: '1ª Série', file: 'cie/prova1.html', startDate: '2025-08-01', endDate: '2025-09-16', password: 'CEJA2025@' },
+                    { series: '2ª Série', file: 'cie/prova2.html', startDate: '2025-09-01', endDate: '2025-09-16', password: 'CEJA2025@' },
+                    { series: '3ª Série', file: 'cie/prova3.html', startDate: '2025-01-01', endDate: '2025-09-16', password: 'CEJA2025@' },
+                ]
+            },
+            // 2. Ciências da Natureza (Segundo)
+            { 
+                area: 'Ciências da Natureza', 
+                id: 'natureza', 
+                exams: [
+                    { series: '1ª Série', file: 'nat/prova_nat_1.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
+                    { series: '2ª Série', file: 'nat/prova_nat_2.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
+                    { series: '3ª Série', file: 'nat/prova_nat_3.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
+                ]
+            },
+            // 3. Linguagens (Terceiro)
+            { 
+                area: 'Linguagens', 
+                id: 'linguagens', 
+                exams: [
+                    { series: '1ª Série', file: 'ling/prova_ling_1.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
+                    { series: '2ª Série', file: 'ling/prova_ling_2.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
+                    { series: '3ª Série', file: 'ling/prova_ling_3.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
+                ]
+            },
+            // 4. Matemática (Último)
+            { 
+                area: 'Matemática', 
+                id: 'matematica', 
+                exams: [
+                    { series: '1ª Série', file: 'mat/prova_mat_1.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
+                    { series: '2ª Série', file: 'mat/prova_mat_2.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
+                    { series: '3ª Série', file: 'mat/prova_mat_3.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
+                ]
+            },
         ];
+
         const ADMIN_PASSWORD = "profadmin2025";
         const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
@@ -339,3 +356,4 @@ function renderResultsList(files) {
     </script>
 </body>
 </html>
+
