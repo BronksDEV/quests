@@ -90,27 +90,27 @@
 const examSchedule = [
             // Provas já configuradas (sem alterações)
             { area: 'Ciências Humanas', id: 'humanas', exams: [
-                { series: '1ª Série', file: 'prova1.html', startDate: '2025-08-01', endDate: '2025-09-17', password: '123' },
-                { series: '2ª Série', file: 'prova2.html', startDate: '2025-09-01', endDate: '2025-09-17', password: '123' },
-                { series: '3ª Série', file: 'prova3.html', startDate: '2025-01-01', endDate: '2025-09-17', password: '123' },
+                { series: '1ª Série', file: 'prova1.html', startDate: '2025-08-01', endDate: '2025-09-17', password: 'CEJA2025@' },
+                { series: '2ª Série', file: 'prova2.html', startDate: '2025-09-01', endDate: '2025-09-17', password: 'CEJA2025@' },
+                { series: '3ª Série', file: 'prova3.html', startDate: '2025-01-01', endDate: '2025-09-17', password: 'CEJA2025@' },
             ]},
             // Provas de Matemática
             { area: 'Matemática', id: 'matematica', exams: [
-                { series: '1ª Série', file: 'prova_mat_1.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
-                { series: '2ª Série', file: 'prova_mat_2.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
-                { series: '3ª Série', file: 'prova_mat_3.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
+                { series: '1ª Série', file: 'prova_mat_1.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
+                { series: '2ª Série', file: 'prova_mat_2.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
+                { series: '3ª Série', file: 'prova_mat_3.html', startDate: '2025-09-18', endDate: '2025-09-25', password: 'CEJA2025@' },
             ]},
             // Provas de Linguagens (fictícias)
             { area: 'Linguagens', id: 'linguagens', exams: [
-                { series: '1ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
-                { series: '2ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
-                { series: '3ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
+                { series: '1ª Série', file: 'prova_ling_1.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
+                { series: '2ª Série', file: 'prova_ling_2.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
+                { series: '3ª Série', file: 'prova_ling_3.html', startDate: '2025-09-19', endDate: '2025-09-26', password: 'CEJA2025@' },
             ]},
             // Provas de Ciências da Natureza (fictícias)
             { area: 'Ciências da Natureza', id: 'natureza', exams: [
-                { series: '1ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
-                { series: '2ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
-                { series: '3ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
+                { series: '1ª Série', file: 'prova_nat_1.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
+                { series: '2ª Série', file: 'prova_nat_2.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
+                { series: '3ª Série', file: 'prova_nat_3.html', startDate: '2025-09-20', endDate: '2025-09-27', password: 'CEJA2025@' },
             ]},
         ];
         const ADMIN_PASSWORD = "profadmin2025";
@@ -217,20 +217,80 @@ const examSchedule = [
             setTimeout(() => { elements.passwordModal.classList.add('hidden'); elements.passwordInput.value = ''; elements.passwordError.textContent = ''; onPasswordSuccess = null; }, 300);
         }
 
-        async function fetchAllResults() {
-            const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).list('', { limit: 2000, sortBy: { column: 'created_at', order: 'desc' } });
-            if (error) { console.error("Erro ao buscar arquivos:", error); return []; }
-            return data.map(file => { const parts = file.name.split('/'); if (parts.length < 2) return null; const [folderPath, studentInfo] = parts; const [series, , turma] = folderPath.split(/(_|-)/); return { fullPath: file.name, series, class: turma, studentInfo: studentInfo.replace('.pdf', ''),}; }).filter(Boolean);
-        }
+async function fetchAllResults() {
+  try {
+    const { data, error } = await supabaseClient.storage
+      .from(SUPABASE_BUCKET_NAME)
+      .list('', { limit: 2000 });
 
-        function renderResultsList(files) {
-            elements.resultsList.innerHTML = ''; elements.noResultsMessage.classList.toggle('hidden', files.length > 0);
-            files.forEach(file => {
-                const [matricula, ...nomeParts] = file.studentInfo.split('-');
-                const nome = nomeParts.join(' ').trim();
-                elements.resultsList.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"><svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p><p class="text-xs text-slate-500">${file.series.replace(/_/g, ' ')} - Turma ${file.class}</p></div><button data-path="${file.fullPath}" class="download-single-btn download-btn flex-shrink-0 bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm flex items-center justify-center w-9 h-9 relative"><span class="icon-default"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></span></button></div>`;
-            });
-        }
+    if (error) {
+      console.error("Erro ao buscar arquivos:", error);
+      return [];
+    }
+
+    // Retorna objetos robustos mesmo com profundidade de pasta variável
+    return data.map(file => {
+      const fullPath = file.name; // ex: "3_SERIE_CIENCIAS/TURMA_A/25129...-NOME.pdf"
+      const parts = fullPath.split('/');
+      const fileName = parts[parts.length - 1] || '';
+      const studentInfo = fileName.replace(/\.pdf$/i, '');
+
+      // series = primeiro segmento de pasta (se existir)
+      const seriesRaw = parts.length > 1 ? parts[0] : '';
+      // turma = segundo segmento de pasta (se existir). Extrai "A" de "TURMA_A" quando possível.
+      const turmaRaw = parts.length > 2 ? parts[1] : (parts.length > 1 ? parts[1] : '');
+      const turma = turmaRaw ? turmaRaw.replace(/^TURMA[_-]?/i, '').replace(/_/g, ' ') : '';
+
+      return {
+        fullPath,
+        series: seriesRaw || '',
+        class: turma || '',
+        studentInfo: studentInfo || '',
+        fileName,
+        created_at: file.created_at || null
+      };
+    }).filter(Boolean);
+  } catch (err) {
+    console.error("fetchAllResults catch:", err);
+    return [];
+  }
+}
+
+function renderResultsList(files) {
+  elements.resultsList.innerHTML = '';
+  elements.noResultsMessage.classList.toggle('hidden', files.length > 0);
+
+  files.forEach(file => {
+    // tenta extrair matrícula + nome (quando usar "MATRICULA-NOME.pdf")
+    const [matricula, ...nomeParts] = file.studentInfo.split('-');
+    const nome = nomeParts.length ? nomeParts.join(' ').trim() : file.studentInfo;
+
+    const displaySeries = file.series ? file.series.replace(/_/g, ' ') : '—';
+    const displayTurma = file.class ? `Turma ${file.class}` : '';
+    const subtitle = `${displaySeries}${displayTurma ? ' • ' + displayTurma : ''}`;
+
+    elements.resultsList.innerHTML += `
+      <div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border">
+        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
+            <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
+          </svg>
+        </div>
+        <div class="flex-grow min-w-0">
+          <p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p>
+          <p class="text-xs text-slate-500">${subtitle}</p>
+        </div>
+        <button data-path="${file.fullPath}" class="download-single-btn download-btn flex-shrink-0 bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm flex items-center justify-center w-9 h-9 relative">
+          <span class="icon-default">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+          </span>
+        </button>
+      </div>
+    `;
+  });
+}
         
         function applyFilters() {
             const query = elements.filterStudent.value.toLowerCase().trim();
