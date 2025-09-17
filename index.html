@@ -1,163 +1,281 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Portal de Avaliações — Colégio Estadual José Abílio</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Keyframes para animações modernas */
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Portal de Avaliações — Colégio Estadual José Abílio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes progressBarFill { from { width: 0%; } to { width: 100%; } }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @property --gradient-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
+        @keyframes gradient-rotation { to { --gradient-angle: 360deg; } }
 
-    /* Animação para os cards entrarem suavemente na tela */
-    @keyframes card-fade-in {
-      from {
-        opacity: 0;
-        transform: translateY(25px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+        body { background-color: #f1f5f9; }
+        .page-container { animation: fadeIn 600ms ease-out; }
+        #page-loader, .modal-backdrop { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 300ms ease-out; }
+        .loader-bar { animation: progressBarFill 1.5s ease-out forwards; }
+        #password-modal-content, #admin-area-content { animation: fadeIn 500ms ease-out forwards; }
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-left-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
+        .tab-content { animation: fadeIn 400ms ease-out; }
+        
+        .exam-card-wrapper { position: relative; }
+        .exam-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; z-index: 1; }
+        .exam-card-wrapper::before { content: ''; position: absolute; inset: -2px; z-index: 0; border-radius: 1.1rem; background: conic-gradient(from var(--gradient-angle), #a78bfa, #3b82f6, #6ee7b7, #a78bfa); opacity: 0; transition: opacity 0.4s ease-out; animation: gradient-rotation 4s linear infinite; }
+        .exam-card-wrapper.available:hover::before { opacity: 1; }
 
-    /* Animação da barra de progresso no carregamento da página */
-    @keyframes progress-bar-fill {
-      from {
-        width: 0%;
-      }
-      to {
-        width: 100%;
-      }
-    }
-    
-    /* Animação para o loader aparecer suavemente */
-    @keyframes fade-in-overlay {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Classes para aplicar as animações */
-    .animate-card-entry {
-      animation: card-fade-in 700ms ease-out backwards;
-    }
-    
-    .loader-bar {
-      animation: progress-bar-fill 1.5s ease-out forwards;
-    }
-    
-    #page-loader {
-      animation: fade-in-overlay 300ms ease-out;
-      /* Efeito de "vidro fosco" para navegadores que suportam */
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-    }
-    
-    /* Fundo gradiente sutil para a página */
-    body {
-        background-color: #f8fafc; /* Cor de fundo caso o gradiente não carregue */
-        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
-        background-size: 20px 20px;
-    }
-  </style>
+        #admin-area-content { transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+        .admin-area-open #admin-area-content { transform: translateX(0); }
+    </style>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased">
+<body class="bg-slate-100 text-slate-800 antialiased">
 
-  <!-- === Loader de Transição de Página === -->
-  <div id="page-loader" class="hidden fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
-    <div class="w-full max-w-sm text-center p-8">
-      <div class="text-lg font-semibold text-slate-700 mb-3">Carregando avaliação...</div>
-      <!-- Barra de progresso -->
-      <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-        <div class="loader-bar bg-blue-600 h-2 rounded-full"></div>
-      </div>
+    <!-- MODAL DE SENHA -->
+    <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div id="password-modal-content" class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm">
+            <button id="password-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <h3 id="password-modal-title" class="text-lg font-bold text-slate-800 text-center">Acesso Restrito</h3><p id="password-modal-text" class="text-sm text-slate-500 text-center mt-2"></p><div class="relative mt-6"><input type="password" id="password-input" class="w-full rounded-lg border-gray-300 py-3 pl-4 pr-10 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••"><button id="password-submit-btn" class="absolute inset-y-0 right-0 flex items-center pr-3 group"><svg class="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.28a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg></button></div><p id="password-error" class="text-xs text-red-500 mt-2 h-4 text-center"></p>
+        </div>
     </div>
-  </div>
-  <!-- ===================================== -->
-
-
-  <div class="min-h-screen flex flex-col items-center justify-center p-6">
-    <main class="w-full max-w-5xl mx-auto">
-      <header class="text-center mb-12">
-        <!-- Ícone principal com animação sutil de pulso -->
-        <svg class="w-16 h-16 mx-auto text-blue-600 mb-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-        </svg>
-        <h1 class="text-4xl font-bold tracking-tight text-slate-900">Portal de Avaliações</h1>
-        <p class="text-lg text-slate-600 mt-2">Selecione sua turma para iniciar a avaliação.</p>
-      </header>
-      
-      <!-- Grid de seleção das provas -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-        <!-- Card da 1ª Série -->
-        <a href="prova1.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 200ms;">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
-              <span class="text-4xl font-bold text-blue-600">1ª</span>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
-            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
-          </div>
-        </a>
-
-        <!-- Card da 2ª Série -->
-        <a href="prova2.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 400ms;">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
-              <span class="text-4xl font-bold text-blue-600">2ª</span>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
-            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
-          </div>
-        </a>
-
-        <!-- Card da 3ª Série -->
-        <a href="prova3.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 600ms;">
-          <div class="text-center">
-            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
-              <span class="text-4xl font-bold text-blue-600">3ª</span>
-            </div>
-            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
-            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
-          </div>
-        </a>
-
-      </div>
-    </main>
     
-    <footer class="mt-16 text-xs text-gray-500">
-      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
-    </footer>
-  </div>
+    <!-- LOADER DE TRANSIÇÃO -->
+    <div id="page-loader" class="hidden fixed inset-0 bg-white/80 z-[60] flex items-center justify-center">
+        <div class="w-full max-w-sm text-center"><div class="text-lg font-semibold text-slate-700 mb-3">Carregando avaliação...</div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="loader-bar bg-blue-600 h-2 rounded-full"></div></div></div>
+    </div>
+    
+    <div class="page-container relative z-10 p-4 sm:p-6 min-h-screen flex flex-col">
+        <main class="w-full max-w-5xl mx-auto flex-grow">
+            <header class="text-center my-12">
+                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Portal de Avaliações 2025</h1>
+                <p class="text-lg text-slate-600 mt-2">Selecione uma avaliação para iniciar.</p>
+            </header>
 
-  <script>
-    // Seleciona todos os links que levam para uma prova
-    const examLinks = document.querySelectorAll('.exam-link');
-    // Seleciona o elemento do loader
-    const pageLoader = document.getElementById('page-loader');
+            <div class="w-full mx-auto">
+                <div class="border-b border-gray-200 mb-8">
+                    <nav id="tabs" class="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs"></nav>
+                </div>
+                <div id="tab-container" class="mt-8"></div>
+            </div>
+        </main>
+        
+        <footer class="mt-16 text-xs text-gray-500 text-center">COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@</footer>
+    </div>
+    
+    <div id="admin-area" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex justify-end modal-backdrop">
+        <div id="admin-area-content" class="w-full max-w-lg h-full bg-white shadow-2xl p-8 overflow-y-auto transform translate-x-full">
+             <button id="admin-close-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition z-10"><svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+             <h2 class="text-2xl font-bold text-slate-800 mb-6">Resultados dos Alunos</h2>
+             <div id="results-loader" class="hidden w-full h-full flex flex-col items-center justify-center"><div class="spinner"></div><p class="mt-4 text-sm text-slate-500">Buscando resultados...</p></div>
+             <div id="results-content" class="hidden">
+                <input type="text" id="filter-student" class="w-full mb-4 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="🔎︎ Buscar por nome, matrícula, série ou turma...">
+                <button id="download-all-filtered-btn" class="w-full bg-gray-700 text-white font-semibold py-2.5 px-4 mb-6 rounded-lg hover:bg-gray-800 transition text-sm flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">Baixar Filtrados (.zip)</button>
+                <div id="results-list" class="space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-2"></div>
+                <p id="no-results-message" class="hidden text-center text-slate-500 py-8">Nenhum resultado encontrado.</p>
+             </div>
+        </div>
+    </div>
+    
+    <button id="admin-toggle-btn" class="fixed bottom-6 right-6 z-40 h-16 w-16 bg-slate-800 rounded-full shadow-lg text-white flex items-center justify-center hover:bg-slate-900 transition-all active:scale-95 group">
+        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+        <span class="absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full whitespace-nowrap bg-slate-800 text-white text-xs font-semibold px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">Área do Professor</span>
+    </button>
+    
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+const examSchedule = [
+            // Provas já configuradas (sem alterações)
+            { area: 'Ciências Humanas', id: 'humanas', exams: [
+                { series: '1ª Série', file: 'prova1.html', startDate: '2025-08-01', endDate: '2025-09-17', password: '123' },
+                { series: '2ª Série', file: 'prova2.html', startDate: '2025-09-01', endDate: '2025-09-17', password: '123' },
+                { series: '3ª Série', file: 'prova3.html', startDate: '2025-01-01', endDate: '2025-09-17', password: '123' },
+            ]},
+            // Provas de Matemática
+            { area: 'Matemática', id: 'matematica', exams: [
+                { series: '1ª Série', file: 'prova_mat_1.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
+                { series: '2ª Série', file: 'prova_mat_2.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
+                { series: '3ª Série', file: 'prova_mat_3.html', startDate: '2025-09-18', endDate: '2025-09-25', password: '456' },
+            ]},
+            // Provas de Linguagens (fictícias)
+            { area: 'Linguagens', id: 'linguagens', exams: [
+                { series: '1ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
+                { series: '2ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
+                { series: '3ª Série', file: '#', startDate: '2025-09-19', endDate: '2025-09-26', password: '789' },
+            ]},
+            // Provas de Ciências da Natureza (fictícias)
+            { area: 'Ciências da Natureza', id: 'natureza', exams: [
+                { series: '1ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
+                { series: '2ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
+                { series: '3ª Série', file: '#', startDate: '2025-09-20', endDate: '2025-09-27', password: '101' },
+            ]},
+        ];
+        const ADMIN_PASSWORD = "profadmin2025";
+        const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
+        const SUPABASE_BUCKET_NAME = "resultados-provas";
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Para cada link, adiciona um "escutador" de clique
-    examLinks.forEach(link => {
-      link.addEventListener('click', function(event) {
-        // 1. Previne o comportamento padrão do link (que é navegar imediatamente)
-        event.preventDefault();
+        const elements = {
+            pageLoader: document.getElementById('page-loader'),
+            passwordModal: document.getElementById('password-modal'), passwordModalContent: document.getElementById('password-modal-content'),
+            passwordInput: document.getElementById('password-input'), passwordError: document.getElementById('password-error'),
+            passwordSubmitBtn: document.getElementById('password-submit-btn'), passwordCloseBtn: document.getElementById('password-close-btn'),
+            adminToggleBtn: document.getElementById('admin-toggle-btn'), adminArea: document.getElementById('admin-area'),
+            adminAreaContent: document.getElementById('admin-area-content'), adminCloseBtn: document.getElementById('admin-close-btn'),
+            resultsLoader: document.getElementById('results-loader'), resultsContent: document.getElementById('results-content'),
+            resultsList: document.getElementById('results-list'), noResultsMessage: document.getElementById('no-results-message'),
+            filterStudent: document.getElementById('filter-student'), downloadAllFilteredBtn: document.getElementById('download-all-filtered-btn'),
+        };
 
-        // 2. Pega o endereço de destino do link (o href)
-        const destination = this.href;
+        let onPasswordSuccess = null, allFilesCache = [];
 
-        // 3. Mostra o loader, removendo a classe que o esconde
-        if (pageLoader) {
-          pageLoader.classList.remove('hidden');
+        function init() {
+            renderTabsAndContents();
+            setupEventListeners();
         }
 
-        // 4. Aguarda a animação da barra de progresso terminar (1.6 segundos)
-        //    e então, finalmente, redireciona o navegador para a página da prova.
-        setTimeout(() => {
-          window.location.href = destination;
-        }, 1600); // 1600ms = 1.6 segundos
-      });
-    });
-  </script>
+        function renderTabsAndContents() {
+            const tabsContainer = document.getElementById('tabs');
+            const tabContainer = document.getElementById('tab-container');
+            tabsContainer.innerHTML = ''; tabContainer.innerHTML = '';
+            examSchedule.forEach((areaData, index) => {
+                const isActive = index === 0;
+                tabsContainer.innerHTML += `<button class="tab-btn shrink-0 border-b-2 px-1 py-4 text-sm font-medium ${isActive ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}" data-tab="${areaData.id}">${areaData.area}</button>`;
+                tabContainer.innerHTML += `<div id="${areaData.id}-content" class="${isActive ? '' : 'hidden'} tab-content grid grid-cols-1 md:grid-cols-3 gap-8"></div>`;
+            });
+            renderExamsForTab(examSchedule[0].id);
+        }
 
+        function handleTabClick(e) {
+            const tabId = e.target.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(t => { t.classList.remove('border-blue-600', 'text-blue-600'); t.classList.add('border-transparent', 'text-gray-500'); });
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+            e.target.classList.add('border-blue-600', 'text-blue-600'); e.target.classList.remove('border-transparent', 'text-gray-500');
+            const content = document.getElementById(`${tabId}-content`);
+            if (content) content.classList.remove('hidden');
+            renderExamsForTab(tabId);
+        }
+
+        function renderExamsForTab(tabId) {
+            const areaData = examSchedule.find(a => a.id === tabId);
+            const container = document.getElementById(`${tabId}-content`);
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!areaData || areaData.exams.length === 0) {
+                container.innerHTML = `<p class="text-center text-slate-500 p-8 col-span-1 md:col-span-3">Nenhuma avaliação programada para esta área.</p>`; return;
+            }
+
+            areaData.exams.forEach((exam, cardIndex) => {
+                const now = new Date(); const startDate = new Date(exam.startDate + 'T00:00:00'); const endDate = new Date(exam.endDate + 'T23:59:59');
+                let status = (now < startDate) ? 'locked' : (now > endDate) ? 'expired' : 'available';
+                const wrapper = document.createElement('div');
+                wrapper.className = `exam-card-wrapper ${status}`;
+                wrapper.style.animationDelay = `${cardIndex * 100}ms`;
+
+                const card = document.createElement('div');
+                card.dataset.exam = JSON.stringify(exam); card.dataset.status = status;
+                card.className = `exam-card h-full relative p-8 rounded-2xl shadow-lg border border-slate-200/50 transition-all duration-300 ease-in-out ${status === 'expired' ? 'opacity-50 grayscale cursor-not-allowed' : `cursor-pointer group ${status === 'available' ? 'hover:scale-[1.03] hover:shadow-2xl' : ''}`} animate-card-entry`;
+                
+                const diffDays = Math.ceil((startDate - now) / (1000 * 60 * 60 * 24));
+                const statusText = status === 'locked' ? `<p class="text-xs font-semibold text-amber-600">Disponível em ${diffDays} dia(s)</p>` : status === 'expired' ? `<p class="text-xs font-semibold text-slate-500">Avaliação Encerrada</p>` : `<p class="text-xs font-semibold text-green-600">Disponível para Iniciar</p>`;
+                
+                card.innerHTML = `<div class="text-center"><div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white transition-colors group-hover:bg-blue-200"><span class="text-4xl font-bold text-blue-600">${exam.series.replace('ª Série', '')}</span><span class="text-lg font-bold mt-2 text-blue-600">ª</span></div><h2 class="text-2xl font-bold text-slate-800">Série</h2><p class="text-slate-500 mt-2">${areaData.area}</p><div class="mt-4">${statusText}</div></div>`;
+                
+                wrapper.appendChild(card);
+                container.appendChild(wrapper);
+            });
+            document.querySelectorAll('.exam-card').forEach(c => c.addEventListener('click', handleExamCardClick));
+        }
+
+        function handleExamCardClick() {
+            const { status, exam } = this.dataset;
+            if (status === 'expired') return;
+            const examData = JSON.parse(exam);
+
+            const action = () => { if (!examData.file || examData.file === '#') { alert("Link da prova ainda não configurado."); return; } elements.pageLoader.classList.remove('hidden'); setTimeout(() => window.location.href = examData.file, 1500); };
+            if (status === 'locked' && examData.password) {
+                openPasswordModal("Acesso Antecipado", "Insira a senha de professor para continuar.", (password) => { if (password === examData.password) { closePasswordModal(); action(); } else { elements.passwordError.textContent = 'Senha incorreta.'; } });
+            } else { action(); }
+        }
+
+        function openPasswordModal(title, text, onSuccess) {
+            document.getElementById('password-modal-title').textContent = title; document.getElementById('password-modal-text').textContent = text;
+            elements.passwordModal.classList.remove('hidden');
+            setTimeout(() => elements.passwordModalContent.classList.remove('opacity-0', '-translate-y-4'), 10);
+            elements.passwordInput.focus();
+            onPasswordSuccess = onSuccess;
+        }
+
+        function closePasswordModal() {
+            elements.passwordModalContent.classList.add('opacity-0', '-translate-y-4');
+            setTimeout(() => { elements.passwordModal.classList.add('hidden'); elements.passwordInput.value = ''; elements.passwordError.textContent = ''; onPasswordSuccess = null; }, 300);
+        }
+
+        async function fetchAllResults() {
+            const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).list('', { limit: 2000, sortBy: { column: 'created_at', order: 'desc' } });
+            if (error) { console.error("Erro ao buscar arquivos:", error); return []; }
+            return data.map(file => { const parts = file.name.split('/'); if (parts.length < 2) return null; const [folderPath, studentInfo] = parts; const [series, , turma] = folderPath.split(/(_|-)/); return { fullPath: file.name, series, class: turma, studentInfo: studentInfo.replace('.pdf', ''),}; }).filter(Boolean);
+        }
+
+        function renderResultsList(files) {
+            elements.resultsList.innerHTML = ''; elements.noResultsMessage.classList.toggle('hidden', files.length > 0);
+            files.forEach(file => {
+                const [matricula, ...nomeParts] = file.studentInfo.split('-');
+                const nome = nomeParts.join(' ').trim();
+                elements.resultsList.innerHTML += `<div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border"><div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center"><svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div><div class="flex-grow min-w-0"><p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p><p class="text-xs text-slate-500">${file.series.replace(/_/g, ' ')} - Turma ${file.class}</p></div><button data-path="${file.fullPath}" class="download-single-btn download-btn flex-shrink-0 bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm flex items-center justify-center w-9 h-9 relative"><span class="icon-default"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></span></button></div>`;
+            });
+        }
+        
+        function applyFilters() {
+            const query = elements.filterStudent.value.toLowerCase().trim();
+            if (!allFilesCache) return;
+            const filtered = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
+            renderResultsList(filtered);
+        }
+
+        async function downloadAllFiltered() {
+            const btn = elements.downloadAllFilteredBtn;
+            const query = elements.filterStudent.value.toLowerCase().trim();
+            const filesToDownload = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
+            if (filesToDownload.length === 0) { alert("Nenhum arquivo para baixar."); return; }
+            btn.disabled = true; btn.innerHTML = `<div class="spinner mr-2"></div>Baixando ${filesToDownload.length} arquivos...`;
+            
+            const zip = new JSZip();
+            try {
+                const downloadPromises = filesToDownload.map(async file => { const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(file.fullPath); if (error) throw new Error(`Falha ao baixar ${file.fullPath}`); zip.file(file.fullPath, data); });
+                await Promise.all(downloadPromises); const content = await zip.generateAsync({ type: "blob" }); saveAs(content, "Resultados_Filtrados.zip");
+            } catch (error) { console.error("Erro zip:", error); alert("Ocorreu um erro ao baixar."); } 
+            finally { btn.disabled = false; btn.innerHTML = `Baixar Filtrados (.zip)`; }
+        }
+        
+        function setupEventListeners() {
+            document.getElementById('tabs').addEventListener('click', (e) => { if(e.target.classList.contains('tab-btn')) handleTabClick(e); });
+            elements.passwordSubmitBtn.addEventListener('click', () => { if (onPasswordSuccess) onPasswordSuccess(elements.passwordInput.value); });
+            elements.passwordInput.addEventListener('keypress', (e) => { elements.passwordError.textContent = ''; if (e.key === 'Enter' && onPasswordSuccess) onPasswordSuccess(elements.passwordInput.value); });
+            elements.passwordCloseBtn.addEventListener('click', closePasswordModal);
+            elements.adminToggleBtn.addEventListener('click', () => { openPasswordModal('Área do Professor', 'Insira a senha de administrador.', async (password) => { if (password === ADMIN_PASSWORD) { closePasswordModal(); elements.adminArea.classList.remove('hidden'); document.body.style.overflow = 'hidden'; setTimeout(() => elements.adminAreaContent.classList.remove('translate-x-full'), 10); elements.resultsContent.classList.add('hidden'); elements.resultsLoader.style.display = 'flex'; allFilesCache = await fetchAllResults(); renderResultsList(allFilesCache); elements.resultsLoader.style.display = 'none'; elements.resultsContent.classList.remove('hidden'); } else { elements.passwordError.textContent = 'Senha incorreta.'; } }); });
+            const closeAdminArea = () => { elements.adminAreaContent.classList.add('translate-x-full'); setTimeout(() => { elements.adminArea.classList.add('hidden'); document.body.style.overflow = ''; }, 500); };
+            elements.adminCloseBtn.addEventListener('click', closeAdminArea);
+            elements.adminArea.addEventListener('click', (e) => { if (e.target === elements.adminArea) closeAdminArea(); });
+            elements.filterStudent.addEventListener('input', applyFilters);
+            elements.downloadAllFilteredBtn.addEventListener('click', downloadAllFiltered);
+            elements.resultsList.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.download-single-btn'); if(!btn) return;
+                btn.disabled = true; const originalContent = btn.innerHTML; btn.innerHTML = `<div class="spinner"></div>`;
+                const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(btn.dataset.path);
+                if (error) { alert("Não foi possível baixar."); } else { saveAs(data, btn.dataset.path.split('/').pop()); }
+                btn.disabled = false; btn.innerHTML = originalContent;
+            });
+        }
+
+        init();
+    });
+    </script>
 </body>
 </html>
