@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Portal de Avaliações — Colégio Estadual José Abílio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Keyframes para animações modernas */
+
+    /* Animação para os cards entrarem suavemente na tela */
+    @keyframes card-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(25px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Animação da barra de progresso no carregamento da página */
+    @keyframes progress-bar-fill {
+      from {
+        width: 0%;
+      }
+      to {
+        width: 100%;
+      }
+    }
+    
+    /* Animação para o loader aparecer suavemente */
+    @keyframes fade-in-overlay {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Classes para aplicar as animações */
+    .animate-card-entry {
+      animation: card-fade-in 700ms ease-out backwards;
+    }
+    
+    .loader-bar {
+      animation: progress-bar-fill 1.5s ease-out forwards;
+    }
+    
+    #page-loader {
+      animation: fade-in-overlay 300ms ease-out;
+      /* Efeito de "vidro fosco" para navegadores que suportam */
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    
+    /* Fundo gradiente sutil para a página */
+    body {
+        background-color: #f8fafc; /* Cor de fundo caso o gradiente não carregue */
+        background-image: radial-gradient(#e2e8f0 1px, transparent 1px);
+        background-size: 20px 20px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased">
+
+  <!-- === Loader de Transição de Página === -->
+  <div id="page-loader" class="hidden fixed inset-0 bg-white/80 z-50 flex items-center justify-center">
+    <div class="w-full max-w-sm text-center p-8">
+      <div class="text-lg font-semibold text-slate-700 mb-3">Carregando avaliação...</div>
+      <!-- Barra de progresso -->
+      <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+        <div class="loader-bar bg-blue-600 h-2 rounded-full"></div>
+      </div>
+    </div>
+  </div>
+  <!-- ===================================== -->
+
+
+  <div class="min-h-screen flex flex-col items-center justify-center p-6">
+    <main class="w-full max-w-5xl mx-auto">
+      <header class="text-center mb-12">
+        <!-- Ícone principal com animação sutil de pulso -->
+        <svg class="w-16 h-16 mx-auto text-blue-600 mb-4 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+        </svg>
+        <h1 class="text-4xl font-bold tracking-tight text-slate-900">Portal de Avaliações</h1>
+        <p class="text-lg text-slate-600 mt-2">Selecione sua turma para iniciar a avaliação.</p>
+      </header>
+      
+      <!-- Grid de seleção das provas -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+
+        <!-- Card da 1ª Série -->
+        <a href="prova1.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 200ms;">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
+              <span class="text-4xl font-bold text-blue-600">1ª</span>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
+            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
+          </div>
+        </a>
+
+        <!-- Card da 2ª Série -->
+        <a href="prova2.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 400ms;">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
+              <span class="text-4xl font-bold text-blue-600">2ª</span>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
+            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
+          </div>
+        </a>
+
+        <!-- Card da 3ª Série -->
+        <a href="prova3.html" class="exam-link group block bg-white p-8 rounded-xl shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-in-out animate-card-entry" style="animation-delay: 600ms;">
+          <div class="text-center">
+            <div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white group-hover:bg-blue-200 transition-colors">
+              <span class="text-4xl font-bold text-blue-600">3ª</span>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800">Série</h2>
+            <p class="text-slate-500 mt-2">Bloco de Avaliação de Ciências Humanas</p>
+          </div>
+        </a>
+
+      </div>
+    </main>
+    
+    <footer class="mt-16 text-xs text-gray-500">
+      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
+    </footer>
+  </div>
+
+  <script>
+    // Seleciona todos os links que levam para uma prova
+    const examLinks = document.querySelectorAll('.exam-link');
+    // Seleciona o elemento do loader
+    const pageLoader = document.getElementById('page-loader');
+
+    // Para cada link, adiciona um "escutador" de clique
+    examLinks.forEach(link => {
+      link.addEventListener('click', function(event) {
+        // 1. Previne o comportamento padrão do link (que é navegar imediatamente)
+        event.preventDefault();
+
+        // 2. Pega o endereço de destino do link (o href)
+        const destination = this.href;
+
+        // 3. Mostra o loader, removendo a classe que o esconde
+        if (pageLoader) {
+          pageLoader.classList.remove('hidden');
+        }
+
+        // 4. Aguarda a animação da barra de progresso terminar (1.6 segundos)
+        //    e então, finalmente, redireciona o navegador para a página da prova.
+        setTimeout(() => {
+          window.location.href = destination;
+        }, 1600); // 1600ms = 1.6 segundos
+      });
+    });
+  </script>
+
+</body>
+</html>

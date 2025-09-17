@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prova — Ciências Humanas (Versão Profissional)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <style>
+    input[name="studentName"] { text-transform: uppercase; }
+    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+    /* Modal */
+    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+    /* Check animation */
+    .check-wrap { width:96px; height:96px; border-radius:999px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; margin:0 auto; }
+    .check-svg { width:64px; height:64px; stroke:#16A34A; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+    .draw {
+      stroke-dasharray: 150;
+      stroke-dashoffset: 150;
+      animation: draw 700ms ease-in-out forwards;
+    }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      z-index:70;
+      background: rgba(2,6,23,0.92);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 8px;
+      box-shadow: 0 6px 18px rgba(2,6,23,0.3);
+      display:flex; gap:10px; align-items:center;
+    }
+
+    /* small subtle confetti stripes (CSS only) */
+    .confetti {
+      width:100%;
+      height:40px;
+      overflow:hidden;
+      position:relative;
+      margin-top:8px;
+    }
+    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+
+    /* small UX tweaks */
+    .option-label { cursor:pointer; }
+    input[type="radio"] { accent-color: #2563eb; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 no-select">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="mb-4">
+      <h1 class="text-2xl font-bold">Bloco de Avaliação — Ciências Humanas (2ª Série)</h1>
+      <p class="text-sm text-gray-600 mt-1">2 tentativas. 2ª tentativa: apenas questões erradas (alternativas embaralhadas). PDF exportável ao finalizar.</p>
+    </header>
+
+    <!-- Identificação -->
+    <section id="studentInfo" class="bg-white p-4 rounded shadow mb-4">
+      <form id="infoForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+        <div>
+          <label class="text-sm font-medium">Nome (CAIXA ALTA)</label>
+          <input id="studentName" name="studentName" class="w-full border rounded px-3 py-2" placeholder="EX: JOÃO DA SILVA" required />
+        </div>
+        <div>
+          <label class="text-sm font-medium">Matrícula (##########-#)</label>
+          <input id="studentId" name="studentId" class="w-full border rounded px-3 py-2" placeholder="2412767146-8" required />
+        </div>
+        <div>
+          <button id="startBtn" class="bg-blue-600 text-white px-4 py-2 rounded">Iniciar prova</button>
+        </div>
+      </form>
+      <p id="infoMsg" class="mt-2 text-sm text-red-600"></p>
+    </section>
+
+<!-- Quiz -->
+<main id="quizArea" class="hidden">
+  <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
+    
+    <!-- Item 1 -->
+    <fieldset id="q1" class="border rounded p-4">
+      <legend class="font-semibold">Item 1</legend>
+      <p class="mt-2 text-sm">
+        Como opera a indústria cultural? (...) Ela inventa figuras chamadas "espectador médio", "ouvinte médio" e "leitor médio", aos quais são atribuídas certas capacidades mentais "médias", certos conhecimentos "médios” e certos gostos "médios", oferecendo-lhes produtos culturais “médios”. A indústria cultural vende cultura. Para vendê-la, deve seduzir e agradar o consumidor. Para seduzi-lo e agradá-lo, não pode chocá-lo, provocá-lo, fazê-lo pensar, trazer-lhe informações novas que o perturbem, mas deve devolver-lhe, com nova aparência, o que ele já sabe, já viu, já fez. A “média” é o senso comum cristalizado, que a indústria cultural devolve com cara de coisa nova.
+      </p>
+      <p class="mt-1 text-xs text-gray-600">CHAUI, Marilena. Simulacro e Poder: uma análise crítica da mídia. São Paulo: Editora Fundação Perseu Abramo, 2006, p. 29 – 30.</p>
+      <p class="mt-2 text-sm font-semibold">
+        Segundo a crítica da Escola de Frankfurt, a função da indústria cultural é
+      </p>
+      <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) explorar o tempo de lazer, convertendo a arte em mercadoria voltada ao entretenimento e reforçando, pelo consumo, a alienação e os valores do sistema.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) ampliar o acesso a bens culturais, mas, ao evitar provocar o público, preserva o senso comum produzindo questionamentos e críticas à ordem vigente.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) utilizar elementos artísticos de diferentes origens para atrair públicos variados, ainda que esses elementos sejam reorganizados de modo a manter o público em uma postura criativa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) criar formatos culturais que parecem inovadores e diversificados, mas que, por sua lógica comercial, reproduzem padrões que colocam em risco a lógica de mercado.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) atender ao gosto médio do público e pode até incluir críticas sociais pontuais, o que pode ameaçar a estabilidade do sistema econômico.</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Item 2 -->
+    <fieldset id="q2" class="border rounded p-4">
+      <legend class="font-semibold">Item 2</legend>
+      <p class="mt-2 text-sm">
+        (Enem PPL 2015) Falava-se, antes, de autonomia da produção significar que uma empresa, ao assegurar uma produção, buscava também manipular a opinião pela via da publicidade. Nesse caso, o fato gerador do consumo seria a produção. Mas, atualmente, as empresas hegemônicas produzem o consumidor antes mesmo de produzirem os produtos. Um dado essencial do entendimento do consumo é que a produção do consumidor, hoje, precede a produção dos bens e dos serviços.
+      </p>
+      <p class="mt-1 text-xs text-gray-600">SANTOS, M. Por uma outra globalização: do pensamento único à consciência universal. Rio de Janeiro: Record, 2000 (adaptado).</p>
+      <p class="mt-2 text-sm font-semibold">
+        O tipo de relação entre produção e consumo discutido no texto pressupõe o(a)
+      </p>
+      <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) aumento do poder aquisitivo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) estímulo à livre concorrência.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) criação de novas necessidades.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) formação de grandes estoques.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) implantação de linhas de montagem.</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Item 3 -->
+    <fieldset id="q3" class="border rounded p-4">
+      <legend class="font-semibold">Item 3</legend>
+      <p class="mt-2 text-sm">
+        (UNESP 2014/1 – Adaptada) Não somente os tipos das canções de sucesso, os astros, as novelas ressurgem ciclicamente como invariantes fixos, mas o conteúdo específico do espetáculo só varia na aparência. (...) clichês prontos para serem empregados arbitrariamente aqui e ali e completamente definidos pela finalidade que lhes cabe no esquema. Desde o começo do filme já se sabe como ele termina, quem é recompensado, e, ao escutar a música ligeira, o ouvido treinado é perfeitamente capaz, desde os primeiros compassos, de adivinhar o desenvolvimento do tema e sente-se feliz quando ele tem lugar como previsto.
+      </p>
+      <p class="mt-1 text-xs text-gray-600">Theodor W. Adorno e Max Horkheimer. A indústria cultural como mistificação das massas. In: Dialética do esclarecimento, 1947. (Adaptado.)</p>
+      <p class="mt-2 text-sm font-semibold">
+        O tema abordado pelo texto refere-se
+      </p>
+      <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) ao conteúdo intelectualmente complexo das produções culturais de massa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) à hegemonia da cultura americana nos meios de comunicação de massa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) ao monopólio da informação e da cultura por ministérios estatais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) ao aspecto positivo da democratização da cultura na sociedade de consumo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) aos procedimentos de transformação da cultura em meio de entretenimento.</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Item 4 -->
+    <fieldset id="q4" class="border rounded p-4">
+      <legend class="font-semibold">Item 4</legend>
+      <p class="mt-2 text-sm">Observe a tirinha a seguir.</p>
+      <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a tirinha da questão 4</div>
+      <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmAH. Acesso em: 18 ago. 2025.</p>
+      <p class="mt-2 text-sm font-semibold">
+        A partir da tirinha, como a indústria cultural atua na sociedade?
+      </p>
+      <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Democratiza o acesso à arte ao atender ao gosto médio do público.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) Surge da espontaneidade da cultura de massas, promovendo diversidade estética.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) Padroniza a arte em forma de entretenimento, esvaziando sua crítica e reforçando a passividade.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) Estimula a participação ativa do público por meio de conteúdos inovadores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) Oferece variedade de produtos culturais que ampliam o pensamento crítico.</span></label>
+      </div>
+    </fieldset>
+
+    <!-- Item 5 -->
+    <fieldset id="q5" class="border rounded p-4">
+        <legend class="font-semibold">Item 5</legend>
+        <p class="mt-2 text-sm">
+        O termo alienação vem do latim alienare, que significa "tornar-se outro”, “afastar-se de si" ou "estranhar-se". Na Teoria Crítica, Adorno e Horkheimer ampliam o conceito para o campo cultural: na sociedade de massas, a indústria cultural produz formas de entretenimento que, sob aparência de liberdade e diversidade, mantêm o indivíduo afastado de sua autonomia e de uma compreensão crítica da realidade.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Segundo Adorno e Horkheimer, como a indústria cultural se relaciona com a alienação?
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) Mesmo percebida como escolha livre, o consumo cultural reforça padrões que mantêm a ordem social.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) A mídia digital supera a alienação ao oferecer pluralidade e emancipação cultural.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) Produtos culturais massificados só são alienantes quando impostos pelo Estado.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) A apropriação subjetiva do público torna a indústria cultural neutra quanto à alienação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) A cultura de massa surge espontaneamente e reflete autenticamente os valores juvenis.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 6 -->
+    <fieldset id="q6" class="border rounded p-4">
+        <legend class="font-semibold">Item 6</legend>
+        <p class="mt-2 text-sm">
+        Em 2011, o Sudão do Sul tornou-se o país mais novo do mundo, após décadas de conflitos com o Sudão. A divisão foi resultado de disputas históricas envolvendo diferenças étnicas, religiosas e o controle sobre áreas ricas em petróleo. Mesmo após a independência, as tensões internas continuam, e grupos armados disputam o poder político e os recursos naturais.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Com base no texto e nos seus conhecimentos, a situação apresentada é um exemplo de:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) Apropriação territorial pacífica e consensual.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) Conflito territorial motivado por fatores étnicos e econômicos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) Expansão imperialista clássica do século XIX.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) Integração regional baseada no comércio internacional.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) Ocupação de território vazio e sem população prévia.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 7 -->
+    <fieldset id="q7" class="border rounded p-4">
+        <legend class="font-semibold">Item 7</legend>
+        <p class="mt-2 text-sm">
+        A Amazônia, por sua grande biodiversidade e riquezas minerais, desperta o interesse de diferentes agentes. O avanço da fronteira agrícola e a exploração ilegal de madeira têm gerado conflitos com comunidades indígenas e ribeirinhas, além de pressões ambientais significativas.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O conflito na Amazônia ilustra:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) O uso equilibrado dos recursos naturais por todos os agentes envolvidos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) O predomínio exclusivo de agentes internacionais na gestão do território.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) A ausência de territorialidade em áreas de floresta tropical.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) A disputa pela apropriação e uso do território entre diferentes agentes sociais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) A redução dos conflitos ambientais por políticas públicas bem-sucedidas.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 8 -->
+    <fieldset id="q8" class="border rounded p-4">
+        <legend class="font-semibold">Item 8</legend>
+        <p class="mt-2 text-sm">
+        (Enem 2015) O projeto Nova Cartografia Social da Amazônia ensina indígenas, quilombolas e outros grupos tradicionais a empregar GPS e técnicas modernas de georreferenciamento para produzir mapas artesanais, bastantes precisos, de suas próprias terras.
+        </p>
+        <p class="mt-1 text-xs text-gray-600">LOPES, R. J. O novo mapa da floresta. Folha de S. Paulo, 7 maio 2011 (adaptado).</p>
+        <p class="mt-2 text-sm font-semibold">
+        A existência de um projeto como o apresentado no texto indica a importância da cartografia como elemento promotor da
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) expansão da fronteira agrícola.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) remoção de populações nativas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) superação da condição de pobreza.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) valorização de identidades coletivas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) implantação de modernos projetos agroindustriais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 9 -->
+    <fieldset id="q9" class="border rounded p-4">
+        <legend class="font-semibold">Item 9</legend>
+        <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da questão 9</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmY7. Acesso em: 19 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        A imagem apresenta a Tríplice Fronteira entre Brasil, Argentina e Paraguai. Além de limites geográficos definidos por rios, essa região também apresenta
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) relações sociais entre os grupos, eliminando qualquer diferença cultural ou econômica.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) fronteiras sociais, que refletem diferenças culturais, étnicas e econômicas entre os grupos que ali vivem.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) fronteiras geográficas, pois os habitantes compartilham língua, costumes e atividades econômicas uniformes.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) fronteiras sociais e geográficas, que se confundem completamente, de modo que não há distinção entre elas na região.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) fronteiras sociais, que não apresentam conflitos ou tensões sociais, pois a proximidade geográfica garante harmonia entre os países.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 10 -->
+    <fieldset id="q10" class="border rounded p-4">
+        <legend class="font-semibold">Item 10</legend>
+        <p class="mt-2 text-sm">
+        As áreas urbanas apresentam diferentes dinâmicas espaciais em comparação às áreas rurais. Enquanto as cidades concentram serviços, indústrias e infraestrutura, o campo está ligado a atividades como agricultura, pecuária e extrativismo. Contudo, a expansão urbana sobre áreas rurais é um fenômeno crescente, especialmente em países emergentes.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O fenômeno descrito, no qual as áreas urbanas avançam sobre áreas rurais, é chamado de:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) Êxodo rural.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) Ruralização.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) Urbanização.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) Gentrificação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) Desertificação.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 11 -->
+    <fieldset id="q11" class="border rounded p-4">
+        <legend class="font-semibold">Item 11</legend>
+        <p class="mt-2 text-sm">
+        O continente africano apresenta grande diversidade cultural, histórica e socioeconômica. Entretanto, muitas de suas fronteiras foram definidas durante o período colonial, sem considerar as divisões étnicas e culturais locais, o que contribuiu para conflitos internos persistentes.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        A definição das fronteiras africanas no período colonial é um exemplo de:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) Territorialidade determinada por interesses externos, ignorando as realidades locais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) Conflito baseado exclusivamente em disputas religiosas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) Territorialidade indígena preservada integralmente.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) Fronteiras naturais estabelecidas por consenso local.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) Integração regional voluntária e democrática.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 12 -->
+    <fieldset id="q12" class="border rounded p-4">
+        <legend class="font-semibold">Item 12</legend>
+        <p class="mt-2 text-sm">
+        O Japão, país desenvolvido e com pouco espaço disponível, utiliza seu território de forma altamente planejada. Suas áreas urbanas concentram a maior parte da população e da economia, enquanto as áreas rurais são voltadas principalmente para a agricultura intensiva, com uso de tecnologia avançada.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        A situação descrita indica que o Japão
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) não utiliza tecnologia no setor agrícola.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) é um país com vastas áreas rurais pouco aproveitadas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) apresenta ocupação territorial homogênea em todas as regiões.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) depende exclusivamente de importações para abastecer sua população.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) possui um padrão de ocupação do espaço influenciado pela disponibilidade limitada de território.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 13 -->
+    <fieldset id="q13" class="border rounded p-4">
+        <legend class="font-semibold">Item 13</legend>
+        <p class="mt-2 text-sm">
+        A Guerra da Crimeia (2014-presente) envolve disputas entre Rússia e Ucrânia sobre a Península da Crimeia, região estratégica no Mar Negro. O conflito está ligado tanto a questões históricas quanto a interesses geopolíticos e econômicos, como o acesso a portos e recursos energéticos.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O conflito pela Crimeia é um exemplo de
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) disputa territorial motivada por fatores geopolíticos e econômicos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) territorialidade baseada em acordos internacionais estáveis.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) conflito ambiental causado pela poluição industrial.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) migração voluntária sem tensões políticas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) expansão agrícola sobre áreas urbanas.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 14 -->
+    <fieldset id="q14" class="border rounded p-4">
+        <legend class="font-semibold">Item 14</legend>
+        <p class="mt-2 text-sm">Observe o mapa político da América do Sul a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o mapa da questão 14</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nm5c. Acesso em: 19 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        O Brasil ocupa uma extensa área da América do Sul e compartilha fronteiras terrestres com diversos países. O reconhecimento dessas fronteiras envolve dimensões físicas, políticas e culturais, essenciais para compreender as dinâmicas territoriais da região. Com base no mapa, é possível dizer que
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) o Brasil apresenta fronteiras terrestres com doze países, e sua linha de costa é limitada aos Oceanos Atlântico e Pacífico.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) o Brasil faz fronteira com todos os países da América do Sul, exceto o Chile, que é separado por barreiras naturais da Cordilheira dos Andes.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) dos países da Bacia Platina, a Argentina é o único vizinho do Brasil localizado no setor meridional do continente.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) o Brasil compartilha fronteiras apenas com países cuja língua oficial é de origem latina, predominando o espanhol.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) entre os países que não fazem fronteira com o Brasil estão Chile e Equador.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 15 -->
+    <fieldset id="q15" class="border rounded p-4">
+        <legend class="font-semibold">Item 15</legend>
+        <p class="mt-2 text-sm">
+        As cidades globais, como Nova Iorque, Londres, Tóquio e São Paulo, são centros que concentram atividades econômicas, financeiras e tecnológicas em escala mundial, sendo fundamentais para a articulação da economia global.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Esse fenômeno está relacionado a
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) ocupação rural e êxodo para o campo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) predomínio das atividades primárias nas cidades globais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) formação de fronteiras físicas entre países desenvolvidos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) isolamento das economias nacionais em relação ao mundo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) distribuição desigual das funções urbanas no espaço geográfico.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 16 -->
+    <fieldset id="q16" class="border rounded p-4">
+        <legend class="font-semibold">Item 16</legend>
+        <p class="mt-2 text-sm">
+        "A região do Oriente Médio possui grandes reservas de petróleo, o que a torna uma área de intensa disputa geopolítica. Além das riquezas minerais, existem tensões envolvendo religião, etnias e interesses estratégicos de diferentes países."
+        </p>
+        <p class="mt-1 text-xs text-gray-600">Desenvolvido para fins didáticos. NUREDI.</p>
+        <p class="mt-2 text-sm font-semibold">
+        O texto permite concluir que:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) A ocupação e uso do espaço no Oriente Médio envolvem múltiplos agentes e interesses.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) Os conflitos no Oriente Médio estão relacionados apenas às diferenças religiosas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) A geopolítica regional é determinada exclusivamente pelos povos nômades.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) O Oriente Médio é uma região isolada das dinâmicas mundiais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) O petróleo não tem relevância geopolítica mundial.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 17 -->
+    <fieldset id="q17" class="border rounded p-4">
+        <legend class="font-semibold">Item 17</legend>
+        <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da questão 17</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmKZ. Acesso em 19 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        A imagem mostra uma manifestação de povos indígenas por acesso à terra e reconhecimento de seus direitos territoriais. Com base na imagem e nos conhecimentos geográficos, podemos dizer que o território é
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) um espaço definido e organizado por relações de poder.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) o resultado de um processo de classificação de unidades espaciais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) um conceito associado, exclusivamente, à escala dos Estados nacionais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) definido pela apreciação estética do espaço a partir de uma longa vivência.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) o resultado das mudanças na morfologia do meio natural, ao longo do tempo.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 18 -->
+    <fieldset id="q18" class="border rounded p-4">
+        <legend class="font-semibold">Item 18</legend>
+        <p class="mt-2 text-sm">
+        O avanço de áreas de garimpo ilegal na Terra Yanomami, no norte do Brasil, tem provocado desmatamento, contaminação de rios por mercúrio e graves impactos na saúde das populações indígenas. O governo federal tem buscado ações para expulsar os garimpeiros e proteger a região.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        A situação descrita envolve:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) Urbanização planejada em áreas indígenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) Expansão controlada e legal do setor minerador.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) Integração econômica equilibrada entre garimpeiros e indígenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) Uso sustentável dos recursos naturais pelas comunidades locais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) Conflito territorial e ambiental entre atividades ilegais e populações tradicionais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 19 -->
+    <fieldset id="q19" class="border rounded p-4">
+        <legend class="font-semibold">Item 19</legend>
+        <p class="mt-2 text-sm">
+        A construção de rodovias na Amazônia durante o período militar no Brasil (1964–1985) teve como objetivo integrar a região ao restante do país. Entretanto, essa abertura viária incentivou o desmatamento, a ocupação irregular e conflitos fundiários.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O processo descrito mostra que:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) A abertura de rodovias promoveu apenas benefícios econômicos, sem gerar impactos ambientais ou sociais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) O planejamento territorial priorizou a preservação ambiental e o modo de vida das comunidades locais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) A construção de rodovias impediu a ocupação de novas áreas, contribuindo para reduzir os conflitos fundiários.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) Grandes obras de infraestrutura podem estimular a ocupação desordenada e provocar impactos ambientais e sociais relevantes.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) A política rodoviária na Amazônia resultou em equilíbrio entre integração nacional, preservação ambiental e direitos das populações locais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 20 -->
+    <fieldset id="q20" class="border rounded p-4">
+        <legend class="font-semibold">Item 20</legend>
+        <p class="mt-2 text-sm">Analise o mapa a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o mapa da questão 20</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmKY. Acesso em: 19 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        O mapa apresenta a divisão territorial da África após a Conferência de Berlim (1884-1885), organizada pelas potências europeias. O que ocasionou
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) a eliminação de conflitos por recursos naturais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) a estabilidade política e ausência de guerras civis.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) o fortalecimento dos vínculos culturais entre as etnias locais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) a criação de fronteiras naturais respeitando os rios e montanhas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) a fragmentação de grupos étnicos e o surgimento de conflitos territoriais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 21 -->
+    <fieldset id="q21" class="border rounded p-4">
+        <legend class="font-semibold">Item 21</legend>
+        <p class="mt-2 text-sm">
+        [...] No Brasil os nomes das línguas são, na maioria dos casos, os mesmos nomes atribuídos aos respectivos povos: por exemplo, o povo "Xavante" fala a língua "Xavante". São raros os casos em que se fixou na literatura especializada ou no uso geral um nome distinto para a língua. [...]
+        </p>
+        <p class="mt-1 text-xs text-gray-600">RODRIGUES, Aryon Dall'Igna. Línguas indígenas brasileiras. Brasília: Laboratório de Línguas Indígenas da UnB, 2013. p. 10.</p>
+        <p class="mt-2 text-sm font-semibold">
+        Os povos que tiveram os primeiros contatos com os portugueses eram, em grande parte
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) grupos caçadores-coletores nômades que ocupavam apenas a região amazônica.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) populações ligadas ao tronco linguístico macro-jê que habitavam o interior do território.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) comunidades do litoral, como os Tupinambá e outros grupos falantes de línguas do tronco tupi.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) povos pastoris de origem africana que haviam migrado para o continente americano antes da chegada dos portugueses.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) habitantes do extremo sul do continente que mantinham redes comerciais com os colonizadores espanhóis.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 22 -->
+    <fieldset id="q22" class="border rounded p-4">
+        <legend class="font-semibold">Item 22</legend>
+        <p class="mt-2 text-sm">
+        As metrópoles coloniais logo entenderam as potencialidades estratégicas das inimizades, já existentes ou alimentadas, entre grupos indígenas.
+        </p>
+        <p class="mt-1 text-xs text-gray-600">SCHWARCZ, Lilia Mortiz; STARLING, Heloisa. Brasil: uma biografia. Companhia das Letras. p. 80.</p>
+        <p class="mt-2 text-sm font-semibold">
+        Durante a colonização, uma prática adotada pelos portugueses foi a de
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) explorar as rivalidades entre diferentes povos indígenas como estratégia para favorecer a conquista do território.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) promover a unificação dos povos indígenas em um grande bloco político para resistir à ocupação europeia.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) impedir qualquer tipo de conflito entre os grupos nativos, buscando preservar suas culturas originais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) isolar as populações nativas do litoral para garantir a preservação de suas práticas culturais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) manter neutralidade frente aos conflitos indígenas, evitando interferir em suas disputas territoriais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 23 -->
+    <fieldset id="q23" class="border rounded p-4">
+        <legend class="font-semibold">Item 23</legend>
+        <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da questão 23</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmC8. Acesso em: 03 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        A gravura de Theodor de Bry representa práticas de antropofagia entre grupos indígenas no território que se tornaria o Brasil. Esses rituais estavam ligados a rivalidades entre os grupos e faziam parte de um conjunto de crenças e tradições desses povos. O ritual antropofágico tinha como principal sentido
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) servir como punição coletiva para membros de sua própria tribo que desobedeciam a normas internas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) incorporar simbolicamente a força e a coragem dos inimigos derrotados em combate.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) garantir que as almas dos inimigos fossem libertadas para retornar ao mundo dos vivos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) substituir ritos de passagem e cerimônias de iniciação para jovens guerreiros.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) punir os colonizadores portugueses como forma de resistência à ocupação europeia.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 24 -->
+    <fieldset id="q24" class="border rounded p-4">
+        <legend class="font-semibold">Item 24</legend>
+        <p class="mt-2 text-sm">
+        (Enem PPL 2014) Áreas em estabelecimento de atividades econômicas sempre se colocaram como grande chamariz. Foi assim no litoral nordestino, no início da colonização, com o pau-brasil, a cana-de-açúcar [...].
+        </p>
+        <p class="mt-1 text-xs text-gray-600">FARIA, S. C. A Colônia em movimento. Rio de Janeiro: Nova Fronteira, 1998 (Adaptação).</p>
+        <p class="mt-2 text-sm font-semibold">
+        O processo descrito no texto trouxe como efeito o(a)
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) acúmulo de capital na Colônia, favorecendo um ambiente cultural ativo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) surgimento de grandes cidades coloniais voltadas para o comércio.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) concessão de títulos de nobreza aos colonos pela Monarquia.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) concentração da população no litoral, pela facilidade de transporte da produção.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) criação de relações de trabalho menos desiguais que as da Metrópole.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 25 -->
+    <fieldset id="q25" class="border rounded p-4">
+        <legend class="font-semibold">Item 25</legend>
+        <p class="mt-2 text-sm">Observe o recorte do mapa a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da questão 25</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmD2. Acesso em: 03 ago. 2025.</p>
+        <p class="mt-2 text-sm font-semibold">
+        O mapa conhecido como Terra Brasilis, de 1519, apresenta registros do território no início do século XVI e cenas do trabalho com o pau-brasil. A extração do pau-brasil nos primeiros anos da colonização foi caracterizada por
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) ser realizada inicialmente pelos povos indígenas por meio do escambo com os colonizadores portugueses.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) depender exclusivamente de mão de obra africana trazida para o trabalho nas matas costeiras.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) ocorrer apenas no interior do território, longe das áreas litorâneas de contato com os europeus.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) ter como principal objetivo o abastecimento das cidades coloniais e não o comércio europeu.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) empregar técnicas de cultivo e reflorestamento avançadas para garantir a sustentabilidade da atividade.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 26 -->
+    <fieldset id="q26" class="border rounded p-4">
+        <legend class="font-semibold">Item 26</legend>
+        <p class="mt-2 text-sm">
+        Relatos de práticas antropofágicas entre indígenas, frequentemente exagerados, foram usados na Europa para criar uma imagem dos nativos que justificasse a presença portuguesa na América.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O uso dessas representações contribuiu para justificar a colonização porque
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) mostrava os indígenas como líderes políticos que precisavam ser integrados ao governo colonial.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) reforçava a ideia de que os povos nativos eram selvagens que precisavam ser civilizados pelos europeus.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) evidenciava que os rituais indígenas eram compatíveis com a cultura europeia e deviam ser preservados.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) comprovava que a antropofagia era uma prática necessária para a defesa das aldeias contra invasores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) destacava a importância de manter as tradições indígenas sem interferência externa.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 27 -->
+    <fieldset id="q27" class="border rounded p-4">
+        <legend class="font-semibold">Item 27</legend>
+        <p class="mt-2 text-sm">
+        Em 1534, a Coroa portuguesa criou as capitanias hereditárias, dividindo o território em faixas de terra entregues a particulares para administrar e explorar, diante das dificuldades de gestão direta pela metrópole. Entre os objetivos principais desse sistema estavam
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) garantir a ocupação das terras brasileiras aos povos indígenas que já habitavam o litoral.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) estabelecer centros urbanos exclusivamente voltados ao comércio de produtos europeus.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) manter o território despovoado para servir apenas como entreposto comercial de Portugal.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) criar colônias independentes com autonomia política e econômica em relação à metrópole.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) garantir a posse e defesa do território e estimular a colonização por meio da ocupação efetiva.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 28 -->
+    <fieldset id="q28" class="border rounded p-4">
+        <legend class="font-semibold">Item 28</legend>
+        <p class="mt-2 text-sm">
+        Poucos anos após sua criação, o sistema de capitanias hereditárias enfrentou dificuldades por falta de recursos, resistência indígena e condições geográficas, mas algumas regiões conseguiram se consolidar economicamente, tornando-se referência no início da colonização portuguesa.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Um exemplo de capitania bem-sucedida foi a
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) da Bahia, que prosperou graças ao comércio de ouro e pedras preciosas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) de São Vicente, destacando-se pela criação de gado para exportação imediata.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) de Pernambuco, impulsionada pelo cultivo da cana-de-açúcar e pela produção açucareira.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) do Espírito Santo, que concentrou sua economia na extração de pau-brasil até o século XVIII.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) do Rio de Janeiro, cujo sucesso veio da exploração de minas de prata logo no início da colonização.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 29 -->
+    <fieldset id="q29" class="border rounded p-4">
+        <legend class="font-semibold">Item 29</legend>
+        <p class="mt-2 text-sm">
+        A Companhia de Jesus, fundada por Inácio de Loyola no século XVI durante a Contrarreforma, buscava fortalecer o catolicismo e conter o protestantismo na Europa, sendo enviada também à América portuguesa com a expansão colonial, com funções específicas.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O papel atribuído aos jesuítas na América foi o de
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) catequizar os povos indígenas e fundar núcleos educacionais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) promover o comércio colonial e administrar diretamente as capitanias hereditárias.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) organizar as tropas militares responsáveis pela defesa contra invasores europeus.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) controlar a produção agrícola e garantir o envio de riquezas para a metrópole.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) substituir as autoridades civis portuguesas na administração da colônia.</span></label>
+        </div>
+    </fieldset>
+    
+    <!-- Item 30 -->
+    <fieldset id="q30" class="border rounded p-4">
+        <legend class="font-semibold">Item 30</legend>
+        <p class="mt-2 text-sm">
+        No período colonial, colonos e jesuítas divergiam sobre os indígenas: os primeiros buscavam sua exploração como mão de obra, enquanto a Igreja defendia catequese e aldeamento. A Coroa proibiu a escravidão, mas admitiu exceções em “guerras justas”, gerando debates na época. Nas leis coloniais, o termo "guerras justas" referia-se a
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) conflitos que tinham como objetivo preservar as terras indígenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) batalhas entre diferentes povos indígenas sem o apoio dos colonizadores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) guerras contra grupos indígenas que resistiam à conversão ao cristianismo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) confrontos organizados pelos jesuítas contra o ataque de colonos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) lutas entre potências europeias pelo domínio do comércio atlântico no século XVI.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 31 -->
+    <fieldset id="q31" class="border rounded p-4">
+        <legend class="font-semibold">Item 31</legend>
+        <p class="mt-2 text-sm">
+        Durante o período colonial, a economia açucareira foi a principal atividade do Brasil, instalada inicialmente no litoral nordestino. Voltada para o mercado externo, a produção se estruturou em grandes propriedades e utilizou de forma intensiva o trabalho escravizado.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        A economia da cana-de-açúcar no Nordeste colonial caracterizou-se por
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) pequenas propriedades voltadas para o consumo interno e mão de obra assalariada.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) agricultura familiar baseada em policultura e troca comunitária de produtos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) exploração coletiva das terras, sem distinção de propriedade ou divisão de áreas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) sistema com base em monocultura, latifúndio e uso de trabalho escravizado.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) produção diversificada de alimentos para o abastecimento local.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 32 -->
+    <fieldset id="q32" class="border rounded p-4">
+        <legend class="font-semibold">Item 32</legend>
+        <p class="mt-2 text-sm">
+        Leia o texto a seguir: "Onde encontrar gente para ocupar as novas fronteiras, organizar povoamentos, erguer casas e abrigos, construir fortalezas, derrubar as matas, cultivar lavouras e explorar eventuais minas de ouro e pedras preciosas? A solução, mais uma vez, estava na África."
+        </p>
+        <p class="mt-1 text-xs text-gray-600">GOMES, Laurentino. Escravidão, volume I. Rio de Janeiro, Globo Livros, 2017; p. 109</p>
+        <p class="mt-2 text-sm font-semibold">
+        A decisão dos portugueses quanto à origem da mão de obra utilizada no Brasil se relaciona à
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) preferência dos colonizadores por trabalhadores indígenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) existência de um lucrativo mercado por meio do tráfico negreiro.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) inexistência de mão de obra indígena nas regiões ocupadas pelos colonizadores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) facilidade de negociação direta entre as aldeias indígenas e os capitães donatários.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) abundância de trabalhadores livres europeus dispostos a atuar nas lavouras tropicais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 33 -->
+    <fieldset id="q33" class="border rounded p-4">
+        <legend class="font-semibold">Item 33</legend>
+        <p class="mt-2 text-sm">
+        "Aqui onde estão os homens<br>
+        Dum lado, cana-de-açúcar<br>
+        Do outro lado, o cafezal<br>
+        Ao centro, senhores sentados<br>
+        Vendo a colheita do algodão branco<br>
+        Sendo colhidos por mãos negras<br>
+        [...] <br>
+        Quando Zumbi chegar<br>
+        O que vai acontecer<br>
+        Zumbi é senhor das guerras<br>
+        É senhor das demandas<br>
+        Quando Zumbi chega<br>
+        É Zumbi é quem manda"
+        </p>
+        <p class="mt-1 text-xs text-gray-600">Música: "Zumbi" - Jorge Ben Jor</p>
+        <p class="mt-2 text-sm">Durante os séculos de escravidão no Brasil, diversas formas de resistência foram adotadas pelos africanos e seus descendentes.</p>
+        <p class="mt-2 text-sm font-semibold">
+        A letra da música homenageia um importante personagem que
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) lutou contra a escravidão liderando o Quilombo dos Palmares.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) foi nomeado líder pelos senhores de engenho por sua obediência e lealdade.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) buscou negociar com o governo colonial para garantir melhores condições de trabalho.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) participou da catequese de povos indígenas como representante da Coroa portuguesa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) serviu de modelo para políticas de integração entre colonos e escravizados africanos.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 34 -->
+    <fieldset id="q34" class="border rounded p-4">
+        <legend class="font-semibold">Item 34</legend>
+        <p class="mt-2 text-sm">
+        A riqueza gerada pela mineração provocou grandes mudanças na colônia. Novas vilas foram fundadas, surgiram igrejas, estradas e centros administrativos. Regiões antes pouco habitadas tornaram-se importantes núcleos de ocupação e organização social.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Um dos efeitos provocados pela exploração do ouro foi
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) a formação de grandes propriedades agrícolas voltadas à exportação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) o abandono do interior e concentração da população no litoral.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) a redução da cobrança de impostos pela Coroa portuguesa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) o aumento da liberdade dos escravizados nas zonas rurais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) o desenvolvimento de cidades na região mineradora.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 35 -->
+    <fieldset id="q35" class="border rounded p-4">
+        <legend class="font-semibold">Item 35</legend>
+        <p class="mt-2 text-sm">
+        A descoberta de ouro em Minas Gerais, no final do século XVII, transformou profundamente a vida na colônia. Milhares de pessoas migraram para a região das minas, e a Coroa portuguesa passou a controlar mais diretamente a exploração da riqueza.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Durante o ciclo do ouro, a principal mão de obra usada na exploração das minas era composta por
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) trabalhadores europeus contratados pela metrópole.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) indígenas livres organizados em aldeamentos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) colonos portugueses que recebiam terras como pagamento.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) africanos escravizados, trazidos para o trabalho pesado nas minas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) religiosos jesuítas que catequizavam nas regiões mineradoras.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 36 -->
+    <fieldset id="q36" class="border rounded p-4">
+        <legend class="font-semibold">Item 36</legend>
+        <p class="mt-2 text-sm">Observe o gráfico a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o gráfico da questão 36</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmSi. Acesso em: 19 ago. 2025.</p>
+        <p class="mt-2 text-sm">
+        O gráfico apresenta a intensificação da urbanização no Brasil a partir da década de 1960, impulsionada pela industrialização e pela migração do campo para as cidades em busca de trabalho.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        O acelerado processo de urbanização da sociedade brasileira criou uma série de problemas sociais urbanos, entre eles, estão:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) Segregação socioespacial, favelização e aumento da violência.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) Analfabetismo e diminuição de vagas em instituições escolares.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) Redução das vagas de trabalho na indústria e do consumo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) Envelhecimento social e baixa expectativa de vida.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) Integração social e intercâmbio cultural.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 37 -->
+    <fieldset id="q37" class="border rounded p-4">
+        <legend class="font-semibold">Item 37</legend>
+        <p class="mt-2 text-sm">
+        Leia o texto a seguir: "O direito à cidade está muito longe da liberdade individual de acesso a recursos urbanos: é o direito de mudar a nós mesmos pela mudança da cidade. Além disso, é um direito comum antes de individual já que esta transformação depende inevitavelmente do exercício de um poder coletivo de moldar o processo de urbanização. A liberdade de construir e reconstruir a cidade e a nós mesmos é um dos mais preciosos e negligenciados direitos humanos.”
+        </p>
+        <p class="mt-1 text-xs text-gray-600">(HARVEY, D. "O direito à cidade". Lutas Sociais, jul./dez. 2012. Adaptado).</p>
+        <p class="mt-2 text-sm font-semibold">
+        Considerando o texto acima e seus conhecimentos acerca da urbanização brasileira, o direito à cidade no Brasil
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) está previsto no Estatuto da Cidade (Lei nº 10.257/2001), que fala sobre o direito a cidades sustentáveis para todos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) é combatido por movimentos sociais urbanos como o MTST, que tentam impedir sua aplicação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) prevê que todas as cidades brasileiras sejam iguais cultural e socialmente.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) foi criado apenas para beneficiar os grupos mais ricos das cidades.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) não existe, pois não há leis no Brasil que tratem desse tema.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 38 -->
+    <fieldset id="q38" class="border rounded p-4">
+        <legend class="font-semibold">Item 38</legend>
+        <p class="mt-2 text-sm">(ENEM 2019 – Adaptada) Observe a imagem a seguir e responda.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da questão 38</div>
+        <p class="mt-2 text-sm">
+        Fala-se aqui de uma arte criada nas ruas e para as ruas, marcadas antes de tudo pela vida cotidiana, seus conflitos e suas possibilidades, que poderiam envolver técnicas, agentes e temas que não fossem encontrados nas instituições mais tradicionais e formais.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        A manifestação artística expressa na imagem e apresentada no texto integra um movimento contemporâneo de
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) revitalização dos patrimônios históricos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) valorização dos formalismos estéticos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) padronização das culturas urbanas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) apropriação dos espaços públicos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) regulação das relações sociais.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 39 -->
+    <fieldset id="q39" class="border rounded p-4">
+        <legend class="font-semibold">Item 39</legend>
+        <p class="mt-2 text-sm">
+        O crescimento acelerado das cidades brasileiras ao longo das últimas décadas gerou grandes desafios urbanos, como desigualdade no acesso a serviços, ocupação irregular do solo e pressão sobre transporte, saneamento e moradia.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Considerando o papel da sociologia na análise da urbanização, é possível dizer que esse campo de estudo:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) Limita-se a calcular o número de habitantes nas cidades, sem se preocupar com impactos sociais ou econômicos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) Examina como o crescimento urbano influencia a vida social, as desigualdades, a distribuição de serviços e a organização do espaço.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) Avalia apenas a arquitetura e o planejamento físico das cidades, ignorando questões sociais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) Concentra-se exclusivamente no transporte público e na mobilidade, sem considerar moradia ou trabalho.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) Busca uniformizar a população urbana, eliminando diferenças culturais e socioeconômicas entre bairros.</span></label>
+        </div>
+    </fieldset>
+
+    <!-- Item 40 -->
+    <fieldset id="q40" class="border rounded p-4">
+        <legend class="font-semibold">Item 40</legend>
+        <p class="mt-2 text-sm">Observe o gráfico a seguir.</p>
+        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o gráfico da questão 40</div>
+        <p class="mt-1 text-xs text-gray-600">Disponível em: https://abre.ai/nmT0. Acesso em: 19 ago. 2025.</p>
+        <p class="mt-2 text-sm">
+        O gráfico mostra que, embora o saneamento básico tenha melhorado nos últimos anos, quase metade da população brasileira ainda não tem acesso a sistemas de esgotamento sanitário.
+        </p>
+        <p class="mt-2 text-sm font-semibold">
+        Com base no gráfico e nos seus conhecimentos sobre urbanização, é possível dizer que:
+        </p>
+        <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) A maioria da população urbana brasileira possui acesso completo a saneamento, o que indica que os problemas sociais nas cidades foram praticamente solucionados.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) Apenas os moradores das regiões rurais sofrem com falta de saneamento, não sendo um problema das cidades.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) O acesso a saneamento não tem relação com a qualidade de vida ou a saúde da população urbana.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) Uma parcela significativa da população ainda enfrenta infraestrutura insuficiente, refletindo desigualdades sociais e desafios urbanos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) A urbanização trouxe benefícios iguais para toda a população, eliminando diferenças sociais.</span></label>
+        </div>
+    </fieldset>
+    
+
+    <!-- BOTÃO -->
+    <div class="flex items-center justify-between">
+      <div class="text-sm text-gray-600">1ª tentativa: responda todas as 40 questões. 2ª tentativa: apenas as erradas.</div>
+      <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
+    </div>
+  </form>
+</main>
+
+<!-- Resultado / ações -->
+<section id="resultArea" class="hidden mt-4">
+  <div id="resultBox" class="bg-white p-4 rounded shadow">
+    <!-- Conteúdo agora exibido via modal/popup profissional -->
+  </div>
+</section>
+
+
+    <footer class="mt-6 text-xs text-gray-500">
+      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
+    </footer>
+  </div>
+
+  <!-- Modal template (inserido dinamicamente) -->
+  <div id="modalRoot" style="display:none;"></div>
+
+  <script>
+/*******************************
+ * CONFIGURAÇÕES
+ *******************************/
+const TOTAL_QUESTIONS = 40;
+const MAX_ATTEMPTS = 2;
+const LOCK_DAYS = 7;
+
+
+const TRUE_GABARITO = {
+  // Filosofia
+  q1:'A', q2:'C', q3:'E', q4:'C', q5:'A',
+  // Geografia
+  q6:'B', q7:'D', q8:'D', q9:'B', q10:'C',
+  q11:'A', q12:'E', q13:'A', q14:'E', q15:'E',
+  q16:'A', q17:'A', q18:'E', q19:'D', q20:'E',
+  // História
+  q21:'C', q22:'A', q23:'B', q24:'D', q25:'A',
+  q26:'B', q27:'E', q28:'C', q29:'A', q30:'C',
+  q31:'D', q32:'B', q33:'A', q34:'E', q35:'D',
+  // Sociologia
+  q36:'A', q37:'A', q38:'D', q39:'B', q40:'D'
+};
+
+/*******************************
+ * HELPERS & PROTEÇÕES
+ *******************************/
+function qs(sel, ctx=document){ return ctx.querySelector(sel); }
+function qsa(sel, ctx=document){ return Array.from(ctx.querySelectorAll(sel)); }
+function nowISO(){ return new Date().toISOString(); }
+
+function simpleFingerprint(){
+  const s = [navigator.userAgent, screen.width+'x'+screen.height, Intl.DateTimeFormat().resolvedOptions().timeZone || '', navigator.language || ''].join('||');
+  let h = 5381;
+  for (let i=0;i<s.length;i++){ h = ((h<<5)+h) + s.charCodeAt(i); h = h & 0xFFFFFFFF; }
+  return 'fp_' + (h >>> 0).toString(36);
+}
+function storageKey(matricula){ return 'exam_'+matricula; }
+function storageFpKey(matricula){ return 'examfp_'+matricula; }
+
+// bloqueios simples
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') e.preventDefault();
+  if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') || e.key === 'F12') e.preventDefault();
+});
+
+/*******************************
+ * ELEMENTS
+ *******************************/
+const studentNameInput = qs('#studentName');
+const studentIdInput = qs('#studentId');
+const startBtn = qs('#startBtn');
+const infoMsg = qs('#infoMsg');
+const quizArea = qs('#quizArea');
+const quizForm = qs('#quizForm');
+const modalRoot = qs('#modalRoot');
+
+// valida matrícula
+function validMatricula(s){ return /^\d{10}-\d{1}$/.test(s); }
+
+// força caixa alta
+if (studentNameInput) studentNameInput.addEventListener('input', ()=> studentNameInput.value = studentNameInput.value.toUpperCase());
+
+/*******************************
+ * INICIAR PROVA
+ *******************************/
+if (startBtn) startBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  if (infoMsg) infoMsg.textContent = '';
+
+  const name = (studentNameInput && studentNameInput.value.trim().toUpperCase()) || '';
+  const id = (studentIdInput && studentIdInput.value.trim()) || '';
+
+  if (!name){ if (infoMsg) infoMsg.textContent = 'Nome obrigatório.'; return; }
+  if (!validMatricula(id)){ if (infoMsg) infoMsg.textContent = 'Matrícula inválida. Formato: 2412767146-8'; return; }
+
+  const key = storageKey(id);
+  let record = null;
+  try { record = JSON.parse(localStorage.getItem(key)); } catch(e){ record = null; }
+
+  if (record && record.attempts >= MAX_ATTEMPTS) {
+    const lockedAt = record.lockedAt || null;
+    if (lockedAt) {
+      const diffDays = (Date.now() - new Date(lockedAt).getTime()) / (1000*60*60*24);
+      if (diffDays < LOCK_DAYS) {
+        if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas. Bloqueado por ${LOCK_DAYS} dias.`;
+        return;
+      } else {
+        record.attempts = 0;
+        record.lockedAt = null;
+        localStorage.setItem(key, JSON.stringify(record));
+      }
+    } else {
+      if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas.`;
+      return;
+    }
+  }
+
+  if (!record) {
+    record = {
+      name: name,
+      matricula: id,
+      attempts: 0,
+      history: [],
+      wrongQuestions: [],
+      createdAt: nowISO()
+    };
+    localStorage.setItem(key, JSON.stringify(record));
+  } else {
+    record.name = name;
+    localStorage.setItem(key, JSON.stringify(record));
+  }
+
+  localStorage.setItem(storageFpKey(id), simpleFingerprint());
+  document.cookie = `exam_matricula=${id}; path=/; max-age=${60*60*24*30}`;
+
+  if (qs('#studentInfo')) qs('#studentInfo').classList.add('hidden');
+  if (quizArea) quizArea.classList.remove('hidden');
+  // 2ª tentativa? mostrar só erradas
+  if (record.attempts === 1 && Array.isArray(record.wrongQuestions) && record.wrongQuestions.length > 0 && record.retakeAllowed) {
+    prepareSecondAttemptView(id, record.wrongQuestions);
+    window.scrollTo({top:0, behavior:'smooth'});
+  } else {
+    // mostrar todas as questões
+    qsa('fieldset[id^="q"]', quizForm).forEach(fs => { fs.style.display = ''; fs.querySelectorAll('input[type="radio"]').forEach(r=> r.required = true); });
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+});
+
+/*******************************
+ * SUBMIT
+ *******************************/
+if (quizForm) quizForm.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  const id = (studentIdInput && studentIdInput.value.trim()) || '';
+  const key = storageKey(id);
+  const record = JSON.parse(localStorage.getItem(key) || '{}');
+  if (!record || !record.matricula){ alert('Erro: registro do aluno não encontrado. Reinicie a página.'); return; }
+
+  const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none' && fs.offsetParent !== null);
+  const answers = {};
+  let allAnswered = true;
+  visibleFieldsets.forEach(fs => {
+    const name = fs.id;
+    const sel = qs(`input[name="${name}"]:checked`, fs);
+    answers[name] = sel ? sel.value : '';
+    if (!sel) allAnswered = false;
+  });
+
+  if (record.attempts === 0) {
+    if (visibleFieldsets.length < TOTAL_QUESTIONS || Object.values(answers).some(v=>v==='')) {
+      showToast('Por favor, responda todas as questões na 1ª tentativa.', 'warn');
+      return;
+    }
+  } else {
+    if (!allAnswered) { showToast('Responda todas as questões mostradas na 2ª tentativa.', 'warn'); return; }
+  }
+
+  record.attempts = (record.attempts || 0) + 1;
+  const attemptEntry = { attempt: record.attempts, answers: answers, ts: nowISO() };
+  record.history = record.history || [];
+  record.history.push(attemptEntry);
+
+  if (record.attempts === 1) {
+    const wrong = [];
+    for (let i=1;i<=TOTAL_QUESTIONS;i++){
+      const q = 'q' + i;
+      const ans = (attemptEntry.answers[q] || '');
+      const truth = TRUE_GABARITO[q] || '';
+      if (truth && ans !== truth) wrong.push(i);
+    }
+    record.wrongQuestions = wrong;
+    record.retakeAllowed = wrong.length > 0;
+    record.correctCount = TOTAL_QUESTIONS - wrong.length;
+    record.gradedAt = nowISO();
+    localStorage.setItem(key, JSON.stringify(record));
+    showModalResultPartial(record);
+  } else if (record.attempts === 2) {
+    const firstAnswers = record.history[0] ? record.history[0].answers : {};
+    const combined = Object.assign({}, firstAnswers);
+    for (const k in attemptEntry.answers) combined[k] = attemptEntry.answers[k];
+    const wrongFinal = [];
+    let correctFinal = 0;
+    for (let i=1;i<=TOTAL_QUESTIONS;i++){
+      const q = 'q'+i;
+      const ans = combined[q] || '';
+      const truth = TRUE_GABARITO[q] || '';
+      if (truth && ans === truth) correctFinal++; else wrongFinal.push(i);
+    }
+    record.wrongQuestions = wrongFinal;
+    record.correctCount = correctFinal;
+    record.finalAnswers = combined;
+    record.finalized = true;
+    record.lockedAt = nowISO();
+    localStorage.setItem(key, JSON.stringify(record));
+    showModalResultFinal(record);
+  }
+
+  if (quizArea) quizArea.classList.add('hidden');
+});
+
+/*******************************
+ * POPUPS / MODAIS / TOASTS
+ *******************************/
+function createModal(htmlContent){
+  if (!modalRoot) return;
+  modalRoot.innerHTML = '';
+  const wrapper = document.createElement('div');
+  wrapper.className = 'modal-backdrop';
+  wrapper.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${htmlContent}</div>`;
+  modalRoot.appendChild(wrapper);
+  modalRoot.style.display = 'block';
+  // fechar ao clicar fora
+  wrapper.addEventListener('click', (e) => {
+    if (e.target === wrapper) closeModal();
+  });
+}
+function closeModal(){ if (modalRoot){ modalRoot.style.display = 'none'; modalRoot.innerHTML = ''; } }
+
+function showToast(text, type='info'){
+  const t = document.createElement('div');
+  t.className = 'toast';
+  t.textContent = text;
+  document.body.appendChild(t);
+  setTimeout(()=> t.style.opacity = '0', 2600);
+  setTimeout(()=> t.remove(), 3000);
+}
+
+function showModalResultPartial(record){
+  const correct = record.correctCount || 0;
+  const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
+  const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
+  const btnHtml = canRetake
+    ? `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Refazer (2ª tentativa) — apenas erradas</button>`
+    : `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded ${((record.correctCount||0)===TOTAL_QUESTIONS)?'':'hidden'}">Exportar PDF</button>`;
+
+  const html = `
+    <div class="text-center">
+      <div class="check-wrap mb-4">
+        <svg class="check-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="draw" d="M20 6L9 17l-5-5"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold">Resultado parcial — ${pct}%</h2>
+      <p class="mt-2 text-sm text-gray-600">Acertos: ${correct} / ${TOTAL_QUESTIONS}</p>
+      <div class="confetti">
+        <span>•</span><span>•</span><span>•</span><span>•</span>
+      </div>
+      <p class="mt-3 text-sm">${record.retakeAllowed ? 'Você pode refazer apenas as questões que errou — boa sorte!' : 'Parabéns — você acertou todas as questões!'}</p>
+      ${btnHtml}
+      <div class="mt-4 text-left text-sm">
+        <strong>Questões erradas:</strong> ${record.wrongQuestions && record.wrongQuestions.length ? record.wrongQuestions.map(n=>'Q'+n).join(', ') : 'nenhuma'}
+      </div>
+    </div>
+  `;
+  createModal(html);
+  // eventos
+  setTimeout(()=> {
+    const btn = qs('#modalRetake');
+    if (btn) btn.addEventListener('click', ()=> {
+      const key = storageKey(record.matricula);
+      const rec = JSON.parse(localStorage.getItem(key));
+      closeModal();
+      prepareSecondAttemptView(record.matricula, rec.wrongQuestions);
+      if (qs('#resultArea')) qs('#resultArea').classList.add('hidden');
+      if (quizArea) quizArea.classList.remove('hidden');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+    const exp = qs('#modalExport');
+    if (exp) exp.addEventListener('click', ()=> {
+      closeModal();
+      triggerExport(record.matricula);
+    });
+  }, 50);
+}
+
+function showModalResultFinal(record){
+  const correct = record.correctCount || 0;
+  const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
+  let message = '';
+  if (pct === 100) message = 'Perfeito! Você acertou todas as questões.';
+  else if (pct >= 80) message = 'Ótimo trabalho! Continue revisando.';
+  else if (pct >= 60) message = 'Bom esforço! Reveja os conteúdos das questões erradas.';
+  else message = 'Mantenha o foco! Use a correção como roteiro de estudo.';
+
+  const html = `
+    <div class="text-center">
+      <div class="check-wrap mb-4">
+        <svg class="check-svg" viewBox="0 0 24 24" aria-hidden="true">
+          <path class="draw" d="M20 6L9 17l-5-5"></path>
+        </svg>
+      </div>
+      <h2 class="text-xl font-semibold">Resultado final — ${pct}%</h2>
+      <p class="mt-2 text-sm text-gray-600">Acertos finais: ${correct} / ${TOTAL_QUESTIONS}</p>
+      <div class="confetti">
+        <span>•</span><span>•</span><span>•</span><span>•</span>
+      </div>
+      <p class="mt-3 text-sm">${message}</p>
+      <div class="mt-4">
+        <button id="modalExportPdf" class="bg-indigo-600 text-white px-4 py-2 rounded">Exportar PDF</button>
+      </div>
+      <div class="mt-4 text-left text-sm">
+        <strong>Questões erradas:</strong> ${record.wrongQuestions && record.wrongQuestions.length ? record.wrongQuestions.map(n=>'Q'+n).join(', ') : 'nenhuma'}
+      </div>
+    </div>
+  `;
+  createModal(html);
+  setTimeout(()=> {
+    const exp = qs('#modalExportPdf');
+    if (exp) exp.addEventListener('click', ()=> {
+      closeModal();
+      triggerExport(record.matricula);
+    });
+  }, 50);
+}
+
+/*******************************
+ * Preparar 2ª tentativa
+ *******************************/
+function prepareSecondAttemptView(matricula, wrongQuestions) {
+  if (!Array.isArray(wrongQuestions) || wrongQuestions.length === 0) {
+    showToast('Nenhuma questão para refazer — sem 2ª tentativa necessária.', 'info');
+    return;
+  }
+  qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
+    const qnum = parseInt(fs.id.replace('q',''),10);
+    if (wrongQuestions.includes(qnum)) {
+      fs.style.display = '';
+      shuffleOptions(fs);
+      fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = true);
+    } else {
+      fs.style.display = 'none';
+      fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
+    }
+  });
+  const key = storageKey(matricula);
+  const record = JSON.parse(localStorage.getItem(key) || '{}');
+  record.retakeAllowed = true;
+  localStorage.setItem(key, JSON.stringify(record));
+  showToast('2ª tentativa preparada — apenas questões erradas aparecem agora.', 'info');
+}
+
+function shuffleOptions(fieldset) {
+  const container = fieldset.querySelector('.options');
+  if (!container) return;
+  const labels = Array.from(container.children);
+  const items = labels.map(lbl => {
+    const input = lbl.querySelector('input');
+    const span = lbl.querySelector('span');
+    return { value: input ? input.value : '', text: span ? span.innerHTML : lbl.innerHTML };
+  });
+  for (let i=items.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  container.innerHTML = '';
+  const qName = fieldset.id;
+  items.forEach(it => {
+    const lbl = document.createElement('label');
+    lbl.className = 'flex items-center gap-2 option-label';
+    const inp = document.createElement('input');
+    inp.type = 'radio';
+    inp.name = qName;
+    inp.value = it.value;
+    const span = document.createElement('span');
+    span.innerHTML = it.text.replace(/^\s*([A-E])\)\s*/,'').trim();
+    lbl.appendChild(inp);
+    lbl.appendChild(span);
+    container.appendChild(lbl);
+  });
+}
+
+/*******************************
+ * Exportar PDF
+ *******************************/
+function triggerExport(matricula) {
+  const key = storageKey(matricula);
+  const record = JSON.parse(localStorage.getItem(key) || '{}');
+  if (!record || (!record.finalized && record.correctCount !== TOTAL_QUESTIONS && record.attempts < MAX_ATTEMPTS)) {
+    showToast('Exportar disponível apenas após finalizar (usar as tentativas) ou acertar todas.', 'warn');
+    return;
+  }
+  // Monta relatório
+  const wrapper = document.createElement('div');
+  wrapper.style.padding = '20px';
+  wrapper.style.fontFamily = 'Arial, sans-serif';
+  wrapper.innerHTML = `<h1 style="font-size:18px;">Resultado — Prova Ciências Humanas</h1>
+    <p><strong>Aluno:</strong> ${record.name} — <strong>Matrícula:</strong> ${record.matricula}</p>
+    <p><strong>Data:</strong> ${record.gradedAt || (record.history && record.history[record.history.length-1] && record.history[record.history.length-1].ts) || nowISO()}</p>
+    <h2>Resumo</h2>
+    <p><strong>Tentativas usadas:</strong> ${record.attempts || 0} / ${MAX_ATTEMPTS}</p>
+    <p><strong>Acertos:</strong> ${record.correctCount || 0} / ${TOTAL_QUESTIONS}</p>
+    <h2>Detalhes</h2>
+    <table style="width:100%;border-collapse:collapse;" border="1">
+      <thead><tr><th>Q</th><th>Gabarito</th><th>Resposta final</th><th>Correto?</th></tr></thead>
+      <tbody>
+      ${[...Array(TOTAL_QUESTIONS).keys()].map(i=>{
+        const q = 'q'+(i+1);
+        const truth = TRUE_GABARITO[q] || '';
+        const finalAns = (record.finalAnswers && record.finalAnswers[q]) || (record.history[0] && record.history[0].answers[q]) || '';
+        const ok = (truth && finalAns && truth === finalAns) ? 'SIM' : 'NÃO';
+        return `<tr><td style="text-align:center">${i+1}</td><td style="text-align:center">${truth}</td><td style="text-align:center">${finalAns}</td><td style="text-align:center">${ok}</td></tr>`;
+      }).join('')}
+      </tbody>
+    </table>
+    <p style="margin-top:10px;font-size:12px;color:#444;">Atenção: o gabarito é definido no objeto TRUE_GABARITO dentro do código Javascript do arquivo HTML.</p>
+  `;
+  const opt = { margin:0.4, filename: `${record.matricula}_resultado.pdf`, image:{type:'jpeg',quality:0.98}, html2canvas:{scale:2}, jsPDF:{unit:'in',format:'a4',orientation:'portrait'} };
+  html2pdf().set(opt).from(wrapper).save();
+}
+
+/*******************************
+ * INSERÇÃO AUTOMÁTICA DE IMAGENS + LIGHTBOX
+ *******************************/
+function insertImagesAuto(folder = 'assets/img2') {
+  const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
+  if (!placeholders.length) return;
+
+  function tryLoad(candidates){
+    return new Promise((resolve, reject) => {
+      let i = 0;
+      function next(){
+        if(i >= candidates.length) return reject();
+        const url = candidates[i++];
+        const img = new Image();
+        img.onload = () => resolve(url);
+        img.onerror = () => next();
+        img.src = url + '?v=1';
+      }
+      next();
+    });
+  }
+
+  placeholders.forEach((ph, idx) => {
+    const fs = ph.closest('fieldset');
+    let qid = fs ? fs.id.replace(/^q?/, '') : '';
+    const seq = idx + 1;
+    const exts = ['webp','jpg','jpeg','png','gif'];
+    const candidates = [];
+
+    if (qid) {
+      exts.forEach(ext => {
+        candidates.push(`${folder}/q${qid}.${ext}`);
+        candidates.push(`${folder}/${qid}.${ext}`);
+      });
+    }
+
+    exts.forEach(ext => {
+      candidates.push(`${folder}/${seq}.${ext}`);
+      candidates.push(`${folder}/img${seq}.${ext}`);
+      candidates.push(`${folder}/image-${seq}.${ext}`);
+    });
+
+    if (qid) {
+      ['grafico','graph','tirinha','charge','mapa','fig'].forEach(suffix=>{
+        exts.forEach(ext=> candidates.push(`${folder}/q${qid}-${suffix}.${ext}`));
+        exts.forEach(ext=> candidates.push(`${folder}/q${qid}_${suffix}.${ext}`));
+      });
+    }
+
+    tryLoad(candidates).then(src=>{
+      const captionText = (ph.getAttribute('data-caption') || (ph.textContent || '')).replace(/\s+/g,' ').trim();
+      const figure = document.createElement('figure');
+      figure.className = 'mt-2 text-center';
+      const imgHtml = document.createElement('img');
+      imgHtml.className = 'mx-auto max-w-full h-auto rounded shadow clickable-img';
+      imgHtml.src = src;
+      imgHtml.alt = `Imagem questão ${qid || seq}`;
+      imgHtml.loading = 'lazy';
+      const figcap = document.createElement('figcaption');
+      figcap.className = 'text-xs text-gray-500 mt-2';
+      figcap.textContent = captionText || '';
+      figure.appendChild(imgHtml);
+      if (captionText) figure.appendChild(figcap);
+      ph.replaceWith(figure);
+    }).catch(()=>{
+      ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada em <code>${folder}</code>. Verifique nomes: q4.jpg, 4.png, img4.webp, etc.</div>`;
+      console.warn('Nenhuma imagem encontrada para placeholder. Pasta esperada:', folder, ph);
+    });
+  });
+
+  if (!qs('#lb')) {
+    const lb = document.createElement('div');
+    lb.id = 'lb';
+    lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.75);z-index:9999;padding:20px;';
+    lb.innerHTML = '<img id="lb-img" style="max-width:90%;max-height:90%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
+    document.body.appendChild(lb);
+
+    document.addEventListener('click', function(e){
+      const t = e.target;
+      if (t && t.classList && t.classList.contains('clickable-img')) {
+        const img = document.getElementById('lb-img');
+        img.src = t.src;
+        img.alt = t.alt || '';
+        lb.style.display = 'flex';
+      } else if (e.target === lb) {
+        lb.style.display = 'none';
+        const img = document.getElementById('lb-img');
+        if (img) img.src = '';
+      }
+    });
+  }
+}
+
+/*******************************
+ * On load
+ *******************************/
+window.addEventListener('load', ()=> {
+  try { insertImagesAuto('assets/img2'); } catch(e){ console.error('Erro ao inserir imagens:', e); }
+});
+
+</script>
+
+</body>
+</html>
