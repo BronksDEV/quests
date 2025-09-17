@@ -234,39 +234,69 @@
             setTimeout(() => { elements.passwordModal.classList.add('hidden'); elements.passwordInput.value = ''; elements.passwordError.textContent = ''; onPasswordSuccess = null; }, 300);
         }
 
+// =======fetchAllResults=======
 async function fetchAllResults() {
   try {
-    const { data, error } = await supabaseClient.storage
-      .from(SUPABASE_BUCKET_NAME)
-      .list('', { limit: 2000 });
+    const foundFiles = [];
 
-    if (error) {
-      console.error("Erro ao buscar arquivos:", error);
-      return [];
+    // lista recursiva simples (até profundidade necessária)
+    async function listRec(path = '') {
+      const { data, error } = await supabaseClient.storage
+        .from(SUPABASE_BUCKET_NAME)
+        .list(path, { limit: 2000 });
+
+      if (error) {
+        console.error("Erro ao listar storage:", error);
+        return;
+      }
+      if (!data || data.length === 0) return;
+
+      for (const item of data) {
+        // ignora placeholders e entradas estranhas
+        if (item.name === '.emptyFolderPlaceholder') continue;
+
+        // Se o nome parece NÃO ter extensão (provável pasta), desça nela
+        const looksLikeFolder = !item.name.includes('.');
+        if (looksLikeFolder) {
+          // constroi subpath corretamente (sem //)
+          const sub = path ? `${path}/${item.name}` : item.name;
+          await listRec(sub);
+          continue;
+        }
+
+        // é arquivo — constroi fullPath relativo dentro do bucket
+        const fullPath = path ? `${path}/${item.name}` : item.name;
+
+        // filtra apenas PDFs
+        if (!fullPath.toLowerCase().endsWith('.pdf')) continue;
+
+        foundFiles.push({
+          fullPath,
+          fileName: item.name,
+          created_at: item.created_at || null
+        });
+      }
     }
 
-    // Retorna objetos robustos mesmo com profundidade de pasta variável
-    return data.map(file => {
-      const fullPath = file.name; // ex: "3_SERIE_CIENCIAS/TURMA_A/25129...-NOME.pdf"
-      const parts = fullPath.split('/');
+    await listRec(''); // inicia do root
+    // transforma para o formato que seu código espera (series, class, studentInfo)
+    return foundFiles.map(file => {
+      const parts = file.fullPath.split('/');
       const fileName = parts[parts.length - 1] || '';
       const studentInfo = fileName.replace(/\.pdf$/i, '');
-
-      // series = primeiro segmento de pasta (se existir)
-      const seriesRaw = parts.length > 1 ? parts[0] : '';
-      // turma = segundo segmento de pasta (se existir). Extrai "A" de "TURMA_A" quando possível.
-      const turmaRaw = parts.length > 2 ? parts[1] : (parts.length > 1 ? parts[1] : '');
+      const seriesRaw = parts.length > 0 ? parts[0] : '';
+      const turmaRaw = parts.length > 1 ? parts[1] : '';
       const turma = turmaRaw ? turmaRaw.replace(/^TURMA[_-]?/i, '').replace(/_/g, ' ') : '';
 
       return {
-        fullPath,
+        fullPath: file.fullPath,
         series: seriesRaw || '',
         class: turma || '',
         studentInfo: studentInfo || '',
-        fileName,
-        created_at: file.created_at || null
+        fileName: fileName,
+        created_at: file.created_at
       };
-    }).filter(Boolean);
+    });
   } catch (err) {
     console.error("fetchAllResults catch:", err);
     return [];
@@ -356,4 +386,5 @@ function renderResultsList(files) {
     </script>
 </body>
 </html>
+
 
