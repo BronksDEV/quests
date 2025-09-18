@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Prova — Linguagens e suas Tecnologias</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+  <style>
+    input[name="studentName"] { text-transform: uppercase; }
+    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+    .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+    .option-label { cursor:pointer; }
+    input[type="radio"] { accent-color: #2563eb; }
+    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .check-wrap { width: 80px; height: 80px; background-color: #dcfce7; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+    .check-svg { width: 48px; height: 48px; }
+    .checkmark__path { stroke-dasharray: 100; stroke-dashoffset: 100; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw 0.8s 0.2s ease-out forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+    .confetti { width:100%; height:40px; overflow:hidden; position:relative; }
+    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 no-select">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="mb-4">
+      <h1 class="text-2xl font-bold">Bloco de Avaliação — Linguagens e suas Tecnologias (3ª Série)</h1>
+      <p class="text-sm text-gray-600 mt-1">Bem-vindo à Plataforma de Avaliação CEJA. 1 tentativa permitida.</p>
+    </header>
+
+    <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
+      <div class="mb-5 flex items-center gap-3"><div class="bg-blue-100 p-2 rounded-full"><svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div><h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2></div>
+      <form id="infoForm" class="space-y-4">
+        <div><label for="studentId" class="sr-only">Matrícula</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" /><path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" /></svg></div><input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1" placeholder="Sua Matrícula (Ex: 2412767146-8)" required /></div></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="studentName" class="sr-only">Nome Completo</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div><input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1" placeholder="Nome Completo (em caixa alta)" required /></div></div>
+          <div><label for="studentClass" class="sr-only">Turma</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" /></svg></div><select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1" required><option value="" disabled selected>Selecione a Turma</option><option value="A">Turma A</option><option value="B">Turma B</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" /></svg></div></div></div></div>
+        <p id="infoMsg" class="text-sm text-red-600 h-5"></p>
+        <div class="pt-2"><button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:bg-blue-400 disabled:cursor-wait"><span id="startBtnText">Iniciar Avaliação</span><div id="startBtnSpinner" class="spinner hidden"></div><svg class="h-5 w-5" id="startBtnArrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></button></div>
+      </form>
+    </section>
+
+    <main id="quizArea" class="hidden">
+      <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
+
+
+                <!-- ============================================= -->
+                <!--        INÍCIO DAS QUESTÕES (LINGUAGENS)       -->
+                <!-- ============================================= -->
+
+                <!-- ARTE (DANÇA) - Itens 1 a 7 -->
+                <fieldset id="q1" class="border rounded p-4">
+                    <legend class="font-semibold">Item 1 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>A criação em dança começa no "gesto" do intérprete e, enquanto houver a concepção da obra, o artista organiza os elementos que irão compor o pensamento coreográfico tornando-o palpável. O processo de criação em dança implica em redimensionar o universo humano em uma linguagem artística do criador: envolve o artista e o mundo ao seu redor; seus princípios éticos e estéticos, suas crenças, convicções e princípios pessoais, os quais norteiam suas possíveis concepções de dança. Há também processos de criação colaborativos em que os membros do grupo participam contribuindo para a composição coreográfica da obra. Neste caso, existe uma criação coletiva ou colaborativa, no sentido em que todos contribuem para a realização do trabalho artístico. Mas ainda assim, há o projeto inicial que parte de uma vontade de querer produzir algo. Esse projeto parte da vontade do criador em querer dizer algo.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Como acontece o processo de criação da dança?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) Impedindo que o projeto da obra venha da vontade do criador em querer dizer algo.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) Excluindo a participação do intérprete e prioriza a organização de elementos do pensamento coreográfico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) Baseando nos princípios estéticos do público e desconsidera princípios e convicções do artista.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) Contestando as convicções do grupo e pessoais de cada artista envolvido na obra.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) Começando no gesto do intérprete e envolvendo a organização de elementos do pensamento coreográfico, seja individual e colaborativo.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q2" class="border rounded p-4">
+                    <legend class="font-semibold">Item 2 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>Estabeleceu-se então uma imensa variedade de estilos e principalmente de métodos de criação. A dança podia ser montada ao acaso, surgindo de improvisações em cena aberta; danças geradas a partir de scores previamente concebidos; de brincadeiras infantis; de atletismo; danças construídas a partir de outras danças; de livre associações; de rituais; de jogos; de literatura; de artes visuais; de situações comportamentais; de manipulação de objetos; enfim, de um universo absolutamente amplo e permissivo. Não havia homogeneidade estilística ou temática (Silva, 2005, p. 109).</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Na dança pós-moderna, a criação artística se modifica e ganha destaque a</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) experimentação e improvisação na construção artística.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) predominância de um método de criação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) apropriação de uma técnica específica.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) substituição por recursos digitais.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) homogeneidade temática.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q3" class="border rounded p-4">
+                    <legend class="font-semibold">Item 3 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>A dança ao dialogar com a tecnologia utiliza equipamentos avançados, mas também promove uma união do corpo humano e do digital, resultando numa experiência artística inovadora. Essa fusão é um pilar da transformação da arte em movimento, redefinindo na contemporaneidade como a dança é concebida e vivenciada. Assim, a relação entre dança, corpo e tecnologia estabelece um campo híbrido no qual a criação coreográfica é profundamente transformada pela integração de recursos digitais. A utilização desses recursos permite que coreógrafos possam expandir os limites do movimento e conceber obras inovadoras.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">O campo híbrido entre dança e tecnologia, manifesta-se pela</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) segmentação dos recursos digitais para a cena.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) minimização da interação entre humano e digital.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) integração do corpo que dança com as tecnologias digitais.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) inovação da obra em detrimento dos recursos a serem utilizados.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) condição da acessibilidade ao espetáculo por meio da linguagem digital.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q4" class="border rounded p-4">
+                    <legend class="font-semibold">Item 4 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                         <p>Merce Cunningham foi um bailarino e coreógrafo norte-americano que revolucionou a forma de criar e pensar a dança no século XX. Um dos aspectos mais inovadores de seu trabalho foi o uso de computadores e softwares como ferramentas criativas na composição de suas coreografias. O artista desafiou a tradição coreográfica ao separar completamente os movimentos de dança do acompanhamento musical. Essa independência entre os elementos artísticos não só redefiniu a relação entre dança e música, mas também abriu novos caminhos para a concepção e apresentação das obras.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">O emprego da tecnologia computacional por Merce Cunningham resultou na</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) previsibilidade dos movimentos e cenas na dança.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) adesão de estruturas musicais predefinidas em dança.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) redução das possibilidades de se criar improvisação no palco.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) limitação da integração da dança com uso de outras linguagens artísticas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) exploração da aleatoriedade, gerando experiências abstratas e imprevisíveis.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q5" class="border rounded p-4">
+                    <legend class="font-semibold">Item 5 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>Arte é processo ou produto?</b><br>Em termos educacionais seria interessante hoje pensarmos nos processos que se completam nos produtos, nos produtos que revelam os processos. Sabemos que isso não é exatamente uma novidade, principalmente nos meios artísticos, mas sabemos também quão pouco esse pensamento transforma-se em prática nas escolas. [...] muitas vezes, os produtos apresentados revelam também a importância e o valor que se dá à arte como forma de conhecimento na instituição. Os professores muitas vezes não estão preparados para construir produtos que sejam resultados de processos artísticos significativos tanto para os alunos quanto para a sociedade em que vivemos. [...] Talvez mudar a formação – e a situação profissional –, tanto dos professores quanto dos artistas, pudesse iniciar a transformação que julgamos necessária: fazer com que os alunos sejam os protagonistas dos processos de ensino-aprendizagem sem deixar de lado a qualidade dos produtos desenvolvidos e o conhecimento das linguagens artísticas, estabelecendo, assim, os papéis essenciais do processo e do produto numa relação realmente dialógica no ensino de Arte.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Na escola, a importância dos processos de criação para a dança, reside na</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) possibilidade de construção de uma coreografia para o espetáculo, assegurada como produto artístico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) simplificação da coreografia que não precisa se preocupar com a criação de um produto artístico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) capacidade de refletir criticamente sobre as escolhas, o processo e o produto artístico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) garantia de que se tenha um alto nível técnico para apresentar um produto artístico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) formação de um público exigente e que valoriza somente o produto artístico.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q6" class="border rounded p-4">
+                    <legend class="font-semibold">Item 6 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>Contenção - Grupo Três em Cena</b><br>Release: O que as experiências, pessoas, trabalhos e estéticas periféricas possuem em comum? O desafio da vida entre a labuta do trabalho diário em busca de melhores condições e o enfrentamento cotidiano com tecnologias de contenção social. O Grupo Três em Cena apresenta uma obra que faz de um container e andaimes o seu cenário, dialogando com elementos, situações e técnica de dança periférica, o breaking, fazendo uso de ferramentas, da prática de reaproveitar e da gambiarra para construir uma poética da quebrada constituída entre os prazeres da sociabilidade periférica e as mazelas sociais.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">A estratégia central para explorar a realidade das periferias no processo de criação da obra foi a</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) fusão entre pesquisa em dança e o uso de elementos estéticos característicos da vida periférica, como o container e a prática da gambiarra.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) utilização de um container para atrair um público especializado em dança.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) exclusão de elementos da dança periférica, priorizando uma abordagem intelectualizada do tema.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) construção de uma poética simples e coreografias de baixa complexidade para um público leigo.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) limitação da colaboração artística ao breaking, evitando outras linguagens de dança.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q7" class="border rounded p-4">
+                    <legend class="font-semibold">Item 7 - Arte (Dança)</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>A importância do registro para o profissional de dança</b><br>[...] O registro tem o viés não só de documentar e proteger uma memória, mas também é de suma importância para o processo criativo e da construção de uma linguagem artística. [...] E o que pode ser considerado registro? Registros em vídeo são os mais fidedignos para quem trabalha com dança, mas também fotos, anotações em diários, áudio e também arquivar materiais de divulgação de eventos realizados. [...] Os vídeos e anotações desse processo de criação são muito importantes e não devem ser descartados! É reanalisando nosso passado e o que já construímos que vamos nos entendendo e desenhando a nossa linguagem artística, a nossa individualidade e deixando a nossa assinatura única! [...] A dança é efêmera, mas os seus registros perpetuam!</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Nos processos de criação em dança, a prática do registro permite</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) analisar o percurso da criação e a construção de uma assinatura.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) divulgar o espetáculo de um festival de encerramento do ano.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) potencializar a escrita de coreografias que minimizam ensaios.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) garantir a visibilidade de coreografias em vídeo.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) construir anotações temporárias.</span></label>
+                    </div>
+                </fieldset>
+
+                <!-- EDUCAÇÃO FÍSICA - Itens 8 a 14 -->
+                <fieldset id="q8" class="border rounded p-4">
+                    <legend class="font-semibold">Item 8 - Educação Física</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>Os esportes de rede e parede são modalidades muito populares e praticadas em todo o mundo. Esses esportes são caracterizados pela presença de uma rede ou parede que divide o espaço de jogo, estabelecendo um campo delimitado onde a atividade ocorre. Exemplos desses esportes incluem tênis, vôlei, badminton, squash e pingue-pongue. Eles são conhecidos não apenas por promoverem a atividade física, mas também por desenvolverem habilidades essenciais como coordenação motora, agilidade, reflexos rápidos e trabalho em equipe.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">De acordo com o texto, qual é o principal elemento que define os esportes de rede e parede?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) O uso de equipamentos como raquetes ou bastões para rebater a bola.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) A presença de uma rede ou parede que divide o espaço, o que exige coordenação, agilidade e reflexos rápidos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) A necessidade de que as equipes sejam compostas por, no mínimo, seis jogadores para a prática do esporte.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) O objetivo exclusivo de marcar pontos em cestas ou gols, como em outros esportes coletivos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) A prioridade de desenvolver apenas o trabalho em equipe, ignorando as habilidades individuais dos atletas.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q9" class="border rounded p-4">
+                    <legend class="font-semibold">Item 9 - Educação Física</legend>
+                     <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>Organizar uma gincana escolar envolve vários passos para garantir que o evento seja bem-sucedido e atenda aos objetivos planejados. Conheça as principais diretrizes para organizar uma gincana escolar: Estabeleça claramente os objetivos da gincana, como promover a integração, incentivar o espírito esportivo, arrecadar fundos ou promover o aprendizado. [...] Crie uma variedade de atividades que atendam aos objetivos da gincana. [...] Desenvolva regras claras e justas para todas as atividades. Comunicar de maneira eficaz aos participantes antes do início da gincana. [...]</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">De acordo com o texto, qual a importância de estabelecer objetivos claros e bem definidos para a organização de uma gincana escolar?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) Servir apenas para que os organizadores saibam qual será a data do evento.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) Permitir focar exclusivamente na arrecadação de fundos, que é o principal objetivo de toda gincana.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) Garantir que a competição seja justa, ao focar na divisão das equipes e na comunicação das regras.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) Direcionar todas as demais etapas da organização, como a escolha das atividades e a formação das equipes, para alcançar as metas propostas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) Estender a participação para a comunidade que não faz parte da escola.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q10" class="border rounded p-4">
+                    <legend class="font-semibold">Item 10 - Educação Física</legend>
+                    <p class="mt-2 text-sm italic">Com base no texto do item 9 sobre gincana escolar:</p>
+                    <p class="mt-4 text-sm font-semibold">Conforme o texto, qual é o critério principal para a criação das atividades que farão parte da gincana?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) As atividades devem ser exclusivamente esportivas, como jogos com bola e corridas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) As atividades devem ser fáceis para garantir que todas as equipes consigam completá-las sem dificuldade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) As atividades devem ser selecionadas para atender aos objetivos da gincana e considerar a diversidade dos participantes.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) As atividades escolhidas devem seguir um único critério para a escolha dos jogos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) As atividades devem ser selecionadas aleatoriamente, para que a gincana seja mais surpreendente para os alunos.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q11" class="border rounded p-4">
+                    <legend class="font-semibold">Item 11 - Educação Física</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                       <p>Os jogos sempre fascinaram a humanidade. Os antigos fenícios, 4 mil anos a.C., já se entretinham com esse tipo de passatempo. Na pista dos nossos ancestrais, educadores vêm criando e adaptando jogos que, além de divertir crianças e adolescentes, trabalham noções de organização, planejamento e cooperação tão úteis no dia a dia da garotada. As opções, para crianças a partir de 4 anos, se adaptam a diferentes gostos e momentos: os jogos de tabuleiro são os preferidos dos mais sossegados. Mas há também os que são ideais para o pátio e põem as crianças para correr. [...]</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">De acordo com o texto, além de servir como um passatempo, qual é a principal função dos jogos na educação, especialmente para crianças e adolescentes?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) Incentivar a competição e o individualismo entre os participantes.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) Arrecadar fundos para projetos escolares, como um tipo de gincana.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) Desenvolver habilidades como organização, planejamento e cooperação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) Ser uma atividade exclusiva para os mais sossegados, como os jogos de tabuleiro.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) Ensinar apenas a história dos fenícios e de outros povos antigos.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q12" class="border rounded p-4">
+                    <legend class="font-semibold">Item 12 - Educação Física</legend>
+                    <p class="mt-2 text-sm italic">Com base no texto do item 11 sobre a diversidade dos jogos:</p>
+                    <p class="mt-4 text-sm font-semibold">O texto destaca a diversidade de jogos existentes. Qual a implicação dessa diversidade para a escolha de um jogo?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) A diversidade de jogos dificulta a organização de atividades, já que cada um tem sua própria regra.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) A escolha do jogo deve ser feita apenas com base na idade, sem considerar o gosto ou o temperamento do grupo.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) Os jogos de tabuleiro são os mais indicados para todos, pois trabalham a organização e o planejamento.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) Há jogos que se adaptam a diferentes perfis e momentos, como os jogos de tabuleiro para os mais calmos e os de correr para os mais ativos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) A variedade de jogos é irrelevante, pois o objetivo principal é sempre a competição entre os participantes.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q13" class="border rounded p-4">
+                    <legend class="font-semibold">Item 13 - Educação Física</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                       <p>Existem diversas capacidades físicas, sendo as principais: FORÇA, VELOCIDADE, FLEXIBILIDADE, COORDENAÇÃO, EQUILÍBRIO, AGILIDADE e RESISTÊNCIA: capacidade do corpo de sustentar atividades físicas por um longo período sem se cansar. Ela envolve o sistema cardiovascular, a musculatura e a respiração, permitindo que uma pessoa realize exercícios prolongados, como correr ou nadar, com menos esforço e por mais tempo.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Em um jogo cooperativo, qual capacidade física do corpo de sustentar o esforço por um longo período é mais exigida para o sucesso da equipe?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) Velocidade</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) Agilidade</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) Equilíbrio</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) Resistência</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) Flexibilidade</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q14" class="border rounded p-4">
+                    <legend class="font-semibold">Item 14 - Educação Física</legend>
+                    <p class="mt-2 text-sm italic">Com base no texto do item 13 sobre capacidades físicas:</p>
+                    <p class="mt-4 text-sm font-semibold">Qual é a capacidade física necessária para uma equipe atravessar um espaço estreito com as mãos dadas?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) Resistência.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) Flexibilidade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) Coordenação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) Força Explosiva.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) Velocidade de Reação.</span></label>
+                    </div>
+                </fieldset>
+
+                <!-- LÍNGUA INGLESA - Itens 15 a 20 -->
+                <fieldset id="q15" class="border rounded p-4">
+                    <legend class="font-semibold">Item 15 - Língua Inglesa</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                       <p><b>Emicida – Singer and Writer</b><br>Emicida is a famous Brazilian rapper, singer, and writer. [...] As a singer, he writes songs about life, love, and social problems. He is known for his strong and positive messages. Besides music, Emicida is also a writer. He wrote a children's book called "Amoras". This book talks about loving who you are, respecting others, and being proud of your identity. [...] He inspires many people with his music and books, teaching about equality, respect, and hope.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Sobre quais temas Emicida escreve suas músicas?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) Esportes, jogos e vida.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) Vida, amor e problemas sociais.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) História, amor e geografia.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) Ciência, religião e tecnologia.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) Culinária, vida e respeito.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q16" class="border rounded p-4">
+                    <legend class="font-semibold">Item 16 - Língua Inglesa</legend>
+                    <p class="mt-2 text-sm italic">Com base no texto sobre o Emicida do item 15:</p>
+                    <p class="mt-4 text-sm font-semibold">Por que Emicida inspira muitas pessoas?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) Porque ele é um jogador de futebol famoso.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) Porque ele escreve sobre igualdade, respeito e esperança.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) Porque ele dá aulas de inglês.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) Porque ele viaja muito.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) Porque ele é bonito.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q17" class="border rounded p-4">
+                    <legend class="font-semibold">Item 17 - Língua Inglesa</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                       <p><b>Anna:</b> Hey, Mia! What movies did you watch this year?<br>
+                       <b>Mia:</b> I loved My Oxford Year. It's a new romantic comedy on Netflix. So sweet!<br>
+                       <b>Anna:</b> Oh, romantic comedies again? You really love them.<br>
+                       <b>Mia:</b> Of course! I think My Oxford Year is the best romantic comedy ever made. What about you?<br>
+                       <b>Anna:</b> I prefer animations. This year I watched the live-action Lilo & Stitch and How to Train Your Dragon. Both were released in 2025 too.<br>
+                       <b>Mia:</b> Hmm, I like Lilo & Stitch, but I believe How to Train Your Dragon is a bit boring.<br>
+                       <b>Anna:</b> Really? I think it's exciting and beautiful.<br>
+                       <b>Mia:</b> I guess we just see movies differently.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Qual das frases abaixo apresenta um fato?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) “I think My Oxford Year is the best romantic comedy ever made."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) "I believe How to Train Your Dragon is a bit boring."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) "Both were released in 2025 too."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) "I think it's exciting and beautiful."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) "Romantic comedies make me happy."</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q18" class="border rounded p-4">
+                    <legend class="font-semibold">Item 18 - Língua Inglesa</legend>
+                    <p class="mt-2 text-sm italic">Com base no diálogo do item 17:</p>
+                    <p class="mt-4 text-sm font-semibold">Quais são as posições distintas expressas por Anna e Mia sobre o filme How to Train Your Dragon?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) As duas acham o filme bonito e emocionante.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) Mia acha o filme entediante e Anna acha o filme emocionante e bonito.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) Anna acha o filme entediante e Mia acha o filme emocionante.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) Ambas concordam que o filme é entediante.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) Mia acha o filme bonito, mas não emocionante.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q19" class="border rounded p-4">
+                    <legend class="font-semibold">Item 19 - Língua Inglesa</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p>I love listening to all types of music! My favorite genre is pop and my favorite musicians are Billie Eilish and Taylor Swift. [...] I also wish I knew how to play an instrument. The instrument I want to learn the most is the piano. I think the piano sounds so beautiful playing any kind of song. My favorite pianists are Yiruma and Thad Fiscella. One day I would like to take lessons to learn the piano.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">A partir do texto apresentado, é possível inferir que o desejo da autora em aprender a tocar piano está relacionado a:</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) sua admiração pela sonoridade do piano, que ela considera bonita em qualquer tipo de música.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) sua vontade de se tornar uma musicista profissional como Billie Eilish e Taylor Swift.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) sua preferência por músicas agitadas e dançantes, comuns no gênero pop.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) sua experiência tocando bateria e outros instrumentos de percussão.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) seu costume de ouvir música ao vivo em concertos de piano e bateria.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q20" class="border rounded p-4">
+                    <legend class="font-semibold">Item 20 - Língua Inglesa</legend>
+                     <p class="mt-2 text-sm italic">Com base no texto do item 19:</p>
+                    <p class="mt-4 text-sm font-semibold">No texto, a autora compartilha sua paixão por música e expressa seu desejo de aprender a tocar instrumentos. A tese central do texto é: "I love listening to all types of music!". Com base nessa tese, qual das alternativas apresenta um argumento que a sustenta de forma coerente ao longo do texto?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) A autora diz que deseja aprender a dirigir para escutar música enquanto viaja.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) A autora descreve sua preferência por músicas clássicas e não gosta do gênero pop.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) A autora afirma que escuta músicas apenas quando está em casa e sozinha.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) A autora demonstra seu interesse musical ao mencionar artistas favoritos, momentos em que ouve música e vontade de aprender instrumentos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) A autora rejeita a ideia de aprender novos instrumentos porque prefere apenas ouvir música no rádio.</span></label>
+                    </div>
+                </fieldset>
+
+                <!-- LÍNGUA PORTUGUESA - Itens 21 a 40 -->
+                <fieldset id="q21" class="border rounded p-4">
+                    <legend class="font-semibold">Item 21 - Língua Portuguesa</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                       <p><b>Uma lição de vida</b><br>Coprodução entre EUA, Quênia e Reino Unido, e dirigido por Justin Chadwick [...], Uma Lição de Vida promete emocionar com história verídica. Num vilarejo do Quênia, Maruge [...] ouve no rádio o anúncio da educação gratuita para todos. Não tendo tido oportunidade de estudar no passado, o senhor de 84 anos – um veterano da tribo Mau Mau [...] bate à porta da escola primária e espera uma chance de poder aprender a ler. [...] Muito poderia ser dito acerca das belezas deste filme. [...] Prefiro, no entanto, dar ênfase à força dos personagens e à entrega dos atores, aspectos capazes de arrepiar o espectador. Os protagonistas – o idoso Maruge e a professora Jane – colocam a determinação como base para se operar mudanças e apontam a educação como a ferramenta principal para isso. Através de flashbacks [...] adentramos o passado de Maruge e somos confrontados com a chocante realidade da luta pela liberdade da ex-colônia britânica. [...] Uma Lição de Vida é a história de uma luta que atravessa gerações. [...] Mas também, trata-se de uma inspiradora história de conquista, portadora de uma verdade incontestável: “o aprendizado só termina quando tivermos terra nos ouvidos".</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Qual é a função social dessa resenha crítica?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) Comentar a escolha do título do filme em português.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) Avaliar o filme “Uma lição de vida” - The First Grader.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) Noticiar a coprodução entre EUA, Quênia e Reino Unido.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) Refletir sobre o passado de Maruge, por meio de flashbacks.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) Narrar os acontecimentos sobre um veterano da tribo Mau Mau.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q22" class="border rounded p-4">
+                    <legend class="font-semibold">Item 22 - Língua Portuguesa</legend>
+                    <p class="mt-2 text-sm italic">Com base na resenha do item 21:</p>
+                    <p class="mt-4 text-sm font-semibold">Na resenha do filme “Uma lição de vida", o trecho da sequência argumentativa que predomina um fato é:</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) "Muito poderia ser dito acerca das belezas deste filme.”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) "O passado, porém, nunca foi de todo extinto e permanece...”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) “Mas também, trata-se de uma inspiradora história de conquista..."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) "Num vilarejo do Quênia, Maruge (Oliver Litondo) ouve no rádio o anúncio da educação gratuita para todos."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) "A despeito da péssima escolha do título em português – seria mais interessante um que se aproximasse do original..."</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q23" class="border rounded p-4">
+                    <legend class="font-semibold">Item 23 - Língua Portuguesa</legend>
+                    <p class="mt-2 text-sm italic">Com base na resenha do item 21:</p>
+                    <p class="mt-4 text-sm font-semibold">Em qual trecho predomina um ponto de vista do resenhista?</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) “Prefiro, no entanto, dar ênfase à força dos personagens e à entrega dos atores, aspectos capazes de arrepiar o espectador."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) “Os protagonistas – o idoso Maruge e a professora Jane – colocam a determinação como base para se operar mudanças e apontam a educação como a ferramenta principal para isso.”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) “Através de flashbacks bem situados, adentramos o passado de Maruge e somos confrontados com a chocante realidade da luta pela liberdade da ex-colônia britânica.”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) “A crueldade extrema e as condições mais desumanas foi o que Maruge encontrou nos campos de detenção na década de 50, após ter tido sua esposa e filhos cruelmente assassinados.”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) “A luta de Maronge para superar seu passado, ir à escola e aprender a ler; a luta de Jane pelo amor à educação; a luta diária das crianças em face das condições precárias da escola...”</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q24" class="border rounded p-4">
+                    <legend class="font-semibold">Item 24 - Língua Portuguesa</legend>
+                     <p class="mt-4 text-sm font-semibold">No trecho "<u>Mas também</u>, trata-se de uma inspiradora história de conquista, portadora de uma verdade incontestável: ‘o aprendizado só termina quando tivermos terra nos ouvidos'.”, a expressão destacada estabelece um/uma</p>
+                     <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) paradoxo entre as ideias.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) conclusão de uma definição.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) acréscimo de um argumento.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) explicação de uma afirmação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) condição para uma ação acontecer.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q25" class="border rounded p-4">
+                    <legend class="font-semibold">Item 25 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">No trecho "Mas também, trata-se de uma inspiradora história de conquista, portadora de uma verdade incontestável: <u>“o aprendizado só termina quando tivermos terra nos ouvidos”</u>.”, as aspas foram utilizadas na expressão destacada para</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) reforçar a crítica de que o filme é de autoajuda.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) minimizar um discurso sobre a autoajuda no filme.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) refletir sobre a ideia de autoajuda como superação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) enfatizar a ideia de que o aprendizado só termina quando morremos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) sugerir que o título do filme não visto como uma história de conquista.</span></label>
+                    </div>
+                </fieldset>
+
+                 <fieldset id="q26" class="border rounded p-4">
+                    <legend class="font-semibold">Item 26 - Língua Portuguesa</legend>
+                    <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>Carta aberta por mobilidade ativa e inclusiva</b><br>O Instituto de Estudos Avançados da Universidade de São Paulo (IEA-USP) [...] expressa a sua proposição para valorizar a mobilidade ativa e inclusiva nas cidades brasileiras, em particular em São Paulo. Os problemas de mobilidade urbana hoje apresentados por São Paulo foram, em grande parte, gerados por políticas voltadas para a mobilidade motorizada individual. [...] Na prática, a mais populosa cidade do país inverteu essa sequência ao longo da sua história. [...] Adotar práticas efetivas de proteção e equidade para a mobilidade das pessoas e para os modais mais vulneráveis devem ser objeto de uma política consistente e de longo prazo.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Em qual trecho na sequência argumentativa predomina a tese defendida nessa carta aberta?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) “Calçadas mais seguras são o antídoto para atropelamentos e quedas de idosos, além de permitirem a circulação de pessoas com mais restrições de mobilidade como cadeirantes.”</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) “Os problemas de mobilidade urbana hoje apresentados por São Paulo foram, em grande parte, gerados por políticas voltadas para a mobilidade motorizada individual."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) “Distorções de investimento públicos, acumuladas ao longo de décadas, resultaram em incentivos excessivos ao uso do automóvel."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) “É premente o redirecionamento dos recursos para o transporte coletivo e a mobilidade ativa, acompanhado de campanhas públicas para esclarecer a importância da mobilidade ativa."</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) “Na prática, a mais populosa cidade do país inverteu essa sequência ao longo da sua história.”</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q27" class="border rounded p-4">
+                    <legend class="font-semibold">Item 27 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">O trecho “Distorções de investimento públicos, acumuladas ao longo de décadas, resultaram em incentivos excessivos ao uso do automóvel.”, é um argumento de</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) princípio.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) autoridade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) exemplificação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) analogia histórica.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) causa/consequência.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q28" class="border rounded p-4">
+                    <legend class="font-semibold">Item 28 - Língua Portuguesa</legend>
+                     <p class="mt-2 text-sm italic">Com base na "Carta Aberta" do item 26:</p>
+                    <p class="mt-4 text-sm font-semibold">De acordo com o texto, os problemas de mobilidade urbana na cidade de São Paulo são gerados por</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) carência de valorização e inclusão nas cidades brasileiras.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) políticas que se voltam para a mobilidade motorizada individual.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) falta de implementação do acesso compartilhado de cadeiras de rodas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) atropelamentos, quedas de idosos e falta de mobilidade dos cadeirantes.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) diversas maneiras de locomoção local com pontos críticos onde circulam pessoas.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q29" class="border rounded p-4">
+                    <legend class="font-semibold">Item 29 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">Nesse texto predomina a linguagem</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) formal.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) técnica.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) literária.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) informal.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) científica.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q30" class="border rounded p-4">
+                    <legend class="font-semibold">Item 30 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">No trecho "Adotar práticas efetivas de proteção e equidade <u>para</u> a mobilidade das pessoas...”, o termo destacado estabelece uma relação de</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) oposição, pois estabelece contraste.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) explicação, pois introduz uma declaração.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) conclusão, pois estabelece uma ideia conclusiva.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) finalidade, pois mostra um propósito a ser alcançado.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) condição, pois há uma situação necessária para que algo aconteça.</span></label>
+                    </div>
+                </fieldset>
+                
+                <fieldset id="q31" class="border rounded p-4">
+                    <legend class="font-semibold">Item 31 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">No trecho "Tratar pedestres como cidadãos de menor valor contraria princípios básicos da dignidade humana.”, infere-se que os</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) direitos dos cidadãos estão sendo desrespeitados.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) direitos dos cidadãos estão resguardados e valorizados.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) pedestres são cidadãos que ainda precisam de dignidade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) princípios básicos da dignidade humana é para todos os cidadãos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) cidadãos são bem tratados quando estão na condição de pedestres.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q32" class="border rounded p-4">
+                    <legend class="font-semibold">Item 32 - Língua Portuguesa</legend>
+                     <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>A última crônica (Fernando Sabino)</b><br>A caminho de casa, entro num botequim da Gávea para tomar um café junto ao balcão. Na realidade estou adiando o momento de escrever. A perspectiva me assusta. Gostaria de estar inspirado [...] Nesta perseguição do acidental [...] torno-me simples espectador e perco a noção do essencial. [...] Ao fundo do botequim um casal de pretos acaba de sentar-se [...] com uma negrinha de seus três anos [...] Vejo, porém, que se preparam para algo mais que matar a fome. Passo a observá-los. [...] A menina, contida na sua expectativa, olha a garrafa de Coca-Cola e o pratinho que o garçom deixou à sua frente. [...] São três velinhas brancas, minúsculas, que a mãe espeta caprichosamente na fatia do bolo. [...] Como a um gesto ensaiado, a negrinha repousa o queixo no mármore e sopra com força, apagando as chamas. Imediatamente põe-se a bater palmas, muito compenetrada, cantando num balbucio, a que os pais se juntam, discretos: "Parabéns pra você, parabéns pra você...”. [...] Dá comigo de súbito, a observá-lo, nossos olhos se encontram, ele se perturba, constrangido – vacila, ameaça abaixar a cabeça, mas acaba sustentando o olhar e enfim se abre num sorriso. Assim eu quereria minha última crônica: que fosse pura como esse sorriso.</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Esse gênero textual é um/uma</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) conto, pois conta uma história envolvendo personagens que vivem as ações a partir de um conflito.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) artigo de opinião, pois defende um ponto de vista e apresenta argumentos para sustentar uma tese.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) crônica, porque apresenta uma observação de fatos do cotidiano, discutindo o que parece invisível para a maioria das pessoas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) carta aberta, porque é um texto de caráter argumentativo que tem a função de se posicionar sobre um assunto.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) resenha crítica, porque é um texto do universo jornalístico e tem a principal característica de analisar criticamente um produto cultural.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q33" class="border rounded p-4">
+                    <legend class="font-semibold">Item 33 - Língua Portuguesa</legend>
+                     <p class="mt-2 text-sm italic">Com base no texto "A última crônica" do item 32:</p>
+                    <p class="mt-4 text-sm font-semibold">O narrador desse texto está em</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) primeira pessoa, portanto ele participa da história.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) primeira pessoa e conhece os pensamentos das personagens.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) terceira pessoa, assim ele tem onisciência dos acontecimentos.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) terceira pessoa e somente observa os acontecimentos para contar.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) terceira pessoa, por isso tem ciência dos sentimentos das personagens.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q34" class="border rounded p-4">
+                    <legend class="font-semibold">Item 34 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">O cronista tem uma atenção voltada para os fatos do dia a dia. Ao proceder assim, qual objetivo ele pretende atingir com o seu texto?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) Informar o leitor sobre um determinado acontecimento.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) Noticiar um acontecimento que envolve o pai, a mãe e uma criança.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) Argumentar, defendendo um ponto de vista sobre a atitude de um pai.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) Instruir o leitor sobre como se comportar diante de uma pessoa que faz aniversário.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) Entreter o leitor e também levá-lo a refletir sobre a vida e os comportamentos humanos.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q35" class="border rounded p-4">
+                    <legend class="font-semibold">Item 35 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">A linguagem predominante na construção desse texto é</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) digital, pois é uma forma de comunicação dos meios virtuais.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) técnica, pois é específica e utilizada numa atividade profissional.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) literária, pois é a forma de comunicação que utiliza em especial, a conotação.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) jornalística, pois é um meio de priorizar a clareza para transmitir informações.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) científica, pois é uma maneira utilizada para comunicar conhecimento científico.</span></label>
+                    </div>
+                </fieldset>
+
+                 <fieldset id="q36" class="border rounded p-4">
+                    <legend class="font-semibold">Item 36 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">No trecho “Dá comigo de súbito, a observá-lo, nossos olhos se encontram, ele se perturba, constrangido...”, o termo em destaque substitui</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) pai.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) poeta.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) garçom.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) freguês.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) homem.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q37" class="border rounded p-4">
+                    <legend class="font-semibold">Item 37 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">Em "A caminho de casa, entro <u>num botequim da Gávea</u> para tomar um café junto ao balcão.", a expressão destacada revela qual elemento da narrativa?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) Tempo.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) Clímax.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) Conflito.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) Espaço.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) Desfecho.</span></label>
+                    </div>
+                </fieldset>
+                
+                 <fieldset id="q38" class="border rounded p-4">
+                    <legend class="font-semibold">Item 38 - Língua Portuguesa</legend>
+                     <div class="mt-2 text-sm bg-gray-50 p-3 rounded">
+                        <p><b>Homem Na Estrada (Racionais MC's)</b><br>Um homem na estrada recomeça sua vida<br>Sua finalidade: A sua liberdade<br>Que foi perdida, subtraída<br>E quer provar a si mesmo que realmente mudou<br>Que se recuperou e quer viver em paz<br>Não olhar para trás, dizer ao crime: Nunca mais<br>Pois sua infância não foi um mar de rosas, não<br>Na FEBEM, lembranças dolorosas, então<br>[...]</p>
+                    </div>
+                    <p class="mt-4 text-sm font-semibold">Qual é o assunto abordado nesse texto?</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) A vida de um homem que viveu suas lembranças alegres na FEBEM.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) A vida de uma pessoa que vivia na miséria e tenta mudar sua realidade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) A vida de um ex-detento que deixou o crime e passou a viver um mar de rosas.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) A realidade enfrentada por um ex-detento que busca reintegração na sociedade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) A realidade de um homem que perdeu a sua liberdade e foi aceito por todos na sociedade.</span></label>
+                    </div>
+                </fieldset>
+
+                 <fieldset id="q39" class="border rounded p-4">
+                    <legend class="font-semibold">Item 39 - Língua Portuguesa</legend>
+                    <p class="mt-4 text-sm font-semibold">O verso “<u>Pois sua infância não foi um mar de rosas, não</u>”., destacado é uma metáfora, pois é uma figura de linguagem que</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) faz uma comparação implícita.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) apresenta um exagero das ideias.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) mostra uma inversão de palavras.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) descreve a personificação de um ser.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) evidencia uma suavização de significado.</span></label>
+                    </div>
+                </fieldset>
+
+                <fieldset id="q40" class="border rounded p-4">
+                    <legend class="font-semibold">Item 40 - Língua Portuguesa</legend>
+                     <p class="mt-2 text-sm italic">"Me digam quem é feliz, quem não se desespera / Vendo nascer seu filho no berço da miséria"</p>
+                    <p class="mt-4 text-sm font-semibold">No verso “<u>Me</u> digam quem é feliz, quem não se desespera”, o pronome oblíquo átono ‘Me' foi utilizado no início do verso para</p>
+                    <div class="mt-2 space-y-1 options">
+                        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) amenizar o desespero do sujeito lírico.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) atenuar a dificuldade de encontrar a felicidade.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) sugerir que não há felicidade para quem se desespera.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) refletir sobre a ideia de que é preciso passar pelo desespero.</span></label>
+                        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) enfatizar a indagação reflexiva do próprio eu lírico diante da miséria.</span></label>
+                    </div>
+                </fieldset>
+        
+        <div class="flex items-center justify-between"><div class="text-sm text-gray-600"></div><button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button></div>
+      </form>
+    </main>
+
+    <footer class="mt-6 text-xs text-gray-500 text-center">COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@</footer>
+    </div>
+    <div id="modalRoot" style="display:none;"></div>
+
+<script>
+    const SERIES = "3_SERIE_LINGUAGENS"; 
+    const MAX_ATTEMPTS = 1;
+    const PROGRESS_KEY = `progress_${SERIES}`;
+    const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const studentNameInput = document.getElementById('studentName');
+    const studentIdInput = document.getElementById('studentId');
+    const studentClassInput = document.getElementById('studentClass');
+    const startBtn = document.getElementById('startBtn');
+    const startBtnText = document.getElementById('startBtnText');
+    const startBtnSpinner = document.getElementById('startBtnSpinner');
+    const startBtnArrow = document.getElementById('startBtnArrow');
+    const infoMsg = document.getElementById('infoMsg');
+    const quizArea = document.getElementById('quizArea');
+    const quizForm = document.getElementById('quizForm');
+    const modalRoot = document.getElementById('modalRoot');
+
+    async function signInAnonymously() {
+        const { error } = await supabaseClient.auth.signInAnonymously();
+        if (error) {
+            console.error('Erro ao fazer login anônimo:', error);
+            document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: sans-serif;"><h1>Erro de Conexão</h1><p>Não foi possível iniciar uma sessão segura. Por favor, recarregue a página.</p></div>';
+            throw new Error("Falha na sessão anônima.");
+        }
+    }
+    
+    function qs(sel, ctx = document) { return ctx.querySelector(sel); }
+    function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
+    
+    function normalizeString(str) {
+      if (!str) return '';
+      let normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return normalized.toUpperCase().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
+    }
+    
+    studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => { if ((e.ctrlKey && e.key === 'r') || e.key === 'F5' || (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) || e.key === 'F12') e.preventDefault(); });
+
+    startBtn.addEventListener('click', async () => {
+        infoMsg.textContent = '';
+        const name = studentNameInput.value.trim();
+        const matricula = studentIdInput.value.trim();
+        const turma = studentClassInput.value;
+        if (!matricula || !name || !turma) { infoMsg.textContent = 'Todos os campos são obrigatórios.'; return; }
+        
+        startBtn.disabled = true; startBtnText.textContent = 'Verificando...'; startBtnSpinner.classList.remove('hidden'); startBtnArrow.classList.add('hidden');
+        try {
+            const { data: aluno, error } = await supabaseClient.from('alunos').select('nome_completo').eq('matricula', matricula).single();
+            if (error || !aluno) throw new Error("Matrícula não encontrada. Verifique os dados.");
+            if (normalizeString(aluno.nome_completo) !== normalizeString(name.replace(/_/g, ' '))) throw new Error("O nome não corresponde à matrícula informada.");
+
+            const key = `exam_${SERIES}_${matricula}`;
+            let record = JSON.parse(localStorage.getItem(key));
+            if (record && record.attempts >= MAX_ATTEMPTS) throw new Error(`Você já atingiu o limite de ${MAX_ATTEMPTS} tentativa(s).`);
+
+            if (!record) { record = { name: name.toUpperCase(), matricula, turma, attempts: 0, history: [], wrongQuestions: [] }; }
+            else { record.name = name.toUpperCase(); record.turma = turma; }
+            localStorage.setItem(key, JSON.stringify(record));
+
+            qs('#studentInfo').classList.add('hidden');
+            quizArea.classList.remove('hidden');
+            if (record.attempts > 0 && Array.isArray(record.wrongQuestions)) {
+                prepareSecondAttemptView(matricula, record.wrongQuestions);
+            }
+        } catch (err) {
+            infoMsg.textContent = err.message; console.error("Falha na validação do aluno:", err.message);
+        } finally {
+            startBtn.disabled = false; startBtnText.textContent = 'Iniciar Avaliação'; startBtnSpinner.classList.add('hidden'); startBtnArrow.classList.remove('hidden');
+        }
+    });
+    
+    if (quizForm) quizForm.addEventListener('submit', async function (ev) {
+        ev.preventDefault();
+        const matricula = studentIdInput.value.trim();
+        const key = `exam_${SERIES}_${matricula}`;
+        let record = JSON.parse(localStorage.getItem(key));
+        if (!record) { alert('Erro: registro do aluno não encontrado.'); return; }
+
+        const studentAnswers = {};
+        const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
+        let allAnswered = true;
+        visibleFieldsets.forEach(fs => { const sel = qs(`input[name="${fs.id}"]:checked`, fs); if (!sel) allAnswered = false; studentAnswers[fs.id] = sel ? sel.value : null; });
+        if (!allAnswered) { showToast('Responda todas as questões antes de enviar.', 'warn'); return; }
+
+        qs('#submitBtn').disabled = true; qs('#submitBtn').textContent = 'Corrigindo...';
+        
+        try {
+            const invokeCorrection = async (answers) => {
+                const { data, error } = await supabaseClient.rpc('corrigir_respostas_aluno', { exam_id: SERIES, student_answers: answers });
+                if (error) throw new Error(`Erro na API de correção: ${error.message}`);
+                if (data.error) throw new Error(`Erro no servidor: ${data.error}`);
+                return data;
+            };
+
+            record.attempts++;
+            record.history = record.history || [];
+            record.history.push({ attempt: record.attempts, answers: studentAnswers, ts: new Date().toISOString() });
+            
+            const isSecondAttempt = record.attempts > 1;
+            const answersToCorrect = isSecondAttempt ? { ...(record.history[0]?.answers || {}), ...studentAnswers } : studentAnswers;
+            const resultData = await invokeCorrection(answersToCorrect);
+
+            record.correctCount = resultData.correctCount;
+            record.totalQuestions = resultData.totalQuestions;
+            if (record.attempts === 1) {
+                record.wrongQuestions = resultData.wrongQuestions;
+                record.retakeAllowed = resultData.wrongQuestions.length > 0 && MAX_ATTEMPTS > 1;
+            }
+            if (record.attempts >= MAX_ATTEMPTS || !record.retakeAllowed) { record.finalized = true; record.finalAnswers = answersToCorrect; }
+            
+            localStorage.setItem(key, JSON.stringify(record));
+            localStorage.removeItem(PROGRESS_KEY);
+            quizArea.classList.add('hidden');
+            if (record.finalized) { showModalResultFinal(record); } else { showModalResultPartial(record); }
+        } catch (err) {
+            console.error("Erro ao chamar a função de correção:", err.message);
+            showToast('Houve um erro ao corrigir sua prova. Tente novamente.', 'error');
+            if (record) { record.attempts--; localStorage.setItem(key, JSON.stringify(record)); }
+        } finally { qs('#submitBtn').disabled = false; qs('#submitBtn').textContent = 'Enviar prova'; }
+    });
+    
+    function animateValue(element, start, end, duration) { let startTimestamp = null; const step = (timestamp) => { if (!startTimestamp) startTimestamp = timestamp; const progress = Math.min((timestamp - startTimestamp) / duration, 1); const easedProgress = 1 - Math.pow(1 - progress, 3); element.textContent = Math.floor(easedProgress * (end - start) + start); if (progress < 1) { window.requestAnimationFrame(step); } else { element.textContent = end; } }; window.requestAnimationFrame(step); }
+    function createModal(htmlContent) { modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal">${htmlContent}</div></div>`; modalRoot.style.display = 'flex'; qs('.modal-backdrop', modalRoot).addEventListener('click', e => { if (e.target === e.currentTarget) { const record = JSON.parse(localStorage.getItem(`exam_${SERIES}_${studentIdInput.value.trim()}`)); if (!record || record.finalized || !record.retakeAllowed) closeModal(); } }); }
+    function closeModal() { modalRoot.style.display = 'none'; modalRoot.innerHTML = ''; }
+    function showToast(text, type = 'info') { const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; document.body.appendChild(t); setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600); setTimeout(() => t.remove(), 3000); }
+    function showModalResultPartial(record) { const total = record.totalQuestions || 40; const pct = Math.round((record.correctCount / total) * 100); const msg = `Você pode refazer apenas as ${record.wrongQuestions.length} questões que errou. Boa sorte!`; const btn = `<button id="modalRetake" class="group flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201-4.42 5.5 5.5 0 017.48-5.013.563.563 0 01.764.819l-1.22 1.464a.563.563 0 01-.764-.819A4.375 4.375 0 006.19 7.004a4.375 4.375 0 007.412 3.56a.563.563 0 01.81.76zM4.688 8.576a5.5 5.5 0 019.201 4.42 5.5 5.5 0 01-7.48 5.013.563.563 0 01-.764-.819l1.22-1.464a.563.563 0 01.764.819 4.375 4.375 0 007.92-3.56 4.375 4.375 0 00-7.412-3.56.563.563 0 01-.81-.76z" clip-rule="evenodd" /></svg><span>Fazer 2ª Tentativa</span></button>`; createModal(`<div class="text-center"><div class="check-wrap"><svg class="check-svg" viewBox="0 0 52 52"><path class="checkmark__path" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg></div><h2 class="text-2xl font-bold text-slate-900 mt-4">1ª Tentativa Concluída</h2><p class="text-5xl font-bold text-slate-800 my-2"><span id="score-counter">0</span>%</p><p class="text-sm text-gray-600">Acertos: ${record.correctCount} de ${total}</p><p class="mt-4 max-w-md mx-auto">${msg}</p><div id="confetti-container" class="confetti"></div><div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">${btn}</div></div>`); const scoreEl = qs('#score-counter'); setTimeout(() => { animateValue(scoreEl, 0, pct, 1500); setTimeout(() => { qs('#confetti-container').innerHTML = `<span>🎉</span><span>🎊</span><span>🥳</span><span>✨</span>`; }, 1500); }, 300); qs('#modalRetake')?.addEventListener('click', () => { closeModal(); quizArea.classList.remove('hidden'); prepareSecondAttemptView(record.matricula, record.wrongQuestions); }); }
+    function showModalResultFinal(record) { const total = record.totalQuestions || 40; const pct = Math.round((record.correctCount / total) * 100); const msg = "Desempenho finalizado. Clique abaixo para gerar e enviar seu resultado."; const btn = `<button id="modalExport" class="group flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700 active:scale-95"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3.25 3.5a.75.75 0 001.1 0l3.25-3.5a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clip-rule="evenodd" /></svg><span>Enviar Resultado Final</span></button>`; createModal(`<div class="text-center"><div class="check-wrap"><svg class="check-svg" viewBox="0 0 52 52"><path class="checkmark__path" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg></div><h2 class="text-2xl font-bold text-slate-900 mt-4">Avaliação Finalizada!</h2><p class="text-5xl font-bold text-slate-800 my-2"><span id="score-counter">0</span>%</p><p class="text-sm text-gray-600">Acertos: ${record.correctCount} de ${total}</p><p class="mt-4 max-w-md mx-auto">${msg}</p><div id="confetti-container" class="confetti"></div><div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">${btn}</div></div>`); const scoreEl = qs('#score-counter'); setTimeout(() => { animateValue(scoreEl, 0, pct, 1500); setTimeout(() => { qs('#confetti-container').innerHTML = `<span>🎉</span><span>🎊</span><span>🥳</span><span>✨</span>`; }, 1500); }, 300); qs('#modalExport')?.addEventListener('click', () => triggerExport(record.matricula)); }
+    
+    function saveProgress() { if (quizArea.classList.contains('hidden')) return; const matricula = studentIdInput.value.trim(); if (!matricula) return; const formData = new FormData(quizForm); const currentAnswers = {}; for (let [key, value] of formData.entries()) { currentAnswers[key] = value; } localStorage.setItem(PROGRESS_KEY, JSON.stringify({ matricula, answers: currentAnswers })); }
+    function restoreProgress() { const savedProgress = localStorage.getItem(PROGRESS_KEY); if (!savedProgress) return; const progress = JSON.parse(savedProgress); if (!progress?.matricula) return; const key = `exam_${SERIES}_${progress.matricula}`; const record = JSON.parse(localStorage.getItem(key)); if (record && !record.finalized) { studentIdInput.value = record.matricula; studentNameInput.value = record.name; studentClassInput.value = record.turma; qs('#studentInfo').classList.add('hidden'); quizArea.classList.remove('hidden'); showToast('Seu progresso foi restaurado.', 'info'); Object.entries(progress.answers).forEach(([q, a]) => { const radio = qs(`input[name="${q}"][value="${a}"]`); if (radio) radio.checked = true; }); if (record.attempts > 0 && Array.isArray(record.wrongQuestions)) { prepareSecondAttemptView(record.matricula, record.wrongQuestions, false); } } else { localStorage.removeItem(PROGRESS_KEY); } }
+    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) { qsa('fieldset[id^="q"]', quizForm).forEach(fs => { const qnum = parseInt(fs.id.replace('q', '')); if (wrongQuestions.includes(qnum)) { fs.style.display = ''; fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; }); if (shouldShuffle) shuffleOptions(fs); } else { fs.style.display = 'none'; fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false); } }); if (shouldShuffle) showToast('Responda apenas as questões que você errou.', 'info'); }
+    function shuffleOptions(fieldset) { const container = fieldset.querySelector('.options'); if (container) for (let i = container.children.length; i >= 0; i--) container.appendChild(container.children[Math.random() * i | 0]); }
+    
+    function triggerExport(matricula) {
+        const key = `exam_${SERIES}_${matricula}`;
+        const record = JSON.parse(localStorage.getItem(key));
+        if (!record?.finalized) { showToast('A prova precisa ser finalizada.', 'warn'); return; }
+
+        const btn = qs('#modalExport');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>Gerando PDF...'; }
+
+        supabaseClient
+            .from('gabaritos')
+            .select('gabarito_completo')
+            .eq('serie', SERIES)
+            .single()
+        .then(({ data, error }) => {
+            if (error || !data) {
+                throw new Error(error?.message || 'Gabarito não encontrado para a geração do PDF.');
+            }
+
+            const GABARITO_PDF = data.gabarito_completo || {};
+            const totalQuestions = Object.keys(GABARITO_PDF).length || 40;
+            const answers = record.finalAnswers || {};
+
+            const tableBody = [...Array(totalQuestions).keys()].map(i => {
+                const qKey = `q${i + 1}`;
+                const isCorrect = answers[qKey] === GABARITO_PDF[qKey];
+                return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${i + 1}</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${GABARITO_PDF[qKey] || '-'}</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${answers[qKey] || 'N/R'}</td>
+                    <td style="padding: 8px; text-align: center; color:${isCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold;">${isCorrect ? '✓' : '✗'}</td>
+                </tr>`;
+            }).join('');
+            
+            const dataHora = new Date(record.gradedAt || Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            const safeName = normalizeString(record.name);
+            const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${safeName}.pdf`;
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 40px; font-size: 12px; color: #333;"><div style="text-align: center; margin-bottom: 20px;"><h2 style="font-size: 24px; margin: 0; color: #111;">Resultado Final da Avaliação</h2><p style="font-size: 16px; color: #555;">Linguagens e suas Tecnologias</p></div><div style="margin-bottom: 25px; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa;"><p style="margin: 4px 0;"><strong>Aluno:</strong> ${record.name}</p><p style="margin: 4px 0;"><strong>Matrícula:</strong> ${record.matricula}</p><p style="margin: 4px 0;"><strong>Turma:</strong> ${record.turma}</p><p style="margin: 4px 0;"><strong>Data de Finalização:</strong> ${dataHora}</p></div><div style="margin-bottom: 20px;"><p style="font-size: 16px;"><strong>Pontuação Final:</strong> ${record.correctCount} de ${totalQuestions} acertos (${Math.round((record.correctCount / totalQuestions) * 100)}%)</p></div><table style="width: 100%; border-collapse: collapse; font-size: 11px;"><thead><tr style="background-color:#e9ecef;"><th style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">Questão</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Gabarito</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Sua Resposta</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Status</th></tr></thead><tbody>${tableBody}</tbody></table><p style="margin-top: 30px; font-size: 10px; color: #999; text-align: center;">Documento gerado pelo Portal de Avaliações CEJA</p></div>`;
+            const opt = { margin: 0.5, filename: `${safeName}.pdf`, jsPDF: { unit: 'in', format: 'a4' }, html2canvas: { scale: 2 } };
+
+            html2pdf().set(opt).from(wrapper).output('blob').then(pdfBlob => {
+                supabaseClient.storage.from('resultados-provas').upload(filePath, pdfBlob, { upsert: true })
+                .then(({ error: uploadError }) => {
+                    if (uploadError) throw uploadError;
+                    showToast('Prova enviada com sucesso!', 'success');
+                    if (btn) btn.textContent = "Enviado!";
+                    localStorage.removeItem(key);
+                })
+                .catch(err => {
+                    console.error('Erro no envio para Supabase:', err);
+                    showToast('Erro ao enviar. Baixando PDF localmente.', 'error');
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<span>Tentar de Novo</span>'; }
+                    saveAs(pdfBlob, `${record.matricula}-${safeName}.pdf`);
+                });
+            });
+        }).catch(err => {
+             console.error("Erro ao buscar gabarito para PDF:", err.message);
+             showToast('Erro crítico ao preparar PDF.', 'error');
+             if(btn) { btn.disabled = false; btn.innerHTML = '<span>Enviar Resultado Final</span>'; }
+        });
+    }
+
+    function insertImagesAuto(folder = '../assets/img3ling') {
+      const placeholders = qsa('div.border-dashed');
+      if (!placeholders.length) return;
+      
+      function tryLoad(candidates) { 
+        return new Promise((resolve,reject) => {
+          let i=0; 
+          const next=()=>{
+            if(i>=candidates.length) return reject(); 
+            const url=candidates[i++]; 
+            const img=new Image(); 
+            img.onload=()=>resolve(url); 
+            img.onerror=next; 
+            img.src=url;
+          }; 
+          next();
+        });
+      }
+
+      placeholders.forEach((ph) => {
+        const fs = ph.closest('fieldset'); 
+        if (!fs) return;
+
+        const baseName = ph.dataset.imgName || fs.id.replace('q', '');
+        
+        const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
+        const candidates = exts.map(ext => `${folder}/${baseName}.${ext}`);
+        
+        tryLoad(candidates)
+          .then(src => { 
+            ph.innerHTML = `<img src="${src}" alt="Imagem da questão" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`; 
+          })
+          .catch(() => { 
+            ph.innerHTML = `<p class="text-xs text-gray-500">Imagem da questão (${baseName}) indisponível.</p>`; 
+          });
+      });
+
+      if (!qs('#lb')) { 
+        const lb=document.createElement('div'); 
+        lb.id='lb'; 
+        lb.style.cssText='position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;'; 
+        lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;"/>'; 
+        document.body.appendChild(lb); 
+        lb.addEventListener('click', ()=>{lb.style.display='none'; qs('#lb-img').src='';});
+      }
+      
+      document.addEventListener('click', function(e) { 
+        if (e.target?.classList.contains('clickable-img')) { 
+          qs('#lb-img').src=e.target.src; 
+          qs('#lb').style.display='flex'; 
+        } 
+      });
+    }
+
+    window.addEventListener('load', async () => { await signInAnonymously(); restoreProgress(); if(quizForm)quizForm.addEventListener('change', saveProgress); insertImagesAuto(); });
+</script>
+</body>
+</html>```
