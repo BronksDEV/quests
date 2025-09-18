@@ -20,7 +20,7 @@
         .page-container { animation: fadeIn 600ms ease-out; }
         #page-loader, .modal-backdrop { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 300ms ease-out; }
         .loader-bar { animation: progressBarFill 1.5s ease-out forwards; }
-        #password-modal-content, #admin-area-content { animation: fadeIn 500ms ease-out forwards; }
+        #admin-login-modal-content, #admin-area-content { animation: fadeIn 500ms ease-out forwards; }
         .spinner { width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-left-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
         .tab-content { animation: fadeIn 400ms ease-out; }
         
@@ -34,12 +34,21 @@
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
-
-    <!-- MODAL DE SENHA -->
-    <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <div id="password-modal-content" class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm">
-            <button id="password-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            <h3 id="password-modal-title" class="text-lg font-bold text-slate-800 text-center">Acesso Restrito</h3><p id="password-modal-text" class="text-sm text-slate-500 text-center mt-2"></p><div class="relative mt-6"><input type="password" id="password-input" class="w-full rounded-lg border-gray-300 py-3 pl-4 pr-10 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••"><button id="password-submit-btn" class="absolute inset-y-0 right-0 flex items-center pr-3 group"><svg class="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.28a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg></button></div><p id="password-error" class="text-xs text-red-500 mt-2 h-4 text-center"></p>
+    <!-- MODAL DE LOGIN DO PROFESSOR -->
+    <div id="admin-login-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div id="admin-login-modal-content" class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm">
+            <button id="admin-login-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <h3 class="text-lg font-bold text-slate-800 text-center">Área do Professor</h3>
+            <p class="text-sm text-slate-500 text-center mt-2">Faça login para gerenciar as avaliações.</p>
+            <div class="space-y-4 mt-6">
+                <input type="email" id="email-input" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="seu-email@dominio.com">
+                <input type="password" id="password-input" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••">
+                <button id="login-submit-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <span id="login-btn-text">Entrar</span>
+                    <div id="login-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+                </button>
+            </div>
+            <p id="login-error" class="text-xs text-red-500 mt-2 h-4 text-center"></p>
         </div>
     </div>
     
@@ -55,7 +64,12 @@
                 <p class="text-lg text-slate-600 mt-2">Selecione uma avaliação para iniciar.</p>
             </header>
 
-            <div class="w-full mx-auto">
+            <div id="loading-exams" class="flex flex-col items-center justify-center p-12">
+                <div class="spinner"></div>
+                <p class="mt-4 text-slate-500">Carregando agendamento de provas...</p>
+            </div>
+            
+            <div id="exam-portal" class="hidden w-full mx-auto">
                 <div class="border-b border-gray-200 mb-8">
                     <nav id="tabs" class="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs"></nav>
                 </div>
@@ -66,17 +80,45 @@
         <footer class="mt-16 text-xs text-gray-500 text-center">COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@</footer>
     </div>
     
+    <!-- PAINEL DO PROFESSOR -->
     <div id="admin-area" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex justify-end modal-backdrop">
-        <div id="admin-area-content" class="w-full max-w-lg h-full bg-white shadow-2xl p-8 overflow-y-auto transform translate-x-full">
-             <button id="admin-close-btn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition z-10"><svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-             <h2 class="text-2xl font-bold text-slate-800 mb-6">Resultados dos Alunos</h2>
-             <div id="results-loader" class="hidden w-full h-full flex flex-col items-center justify-center"><div class="spinner"></div><p class="mt-4 text-sm text-slate-500">Buscando resultados...</p></div>
-             <div id="results-content" class="hidden">
-                <input type="text" id="filter-student" class="w-full mb-4 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="🔎︎ Buscar por nome, matrícula, série ou turma...">
-                <button id="download-all-filtered-btn" class="w-full bg-gray-700 text-white font-semibold py-2.5 px-4 mb-6 rounded-lg hover:bg-gray-800 transition text-sm flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">Baixar Filtrados (.zip)</button>
-                <div id="results-list" class="space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-2"></div>
-                <p id="no-results-message" class="hidden text-center text-slate-500 py-8">Nenhum resultado encontrado.</p>
-             </div>
+        <div id="admin-area-content" class="w-full max-w-4xl h-full bg-white shadow-2xl transform translate-x-full">
+            <div class="flex flex-col h-full">
+                <header class="p-6 border-b flex items-center justify-between">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-800">Painel do Professor</h2>
+                        <p id="professor-email" class="text-sm text-slate-500"></p>
+                    </div>
+                    <div>
+                        <button id="admin-close-btn" class="p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+                        <button id="logout-btn" class="ml-2 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition text-sm">Sair</button>
+                    </div>
+                </header>
+
+                <main class="flex-grow p-6 overflow-y-auto">
+                    <nav class="flex border-b mb-6">
+                        <button data-panel="provas" class="admin-panel-tab border-b-2 border-blue-600 text-blue-600 py-3 px-4 font-semibold">Gerenciar Provas</button>
+                        <button data-panel="gabaritos" class="admin-panel-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4 font-semibold">Consultar Gabaritos</button>
+                    </nav>
+
+                    <!-- Painel de Gerenciamento de Provas -->
+                    <div id="admin-panel-provas">
+                         <div id="exams-admin-list" class="space-y-4"></div>
+                         <p id="no-exams-admin" class="hidden text-center text-slate-500 p-8">Nenhuma prova encontrada para gerenciar.</p>
+                    </div>
+
+                    <!-- Painel de Consulta de Gabaritos -->
+                    <div id="admin-panel-gabaritos" class="hidden">
+                         <div id="results-loader" class="hidden w-full h-full flex flex-col items-center justify-center"><div class="spinner"></div><p class="mt-4 text-sm text-slate-500">Buscando resultados...</p></div>
+                         <div id="results-content" class="hidden">
+                            <input type="text" id="filter-student" class="w-full mb-4 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="🔎︎ Buscar por nome, matrícula, série ou turma...">
+                            <button id="download-all-filtered-btn" class="w-full bg-gray-700 text-white font-semibold py-2.5 px-4 mb-6 rounded-lg hover:bg-gray-800 transition text-sm flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">Baixar Filtrados (.zip)</button>
+                            <div id="results-list" class="space-y-3 max-h-[calc(100vh-250px)] overflow-y-auto pr-2"></div>
+                            <p id="no-results-message" class="hidden text-center text-slate-500 py-8">Nenhum resultado encontrado.</p>
+                         </div>
+                    </div>
+                </main>
+            </div>
         </div>
     </div>
     
@@ -86,77 +128,85 @@
     </button>
     
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const examSchedule = [
-            // 1. Ciências Humanas (Primeiro)
-            { 
-                area: 'Ciências Humanas', 
-                id: 'humanas', 
-                exams: [
-                    { series: '1ª Série', file: 'cie/prova1.html', startDate: '2025-08-01', endDate: '2025-09-16', password: 'CEJA2025@' },
-                    { series: '2ª Série', file: 'cie/prova2.html', startDate: '2025-09-01', endDate: '2025-09-16', password: 'CEJA2025@' },
-                    { series: '3ª Série', file: 'cie/prova3.html', startDate: '2025-01-01', endDate: '2025-09-16', password: 'CEJA2025@' },
-                ]
-            },
-            // 2. Ciências da Natureza (Segundo)
-            { 
-                area: 'Ciências da Natureza', 
-                id: 'natureza', 
-                exams: [
-                    { series: '1ª Série', file: 'nat/prova_nat_1.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
-                    { series: '2ª Série', file: 'nat/prova_nat_2.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
-                    { series: '3ª Série', file: 'nat/prova_nat_3.html', startDate: '2025-09-17', endDate: '2025-09-17', password: 'CEJA2025@' },
-                ]
-            },
-            // 3. Linguagens (Terceiro)
-            { 
-                area: 'Linguagens', 
-                id: 'linguagens', 
-                exams: [
-                    { series: '1ª Série', file: 'ling/prova_ling_1.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
-                    { series: '2ª Série', file: 'ling/prova_ling_2.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
-                    { series: '3ª Série', file: 'ling/prova_ling_3.html', startDate: '2025-09-18', endDate: '2025-09-18', password: 'CEJA2025@' },
-                ]
-            },
-            // 4. Matemática (Último)
-            { 
-                area: 'Matemática', 
-                id: 'matematica', 
-                exams: [
-                    { series: '1ª Série', file: 'mat/prova_mat_1.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
-                    { series: '2ª Série', file: 'mat/prova_mat_2.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
-                    { series: '3ª Série', file: 'mat/prova_mat_3.html', startDate: '2025-09-19', endDate: '2025-09-19', password: 'CEJA2025@' },
-                ]
-            },
-        ];
-
-        const ADMIN_PASSWORD = "profadmin2025";
+    document.addEventListener('DOMContentLoaded', async () => {
+        // --- CONFIGURAÇÃO SUPABASE ---
         const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
         const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
         const SUPABASE_BUCKET_NAME = "resultados-provas";
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // --- FIM DA CONFIGURAÇÃO ---
 
         const elements = {
             pageLoader: document.getElementById('page-loader'),
-            passwordModal: document.getElementById('password-modal'), passwordModalContent: document.getElementById('password-modal-content'),
-            passwordInput: document.getElementById('password-input'), passwordError: document.getElementById('password-error'),
-            passwordSubmitBtn: document.getElementById('password-submit-btn'), passwordCloseBtn: document.getElementById('password-close-btn'),
-            adminToggleBtn: document.getElementById('admin-toggle-btn'), adminArea: document.getElementById('admin-area'),
-            adminAreaContent: document.getElementById('admin-area-content'), adminCloseBtn: document.getElementById('admin-close-btn'),
-            resultsLoader: document.getElementById('results-loader'), resultsContent: document.getElementById('results-content'),
-            resultsList: document.getElementById('results-list'), noResultsMessage: document.getElementById('no-results-message'),
-            filterStudent: document.getElementById('filter-student'), downloadAllFilteredBtn: document.getElementById('download-all-filtered-btn'),
+            loadingExams: document.getElementById('loading-exams'),
+            examPortal: document.getElementById('exam-portal'),
+            adminLoginModal: document.getElementById('admin-login-modal'),
+            adminLoginModalContent: document.getElementById('admin-login-modal-content'),
+            emailInput: document.getElementById('email-input'),
+            passwordInput: document.getElementById('password-input'),
+            loginSubmitBtn: document.getElementById('login-submit-btn'),
+            loginBtnText: document.getElementById('login-btn-text'),
+            loginSpinner: document.getElementById('login-spinner'),
+            loginError: document.getElementById('login-error'),
+            adminLoginCloseBtn: document.getElementById('admin-login-close-btn'),
+            adminToggleBtn: document.getElementById('admin-toggle-btn'),
+            adminArea: document.getElementById('admin-area'),
+            adminAreaContent: document.getElementById('admin-area-content'),
+            adminCloseBtn: document.getElementById('admin-close-btn'),
+            logoutBtn: document.getElementById('logout-btn'),
+            professorEmail: document.getElementById('professor-email'),
+            adminPanelTabs: document.querySelectorAll('.admin-panel-tab'),
+            resultsLoader: document.getElementById('results-loader'),
+            resultsContent: document.getElementById('results-content'),
+            resultsList: document.getElementById('results-list'),
+            noResultsMessage: document.getElementById('no-results-message'),
+            filterStudent: document.getElementById('filter-student'),
+            downloadAllFilteredBtn: document.getElementById('download-all-filtered-btn'),
+            examsAdminList: document.getElementById('exams-admin-list'),
+            noExamsAdmin: document.getElementById('no-exams-admin')
         };
 
-        let onPasswordSuccess = null, allFilesCache = [];
+        let examSchedule = [];
+        let allFilesCache = [];
 
-        function init() {
-            renderTabsAndContents();
-            setupEventListeners();
+        async function fetchExams() {
+            const { data, error } = await supabaseClient.from('provas').select('*').order('area', { ascending: true });
+            if (error) {
+                console.error("Erro ao buscar provas:", error);
+                return [];
+            }
+            
+            const groupedByArea = data.reduce((acc, exam) => {
+                const { area, id, series, arquivo_html, data_inicio, data_fim, esta_aberta } = exam;
+                const areaId = area.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                if (!acc[areaId]) {
+                    acc[areaId] = { area: area, id: areaId, exams: [] };
+                }
+                
+                acc[areaId].exams.push({ 
+                    id, 
+                    series, 
+                    file: arquivo_html, 
+                    startDate: data_inicio, 
+                    endDate: data_fim,
+                    isOpen: esta_aberta 
+                });
+                return acc;
+            }, {});
+
+            return Object.values(groupedByArea);
         }
 
         function renderTabsAndContents() {
+            if(examSchedule.length === 0){
+                elements.loadingExams.innerHTML = '<p class="text-slate-500">Nenhuma avaliação agendada no momento.</p>';
+                return;
+            }
+            elements.loadingExams.classList.add('hidden');
+            elements.examPortal.classList.remove('hidden');
+
             const tabsContainer = document.getElementById('tabs');
             const tabContainer = document.getElementById('tab-container');
             tabsContainer.innerHTML = ''; tabContainer.innerHTML = '';
@@ -166,6 +216,7 @@
                 tabContainer.innerHTML += `<div id="${areaData.id}-content" class="${isActive ? '' : 'hidden'} tab-content grid grid-cols-1 md:grid-cols-3 gap-8"></div>`;
             });
             renderExamsForTab(examSchedule[0].id);
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', handleTabClick));
         }
 
         function handleTabClick(e) {
@@ -181,26 +232,31 @@
         function renderExamsForTab(tabId) {
             const areaData = examSchedule.find(a => a.id === tabId);
             const container = document.getElementById(`${tabId}-content`);
-            if (!container) return;
             container.innerHTML = '';
-
-            if (!areaData || areaData.exams.length === 0) {
-                container.innerHTML = `<p class="text-center text-slate-500 p-8 col-span-1 md:col-span-3">Nenhuma avaliação programada para esta área.</p>`; return;
-            }
-
             areaData.exams.forEach((exam, cardIndex) => {
-                const now = new Date(); const startDate = new Date(exam.startDate + 'T00:00:00'); const endDate = new Date(exam.endDate + 'T23:59:59');
-                let status = (now < startDate) ? 'locked' : (now > endDate) ? 'expired' : 'available';
+                const now = new Date(); 
+                const startDate = new Date(exam.startDate); 
+                const endDate = new Date(exam.endDate);
+                
+                let status = 'available';
+                if (!exam.isOpen) status = 'locked';
+                else if (now < startDate) status = 'locked';
+                else if (now > endDate) status = 'expired';
+
                 const wrapper = document.createElement('div');
                 wrapper.className = `exam-card-wrapper ${status}`;
                 wrapper.style.animationDelay = `${cardIndex * 100}ms`;
 
                 const card = document.createElement('div');
-                card.dataset.exam = JSON.stringify(exam); card.dataset.status = status;
-                card.className = `exam-card h-full relative p-8 rounded-2xl shadow-lg border border-slate-200/50 transition-all duration-300 ease-in-out ${status === 'expired' ? 'opacity-50 grayscale cursor-not-allowed' : `cursor-pointer group ${status === 'available' ? 'hover:scale-[1.03] hover:shadow-2xl' : ''}`} animate-card-entry`;
+                card.dataset.exam = JSON.stringify(exam); 
+                card.dataset.status = status;
+                card.className = `exam-card h-full relative p-8 rounded-2xl shadow-lg border border-slate-200/50 transition-all duration-300 ease-in-out ${status === 'expired' ? 'opacity-50 grayscale cursor-not-allowed' : `cursor-pointer group ${status === 'available' ? 'hover:scale-[1.03] hover:shadow-2xl' : ''}`}`;
                 
                 const diffDays = Math.ceil((startDate - now) / (1000 * 60 * 60 * 24));
-                const statusText = status === 'locked' ? `<p class="text-xs font-semibold text-amber-600">Disponível em ${diffDays} dia(s)</p>` : status === 'expired' ? `<p class="text-xs font-semibold text-slate-500">Avaliação Encerrada</p>` : `<p class="text-xs font-semibold text-green-600">Disponível para Iniciar</p>`;
+                const statusText = status === 'locked' 
+                    ? `<p class="text-xs font-semibold text-amber-600">Disponível em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(startDate)}</p>` 
+                    : status === 'expired' ? `<p class="text-xs font-semibold text-slate-500">Avaliação Encerrada</p>` 
+                    : `<p class="text-xs font-semibold text-green-600">Disponível para Iniciar</p>`;
                 
                 card.innerHTML = `<div class="text-center"><div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white transition-colors group-hover:bg-blue-200"><span class="text-4xl font-bold text-blue-600">${exam.series.replace('ª Série', '')}</span><span class="text-lg font-bold mt-2 text-blue-600">ª</span></div><h2 class="text-2xl font-bold text-slate-800">Série</h2><p class="text-slate-500 mt-2">${areaData.area}</p><div class="mt-4">${statusText}</div></div>`;
                 
@@ -212,179 +268,308 @@
 
         function handleExamCardClick() {
             const { status, exam } = this.dataset;
-            if (status === 'expired') return;
+            if (status !== 'available') return;
             const examData = JSON.parse(exam);
 
-            const action = () => { if (!examData.file || examData.file === '#') { alert("Link da prova ainda não configurado."); return; } elements.pageLoader.classList.remove('hidden'); setTimeout(() => window.location.href = examData.file, 1500); };
-            if (status === 'locked' && examData.password) {
-                openPasswordModal("Acesso Antecipado", "Insira a senha de professor para continuar.", (password) => { if (password === examData.password) { closePasswordModal(); action(); } else { elements.passwordError.textContent = 'Senha incorreta.'; } });
-            } else { action(); }
+            if (!examData.file || examData.file === '#') {
+                alert("Link da prova ainda não configurado.");
+                return;
+            }
+            elements.pageLoader.classList.remove('hidden');
+            setTimeout(() => window.location.href = examData.file, 1500);
         }
-
-        function openPasswordModal(title, text, onSuccess) {
-            document.getElementById('password-modal-title').textContent = title; document.getElementById('password-modal-text').textContent = text;
-            elements.passwordModal.classList.remove('hidden');
-            setTimeout(() => elements.passwordModalContent.classList.remove('opacity-0', '-translate-y-4'), 10);
-            elements.passwordInput.focus();
-            onPasswordSuccess = onSuccess;
-        }
-
-        function closePasswordModal() {
-            elements.passwordModalContent.classList.add('opacity-0', '-translate-y-4');
-            setTimeout(() => { elements.passwordModal.classList.add('hidden'); elements.passwordInput.value = ''; elements.passwordError.textContent = ''; onPasswordSuccess = null; }, 300);
-        }
-
-// =======fetchAllResults=======
-async function fetchAllResults() {
-  try {
-    const foundFiles = [];
-
-    // lista recursiva simples (até profundidade necessária)
-    async function listRec(path = '') {
-      const { data, error } = await supabaseClient.storage
-        .from(SUPABASE_BUCKET_NAME)
-        .list(path, { limit: 2000 });
-
-      if (error) {
-        console.error("Erro ao listar storage:", error);
-        return;
-      }
-      if (!data || data.length === 0) return;
-
-      for (const item of data) {
-        // ignora placeholders e entradas estranhas
-        if (item.name === '.emptyFolderPlaceholder') continue;
-
-        // Se o nome parece NÃO ter extensão (provável pasta), desça nela
-        const looksLikeFolder = !item.name.includes('.');
-        if (looksLikeFolder) {
-          // constroi subpath corretamente (sem //)
-          const sub = path ? `${path}/${item.name}` : item.name;
-          await listRec(sub);
-          continue;
-        }
-
-        // é arquivo — constroi fullPath relativo dentro do bucket
-        const fullPath = path ? `${path}/${item.name}` : item.name;
-
-        // filtra apenas PDFs
-        if (!fullPath.toLowerCase().endsWith('.pdf')) continue;
-
-        foundFiles.push({
-          fullPath,
-          fileName: item.name,
-          created_at: item.created_at || null
-        });
-      }
-    }
-
-    await listRec(''); // inicia do root
-    // transforma para o formato que seu código espera (series, class, studentInfo)
-    return foundFiles.map(file => {
-      const parts = file.fullPath.split('/');
-      const fileName = parts[parts.length - 1] || '';
-      const studentInfo = fileName.replace(/\.pdf$/i, '');
-      const seriesRaw = parts.length > 0 ? parts[0] : '';
-      const turmaRaw = parts.length > 1 ? parts[1] : '';
-      const turma = turmaRaw ? turmaRaw.replace(/^TURMA[_-]?/i, '').replace(/_/g, ' ') : '';
-
-      return {
-        fullPath: file.fullPath,
-        series: seriesRaw || '',
-        class: turma || '',
-        studentInfo: studentInfo || '',
-        fileName: fileName,
-        created_at: file.created_at
-      };
-    });
-  } catch (err) {
-    console.error("fetchAllResults catch:", err);
-    return [];
-  }
-}
-
-function renderResultsList(files) {
-  elements.resultsList.innerHTML = '';
-  elements.noResultsMessage.classList.toggle('hidden', files.length > 0);
-
-  files.forEach(file => {
-    // tenta extrair matrícula + nome (quando usar "MATRICULA-NOME.pdf")
-    const [matricula, ...nomeParts] = file.studentInfo.split('-');
-    const nome = nomeParts.length ? nomeParts.join(' ').trim() : file.studentInfo;
-
-    const displaySeries = file.series ? file.series.replace(/_/g, ' ') : '—';
-    const displayTurma = file.class ? `Turma ${file.class}` : '';
-    const subtitle = `${displaySeries}${displayTurma ? ' • ' + displayTurma : ''}`;
-
-    elements.resultsList.innerHTML += `
-      <div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border">
-        <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-          <svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor">
-            <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
-          </svg>
-        </div>
-        <div class="flex-grow min-w-0">
-          <p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p>
-          <p class="text-xs text-slate-500">${subtitle}</p>
-        </div>
-        <button data-path="${file.fullPath}" class="download-single-btn download-btn flex-shrink-0 bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm flex items-center justify-center w-9 h-9 relative">
-          <span class="icon-default">
-            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-          </span>
-        </button>
-      </div>
-    `;
-  });
-}
         
+        async function openAdminPanel() {
+            elements.adminArea.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => elements.adminAreaContent.classList.remove('translate-x-full'), 10);
+            renderAdminExamsList();
+        }
+
+        function closeAdminPanel() {
+            elements.adminAreaContent.classList.add('translate-x-full');
+            setTimeout(() => {
+                elements.adminArea.classList.add('hidden');
+                document.body.style.overflow = '';
+            }, 500);
+        }
+
+        // FUNÇÕES DA ÁREA DO PROFESSOR (NOVO)
+
+        function renderAdminExamsList() {
+            const list = elements.examsAdminList;
+            list.innerHTML = '';
+            if (examSchedule.length === 0) {
+                elements.noExamsAdmin.classList.remove('hidden');
+                return;
+            }
+            elements.noExamsAdmin.classList.add('hidden');
+
+            examSchedule.forEach(area => {
+                area.exams.forEach(exam => {
+                    const startDate = new Date(exam.startDate).toISOString().slice(0, 16);
+                    const endDate = new Date(exam.endDate).toISOString().slice(0, 16);
+                    
+                    const item = document.createElement('div');
+                    item.className = 'bg-slate-50 p-4 rounded-lg border flex flex-col md:flex-row items-start md:items-center gap-4';
+                    item.dataset.examId = exam.id;
+                    item.innerHTML = `
+                        <div class="flex-grow">
+                            <p class="font-bold text-slate-800">${area.area} - ${exam.series}</p>
+                            <p class="text-sm text-slate-500">${exam.file}</p>
+                        </div>
+                        <div class="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-4">
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm font-medium whitespace-nowrap" for="start-${exam.id}">Início:</label>
+                                <input type="datetime-local" id="start-${exam.id}" value="${startDate}" class="exam-date-input border-gray-300 rounded-md shadow-sm text-sm p-2 w-full">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label class="text-sm font-medium" for="end-${exam.id}">Fim:</label>
+                                <input type="datetime-local" id="end-${exam.id}" value="${endDate}" class="exam-date-input border-gray-300 rounded-md shadow-sm text-sm p-2 w-full">
+                            </div>
+                            <button class="exam-status-toggle w-full md:w-auto text-white font-bold py-2 px-4 rounded transition ${exam.isOpen ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}">
+                                ${exam.isOpen ? 'Aberta' : 'Fechada'}
+                            </button>
+                            <button class="update-exam-btn w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded transition flex justify-center items-center h-10">
+                               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                            </button>
+                        </div>
+                    `;
+                    list.appendChild(item);
+                });
+            });
+        }
+        
+        async function handleExamUpdate(e) {
+            const btn = e.target.closest('.update-exam-btn');
+            if (!btn) return;
+            
+            const examItem = btn.closest('[data-exam-id]');
+            const examId = examItem.dataset.examId;
+            const startDate = examItem.querySelector(`#start-${examId}`).value;
+            const endDate = examItem.querySelector(`#end-${examId}`).value;
+
+            // Encontra a prova e o status correspondente
+            let examStatus = false;
+             examSchedule.forEach(area => {
+                const foundExam = area.exams.find(ex => ex.id == examId);
+                if (foundExam) examStatus = foundExam.isOpen;
+            });
+
+            btn.disabled = true;
+            btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-left-color:white;"></div>`;
+
+            const { error } = await supabaseClient
+                .from('provas')
+                .update({ 
+                    data_inicio: new Date(startDate).toISOString(), 
+                    data_fim: new Date(endDate).toISOString(),
+                    esta_aberta: examStatus
+                })
+                .eq('id', examId);
+            
+            if (error) {
+                console.error("Erro ao atualizar prova:", error);
+                alert('Falha ao salvar as alterações. Verifique o console.');
+                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
+            } else {
+                 btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+                await reloadAllExams();
+            }
+
+            setTimeout(() => { btn.disabled = false; }, 1000);
+        }
+
+        async function handleStatusToggle(e) {
+             const btn = e.target.closest('.exam-status-toggle');
+             if (!btn) return;
+
+             const examItem = btn.closest('[data-exam-id]');
+             const examId = examItem.dataset.examId;
+
+             // Encontra e atualiza o estado localmente primeiro para resposta visual imediata
+             let updatedIsOpen = false;
+             examSchedule.forEach(area => {
+                 const exam = area.exams.find(ex => ex.id == examId);
+                 if (exam) {
+                     exam.isOpen = !exam.isOpen;
+                     updatedIsOpen = exam.isOpen;
+                 }
+             });
+
+            // Atualiza a UI
+            btn.textContent = updatedIsOpen ? 'Aberta' : 'Fechada';
+            btn.classList.toggle('bg-green-500', updatedIsOpen);
+            btn.classList.toggle('hover:bg-green-600', updatedIsOpen);
+            btn.classList.toggle('bg-red-500', !updatedIsOpen);
+            btn.classList.toggle('hover:bg-red-600', !updatedIsOpen);
+
+            // Simula uma chamada assíncrona para o botão de salvar, para garantir que o estado seja persistido.
+            const updateButton = examItem.querySelector('.update-exam-btn');
+            updateButton.click(); // Aciona o salvamento completo
+        }
+
+        // --- GABARITOS (CÓDIGO OTIMIZADO) ---
+        async function fetchAllResults() {
+          const foundFiles = [];
+          async function listRec(path = '') {
+            const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).list(path, { limit: 2000 });
+            if (error) { console.error("Erro ao listar storage:", error); return; }
+            if (!data || data.length === 0) return;
+            for (const item of data) {
+              if (item.name === '.emptyFolderPlaceholder') continue;
+              const sub = path ? `${path}/${item.name}` : item.name;
+              if (!item.name.includes('.')) { await listRec(sub); continue; }
+              if (!sub.toLowerCase().endsWith('.pdf')) continue;
+              foundFiles.push({ fullPath: sub, fileName: item.name });
+            }
+          }
+          await listRec('');
+          return foundFiles.map(file => {
+            const parts = file.fullPath.split('/');
+            return {
+              fullPath: file.fullPath,
+              series: parts[0] || '',
+              class: (parts[1] || '').replace(/^TURMA[_-]?/i, '').replace(/_/g, ' '),
+              studentInfo: (parts[parts.length-1] || '').replace(/\.pdf$/i, ''),
+            };
+          });
+        }
+        function renderResultsList(files) {
+          elements.resultsList.innerHTML = '';
+          elements.noResultsMessage.classList.toggle('hidden', files.length > 0);
+          files.forEach(file => {
+            const [matricula, ...nomeParts] = file.studentInfo.split('-');
+            const nome = nomeParts.length ? nomeParts.join(' ').trim() : file.studentInfo;
+            const subtitle = `${file.series.replace(/_/g, ' ')}${file.class ? ' • Turma ' + file.class : ''}`;
+            elements.resultsList.innerHTML += `
+              <div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border">
+                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg>
+                </div>
+                <div class="flex-grow min-w-0">
+                  <p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p>
+                  <p class="text-xs text-slate-500">${subtitle}</p>
+                </div>
+                <button data-path="${file.fullPath}" class="download-single-btn flex-shrink-0 bg-blue-500 text-white py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm w-9 h-9 flex items-center justify-center">
+                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+                </button>
+              </div>`;
+          });
+        }
         function applyFilters() {
             const query = elements.filterStudent.value.toLowerCase().trim();
-            if (!allFilesCache) return;
-            const filtered = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
+            const filtered = allFilesCache.filter(file => `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' ').includes(query));
             renderResultsList(filtered);
         }
-
         async function downloadAllFiltered() {
             const btn = elements.downloadAllFilteredBtn;
-            const query = elements.filterStudent.value.toLowerCase().trim();
-            const filesToDownload = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
-            if (filesToDownload.length === 0) { alert("Nenhum arquivo para baixar."); return; }
-            btn.disabled = true; btn.innerHTML = `<div class="spinner mr-2"></div>Baixando ${filesToDownload.length} arquivos...`;
-            
+            const filesToDownload = allFilesCache.filter(file => `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' ').includes(elements.filterStudent.value.toLowerCase().trim()));
+            if (filesToDownload.length === 0) return;
+            btn.disabled = true; btn.innerHTML = `<div class="spinner mr-2"></div>Baixando ${filesToDownload.length}...`;
             const zip = new JSZip();
             try {
-                const downloadPromises = filesToDownload.map(async file => { const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(file.fullPath); if (error) throw new Error(`Falha ao baixar ${file.fullPath}`); zip.file(file.fullPath, data); });
-                await Promise.all(downloadPromises); const content = await zip.generateAsync({ type: "blob" }); saveAs(content, "Resultados_Filtrados.zip");
-            } catch (error) { console.error("Erro zip:", error); alert("Ocorreu um erro ao baixar."); } 
+                const promises = filesToDownload.map(async f => {
+                    const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(f.fullPath);
+                    if (error) throw new Error(f.fullPath);
+                    zip.file(f.fullPath, data);
+                });
+                await Promise.all(promises);
+                saveAs(await zip.generateAsync({type:"blob"}), "Resultados_Filtrados.zip");
+            } catch (error) { alert("Erro ao baixar os arquivos."); } 
             finally { btn.disabled = false; btn.innerHTML = `Baixar Filtrados (.zip)`; }
         }
+
+        async function reloadAllExams(){
+            examSchedule = await fetchExams();
+            renderTabsAndContents();
+            if(document.body.style.overflow === 'hidden'){ // se o painel admin está aberto
+                renderAdminExamsList();
+            }
+        }
         
-        function setupEventListeners() {
-            document.getElementById('tabs').addEventListener('click', (e) => { if(e.target.classList.contains('tab-btn')) handleTabClick(e); });
-            elements.passwordSubmitBtn.addEventListener('click', () => { if (onPasswordSuccess) onPasswordSuccess(elements.passwordInput.value); });
-            elements.passwordInput.addEventListener('keypress', (e) => { elements.passwordError.textContent = ''; if (e.key === 'Enter' && onPasswordSuccess) onPasswordSuccess(elements.passwordInput.value); });
-            elements.passwordCloseBtn.addEventListener('click', closePasswordModal);
-            elements.adminToggleBtn.addEventListener('click', () => { openPasswordModal('Área do Professor', 'Insira a senha de administrador.', async (password) => { if (password === ADMIN_PASSWORD) { closePasswordModal(); elements.adminArea.classList.remove('hidden'); document.body.style.overflow = 'hidden'; setTimeout(() => elements.adminAreaContent.classList.remove('translate-x-full'), 10); elements.resultsContent.classList.add('hidden'); elements.resultsLoader.style.display = 'flex'; allFilesCache = await fetchAllResults(); renderResultsList(allFilesCache); elements.resultsLoader.style.display = 'none'; elements.resultsContent.classList.remove('hidden'); } else { elements.passwordError.textContent = 'Senha incorreta.'; } }); });
-            const closeAdminArea = () => { elements.adminAreaContent.classList.add('translate-x-full'); setTimeout(() => { elements.adminArea.classList.add('hidden'); document.body.style.overflow = ''; }, 500); };
-            elements.adminCloseBtn.addEventListener('click', closeAdminArea);
-            elements.adminArea.addEventListener('click', (e) => { if (e.target === elements.adminArea) closeAdminArea(); });
+        async function setupEventListeners() {
+            // -- Login / Autenticação
+            elements.adminToggleBtn.addEventListener('click', () => {
+                 elements.adminLoginModal.classList.remove('hidden');
+                 elements.emailInput.focus();
+            });
+            elements.adminLoginCloseBtn.addEventListener('click', () => elements.adminLoginModal.classList.add('hidden'));
+            elements.loginSubmitBtn.addEventListener('click', async () => {
+                const email = elements.emailInput.value;
+                const password = elements.passwordInput.value;
+                elements.loginError.textContent = '';
+                elements.loginBtnText.classList.add('hidden');
+                elements.loginSpinner.classList.remove('hidden');
+
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+
+                elements.loginBtnText.classList.remove('hidden');
+                elements.loginSpinner.classList.add('hidden');
+
+                if (error) {
+                    elements.loginError.textContent = 'Email ou senha inválidos.';
+                } else {
+                    elements.adminLoginModal.classList.add('hidden');
+                    elements.professorEmail.textContent = data.user.email;
+                    openAdminPanel();
+                }
+            });
+            elements.logoutBtn.addEventListener('click', async () => {
+                await supabaseClient.auth.signOut();
+                closeAdminPanel();
+            });
+            
+            // -- Painel Admin
+            elements.adminCloseBtn.addEventListener('click', closeAdminPanel);
+            elements.adminArea.addEventListener('click', (e) => { if (e.target === elements.adminArea) closeAdminPanel(); });
+            elements.adminPanelTabs.forEach(tab => {
+                tab.addEventListener('click', async () => {
+                    elements.adminPanelTabs.forEach(t => {
+                         t.classList.remove('border-blue-600', 'text-blue-600');
+                         t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    tab.classList.add('border-blue-600', 'text-blue-600');
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+                    
+                    const panel = tab.dataset.panel;
+                    document.getElementById('admin-panel-provas').classList.toggle('hidden', panel !== 'provas');
+                    document.getElementById('admin-panel-gabaritos').classList.toggle('hidden', panel !== 'gabaritos');
+                    
+                    if (panel === 'gabaritos' && allFilesCache.length === 0) { // Carrega sob demanda
+                        elements.resultsContent.classList.add('hidden');
+                        elements.resultsLoader.style.display = 'flex';
+                        allFilesCache = await fetchAllResults();
+                        renderResultsList(allFilesCache);
+                        elements.resultsLoader.style.display = 'none';
+                        elements.resultsContent.classList.remove('hidden');
+                    }
+                });
+            });
+            
+            // Gerenciamento de Provas (Delegated events)
+            elements.examsAdminList.addEventListener('click', (e) => {
+                handleExamUpdate(e);
+                handleStatusToggle(e);
+            });
+
+            // -- Gabaritos
             elements.filterStudent.addEventListener('input', applyFilters);
             elements.downloadAllFilteredBtn.addEventListener('click', downloadAllFiltered);
             elements.resultsList.addEventListener('click', async (e) => {
                 const btn = e.target.closest('.download-single-btn'); if(!btn) return;
-                btn.disabled = true; const originalContent = btn.innerHTML; btn.innerHTML = `<div class="spinner"></div>`;
+                btn.disabled = true; const originalContent = btn.innerHTML; btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-left-color:white;"></div>`;
                 const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(btn.dataset.path);
                 if (error) { alert("Não foi possível baixar."); } else { saveAs(data, btn.dataset.path.split('/').pop()); }
                 btn.disabled = false; btn.innerHTML = originalContent;
             });
         }
-
-        init();
+        
+        // --- INICIALIZAÇÃO ---
+        examSchedule = await fetchExams();
+        renderTabsAndContents();
+        setupEventListeners();
     });
-    </script>
+</script>
 </body>
 </html>
-
-
