@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Prova — Ciências da Natureza</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
   <style>
     input[name="studentName"] { text-transform: uppercase; }
@@ -25,85 +26,59 @@
     @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
     .option-label { cursor:pointer; }
     input[type="radio"] { accent-color: #2563eb; }
+    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900 no-select">
   <div class="max-w-5xl mx-auto p-6">
     <header class="mb-4">
       <h1 class="text-2xl font-bold">Bloco de Avaliação — Ciências da Natureza e suas Tecnologias (1ª Série)</h1>
-      <p class="text-sm text-gray-600 mt-1">2 tentativas. 2ª tentativa: apenas questões erradas (alternativas embaralhadas). PDF exportável ao finalizar.</p>
+      <p class="text-sm text-gray-600 mt-1">Bem-vindo à Plataforma de Avaliação CEJA. Atenção: você possui apenas 1 tentativa.</p>
     </header>
 
     <!-- SEÇÃO DE IDENTIFICAÇÃO -->
     <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
       <div class="mb-5 flex items-center gap-3">
-        <div class="bg-blue-100 p-2 rounded-full">
-          <svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-          </svg>
-        </div>
+        <div class="bg-blue-100 p-2 rounded-full"><svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div>
         <h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2>
       </div>
-
       <form id="infoForm" class="space-y-4">
-        <!-- Linha do Nome Completo -->
         <div>
-          <label for="studentName" class="text-sm font-medium text-gray-700 sr-only">Nome Completo</label>
+          <label for="studentId" class="text-sm font-medium text-gray-700 sr-only">Matrícula</label>
           <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" />
-              </svg>
-            </div>
-            <input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)" required />
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" /><path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" /></svg></div>
+            <input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula (Ex: 2412767146-8)" required />
           </div>
         </div>
-        
-        <!-- Grid para Turma e Matrícula -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Turma -->
+          <div>
+            <label for="studentName" class="text-sm font-medium text-gray-700 sr-only">Nome Completo</label>
+            <div class="relative">
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div>
+              <input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)" required />
+            </div>
+          </div>
           <div>
             <label for="studentClass" class="text-sm font-medium text-gray-700 sr-only">Turma</label>
             <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                 <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" />
-                </svg>
-              </div>
+              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" /></svg></div>
               <select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
                 <option value="" disabled selected>Selecione a Turma</option>
-                <option value="A">Turma A</option>
-                <option value="B">Turma B</option>
+                <option value="A">Turma A</option><option value="B">Turma B</option>
               </select>
-               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
-                </svg>
-              </div>
-            </div>
-          </div>
-          <!-- Matrícula -->
-          <div>
-            <label for="studentId" class="text-sm font-medium text-gray-700 sr-only">Matrícula</label>
-            <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                <svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" />
-                  <path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" />
-                  <path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula" required />
+               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" /></svg></div>
             </div>
           </div>
         </div>
         
-        <p id="infoMsg" class="text-sm text-red-600 col-span-1 sm:col-span-2"></p>
+        <p id="infoMsg" class="text-sm text-red-600 h-5"></p>
         
-        <div class="col-span-1 sm:col-span-2 mt-2">
-            <button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95">
-                <span>Iniciar Avaliação</span>
-                 <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+        <div class="pt-2">
+            <button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:bg-blue-400 disabled:cursor-wait">
+                <span id="startBtnText">Iniciar Avaliação</span>
+                <div id="startBtnSpinner" class="spinner hidden"></div>
+                 <svg class="h-5 w-5" id="startBtnArrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
             </button>
@@ -111,11 +86,11 @@
       </form>
     </section>
 
-<!-- Quiz -->
-<main id="quizArea" class="hidden">
-  <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
-    
-    <!-- Item 1 - Biologia -->
+    <!-- Quiz -->
+    <main id="quizArea" class="hidden">
+      <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
+        
+ <!-- Item 1 - Biologia -->
     <fieldset id="q1" class="border rounded p-4">
         <legend class="font-semibold">Item 1</legend>
         <p class="mt-2 text-sm">Observe equação geral da fotossíntese:<br><b>6CO₂ + 6H₂O + Luz Solar → C₆H₁₂O₆ + 6O₂</b></p>
@@ -662,601 +637,446 @@
             <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) dipolo permanente - dipolo permanente.</span></label>
         </div>
     </fieldset>
-    
-    <!-- Item 40 - Química -->
-    <fieldset id="q40" class="border rounded p-4">
-        <legend class="font-semibold">Item 40</legend>
-        <p class="mt-2 text-sm">Para responder à questão, numere a Coluna B, que contém algumas fórmulas de substâncias químicas, de acordo com a Coluna A, na qual estão relacionados tipos de atrações intermoleculares.</p>
-        <div class="mt-2 text-sm">
-            <b class="block mb-2">Coluna A</b>
-            1. Ligações de hidrogênio<br>
-            2. Dipolo induzido<br>
-            3. Dipolo - dipolo
-        </div>
-        <div class="mt-4 text-sm">
-            <b class="block mb-2">Coluna B</b>
-            (  ) HF<br>
-            (  ) Cl₂<br>
-            (  ) CO₂<br>
-            (  ) NH₃<br>
-            (  ) HCl
-        </div>
-        <p class="mt-2 text-sm font-semibold">A numeração correta da Coluna B, de cima para baixo, é:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) 1-3-3-2-1</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) 2-1-1-3-2</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) 1-2-2-1-3</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) 3-1-1-2-3</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) 3-2-3-1-1</span></label>
-        </div>
-    </fieldset>
 
-    <div class="flex items-center justify-between">
-      <div class="text-sm text-gray-600"></div>
-      <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
+        <div class="flex items-center justify-between">
+          <div class="text-sm text-gray-600"></div>
+          <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
+        </div>
+      </form>
+    </main>
+
+    <footer class="mt-6 text-xs text-gray-500 text-center">
+      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
+    </footer>
     </div>
-  </form>
-</main>
 
-<footer class="mt-6 text-xs text-gray-500 text-center">
-  COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
-</footer>
-</div>
+    <div id="modalRoot" style="display:none;"></div>
 
-<div id="modalRoot" style="display:none;"></div>
+    <script>
+    // CÓDIGO JS COMPLETO COMEÇA AQUI
+    
+    // Configurações Globais
+    const SERIES = "2_SERIE_NATUREZA";
+    const TOTAL_QUESTIONS = 40; // Ajuste se necessário
+    const MAX_ATTEMPTS = 2;
+    const LOCK_DAYS = 1;
+    const PROGRESS_KEY = `progress_${SERIES}`;
 
-<script>
-/*******************************
- * CONFIGURAÇÕES
- *******************************/
-// ATUALIZADO: Identificador único para a prova de Ciências da Natureza da 1ª Série
-const SERIES = "1_SERIE_NATUREZA"; 
-const TOTAL_QUESTIONS = 40;
-const MAX_ATTEMPTS = 2;
-const LOCK_DAYS = 1;
-const PROGRESS_KEY = `progress_${SERIES}`;
+
+    const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
+    const { createClient } = supabase;
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Elementos do DOM
+    const studentNameInput = document.getElementById('studentName');
+    const studentIdInput = document.getElementById('studentId');
+    const studentClassInput = document.getElementById('studentClass');
+    const startBtn = document.getElementById('startBtn');
+    const startBtnText = document.getElementById('startBtnText');
+    const startBtnSpinner = document.getElementById('startBtnSpinner');
+    const startBtnArrow = document.getElementById('startBtnArrow');
+    const infoMsg = document.getElementById('infoMsg');
+    const quizArea = document.getElementById('quizArea');
+    const quizForm = document.getElementById('quizForm');
+    const modalRoot = document.getElementById('modalRoot');
+
+    // Funções Auxiliares
+    function qs(sel, ctx = document) { return ctx.querySelector(sel); }
+    function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
+    function normalizeString(str) { return str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase(); }
+
+    // Proteções e Helpers
+    studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey && e.key === 'r') || e.key === 'F5' || (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) || e.key === 'F12') {
+        e.preventDefault();
+      }
+    });
+
+    // Lógica de Início
+    startBtn.addEventListener('click', async () => {
+        infoMsg.textContent = '';
+        const name = studentNameInput.value.trim().toUpperCase();
+        const matricula = studentIdInput.value.trim();
+        const turma = studentClassInput.value;
+
+        if (!matricula || !name || !turma) {
+            infoMsg.textContent = 'Todos os campos são obrigatórios.';
+            return;
+        }
+        
+        startBtn.disabled = true;
+        startBtnText.textContent = 'Verificando...';
+        startBtnSpinner.classList.remove('hidden');
+        startBtnArrow.classList.add('hidden');
+
+        try {
+            const { data: aluno, error } = await supabaseClient
+                .from('alunos').select('nome_completo').eq('matricula', matricula).single();
+
+            if (error || !aluno) {
+                infoMsg.textContent = 'Matrícula não encontrada. Verifique os dados.';
+                throw new Error("Matrícula inválida ou não encontrada.");
+            }
+            
+            if (normalizeString(aluno.nome_completo) !== normalizeString(name)) {
+                infoMsg.textContent = 'O nome não corresponde à matrícula informada.';
+                throw new Error("Nome incorreto.");
+            }
+
+            const key = `exam_${SERIES}_${matricula}`;
+            let record = JSON.parse(localStorage.getItem(key));
+
+            if (record && record.attempts >= MAX_ATTEMPTS) {
+                infoMsg.textContent = `Você já atingiu o limite de ${MAX_ATTEMPTS} tentativas.`;
+                throw new Error("Máximo de tentativas atingido.");
+            }
+
+            if (!record) {
+                record = { name, matricula, turma, attempts: 0, history: [], wrongQuestions: [], createdAt: new Date().toISOString() };
+            } else {
+                record.name = name; record.turma = turma;
+            }
+            localStorage.setItem(key, JSON.stringify(record));
+
+            qs('#studentInfo').classList.add('hidden');
+            quizArea.classList.remove('hidden');
+
+            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
+                prepareSecondAttemptView(matricula, record.wrongQuestions);
+            }
+        } catch (err) {
+            console.error("Falha na validação do aluno:", err.message);
+        } finally {
+            startBtn.disabled = false;
+            startBtnText.textContent = 'Iniciar Avaliação';
+            startBtnSpinner.classList.add('hidden');
+            startBtnArrow.classList.remove('hidden');
+        }
+    });
+
+    // Demais funções da prova...
+    function saveProgress() { /* ... */ }
+    function restoreProgress() { /* ... */ }
+    if (quizForm) quizForm.addEventListener('submit', function (ev) { /* ... */ });
+    function createModal(htmlContent) { /* ... */ }
+    function closeModal() { /* ... */ }
+    function showToast(text, type = 'info') { /* ... */ }
+    function showModalResultPartial(record) { /* ... */ }
+    function showModalResultFinal(record) { /* ... */ }
+    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) { /* ... */ }
+    function shuffleOptions(fieldset) { /* ... */ }
+    function triggerExport(matricula) { /* ... */ }
+    function insertImagesAuto(folder = '../assets/img1nat') { /* ... */ }
+    window.addEventListener('load', () => { /* ... */ });
+
+    // CÓDIGO RESTANTE COMPLETO (Funções de progresso, submissão, modais, etc.)
+
+    function saveProgress() {
+        if (quizArea.classList.contains('hidden')) return;
+        const matricula = studentIdInput.value.trim();
+        if (!matricula) return;
+
+        const formData = new FormData(quizForm);
+        const currentAnswers = {};
+        for (let [key, value] of formData.entries()) {
+            currentAnswers[key] = value;
+        }
+        localStorage.setItem(PROGRESS_KEY, JSON.stringify({ matricula, answers: currentAnswers }));
+    }
+
+    function restoreProgress() {
+        const savedProgress = localStorage.getItem(PROGRESS_KEY);
+        if (!savedProgress) return;
+        const progress = JSON.parse(savedProgress);
+        if (!progress || !progress.matricula) return;
+
+        const key = `exam_${SERIES}_${progress.matricula}`;
+        const record = JSON.parse(localStorage.getItem(key));
+
+        if (record && !record.finalized) {
+            studentIdInput.value = record.matricula;
+            studentNameInput.value = record.name;
+            studentClassInput.value = record.turma;
+            
+            qs('#studentInfo').classList.add('hidden');
+            quizArea.classList.remove('hidden');
+            showToast('Seu progresso foi restaurado.', 'info');
+
+            Object.entries(progress.answers).forEach(([q, a]) => {
+                const radio = qs(`input[name="${q}"][value="${a}"]`);
+                if (radio) radio.checked = true;
+            });
+
+            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
+                prepareSecondAttemptView(record.matricula, record.wrongQuestions, false);
+            }
+        } else {
+            localStorage.removeItem(PROGRESS_KEY);
+        }
+    }
+
+    if (quizForm) quizForm.addEventListener('submit', function (ev) {
+        ev.preventDefault();
+        const matricula = studentIdInput.value.trim();
+        const key = `exam_${SERIES}_${matricula}`;
+        const record = JSON.parse(localStorage.getItem(key));
+        if (!record) { alert('Erro: registro não encontrado.'); return; }
+
+        const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
+        const answers = {};
+        let allAnswered = true;
+        visibleFieldsets.forEach(fs => {
+            const name = fs.id;
+            const sel = qs(`input[name="${name}"]:checked`, fs);
+            answers[name] = sel ? sel.value : null;
+            if (!sel) allAnswered = false;
+        });
+
+        if (!allAnswered) {
+            showToast('Responda todas as questões antes de enviar.', 'warn');
+            return;
+        }
+
+        record.attempts++;
+        record.history = record.history || [];
+        record.history.push({ attempt: record.attempts, answers, ts: new Date().toISOString() });
+
+        if (record.attempts === 1) {
+            const wrong = Object.keys(TRUE_GABARITO).filter(q => answers[q] !== TRUE_GABARITO[q]);
+            record.wrongQuestions = wrong.map(q => parseInt(q.replace('q', '')));
+            record.correctCount = TOTAL_QUESTIONS - wrong.length;
+            record.retakeAllowed = wrong.length > 0;
+            record.gradedAt = new Date().toISOString();
+
+            if (wrong.length === 0) {
+              record.finalized = true;
+              record.finalAnswers = answers;
+            }
+
+            localStorage.setItem(key, JSON.stringify(record));
+            showModalResultPartial(record);
+        } else {
+            const finalAnswers = { ...(record.history[0]?.answers || {}), ...answers };
+            record.correctCount = Object.keys(TRUE_GABARITO).filter(q => finalAnswers[q] === TRUE_GABARITO[q]).length;
+            record.finalized = true;
+            record.finalAnswers = finalAnswers;
+            localStorage.setItem(key, JSON.stringify(record));
+            showModalResultFinal(record);
+        }
+        
+        localStorage.removeItem(PROGRESS_KEY);
+        quizArea.classList.add('hidden');
+    });
+
+    function createModal(htmlContent) {
+        modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal">${htmlContent}</div></div>`;
+        modalRoot.style.display = 'flex';
+        modalRoot.querySelector('.modal-backdrop').addEventListener('click', e => {
+            if (e.target === e.currentTarget) {
+              const record = JSON.parse(localStorage.getItem(`exam_${SERIES}_${studentIdInput.value.trim()}`));
+              if(!record || record.finalized || !record.retakeAllowed || record.correctCount === TOTAL_QUESTIONS) closeModal();
+            }
+        });
+    }
+
+    function closeModal() {
+        modalRoot.style.display = 'none';
+        modalRoot.innerHTML = '';
+    }
+
+    function showToast(text, type = 'info') {
+        const t = document.createElement('div');
+        t.className = 'toast'; t.textContent = text;
+        document.body.appendChild(t);
+        setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600);
+        setTimeout(() => t.remove(), 3000);
+    }
+
+    function showModalResultPartial(record) {
+        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
+        const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
+        const allCorrect = record.correctCount === TOTAL_QUESTIONS;
+        let message = canRetake ? 'Você pode refazer apenas as questões que errou!' : (allCorrect ? 'Parabéns, você acertou tudo!' : 'Tentativas finalizadas.');
+        let btnHtml = canRetake 
+            ? `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fazer 2ª tentativa</button>`
+            : `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
+
+        createModal(`
+            <div class="text-center">
+                <h2 class="text-xl font-semibold">1ª Tentativa — ${pct}%</h2>
+                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
+                <p class="mt-3 text-sm">${message}</p>${btnHtml}
+                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${record.wrongQuestions.length ? 'Q' + record.wrongQuestions.join(', Q') : 'Nenhuma'}</div>
+            </div>
+        `);
+        
+        qs('#modalRetake')?.addEventListener('click', () => {
+            closeModal();
+            quizArea.classList.remove('hidden');
+            prepareSecondAttemptView(record.matricula, record.wrongQuestions);
+        });
+        qs('#modalExport')?.addEventListener('click', () => triggerExport(record.matricula));
+    }
+
+    function showModalResultFinal(record) {
+        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
+        const wrongFinal = Object.keys(TRUE_GABARITO).filter(q => record.finalAnswers[q] !== TRUE_GABARITO[q]);
+        createModal(`
+            <div class="text-center">
+                <h2 class="text-xl font-semibold">Resultado Final — ${pct}%</h2>
+                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
+                <button id="modalExportPdf" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado</button>
+                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${wrongFinal.length ? 'Q' + wrongFinal.map(q=>q.replace('q','')).join(', Q') : 'Nenhuma'}</div>
+            </div>
+        `);
+        qs('#modalExportPdf')?.addEventListener('click', () => triggerExport(record.matricula));
+    }
+
+    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) {
+        qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
+            const qnum = parseInt(fs.id.replace('q', ''));
+            if (wrongQuestions.includes(qnum)) {
+                fs.style.display = '';
+                fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; });
+                if (shouldShuffle) shuffleOptions(fs);
+            } else {
+                fs.style.display = 'none';
+                fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
+            }
+        });
+        if(shouldShuffle) showToast('Responda apenas as questões que você errou.', 'info');
+    }
+
+    function shuffleOptions(fieldset) {
+        const container = fieldset.querySelector('.options');
+        if (container) for (let i = container.children.length; i >= 0; i--) container.appendChild(container.children[Math.random() * i | 0]);
+    }
+
+    function triggerExport(matricula) {
+        const key = `exam_${SERIES}_${matricula}`;
+        const record = JSON.parse(localStorage.getItem(key));
+        if (!record || !record.finalized) { showToast('A prova precisa ser finalizada.', 'warn'); return; }
+        
+        const btn = qs('#modalExportPdf') || qs('#modalExport');
+        if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
+        
+        const answers = record.finalAnswers || record.history[0]?.answers || {};
+        const tableBody = Object.keys(TRUE_GABARITO).map((q, i) => {
+          const isCorrect = answers[q] === TRUE_GABARITO[q];
+          return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
+            <td style="padding:4px; text-align:center;">${i + 1}</td>
+            <td style="padding:4px; text-align:center;">${TRUE_GABARITO[q]}</td>
+            <td style="padding:4px; text-align:center;">${answers[q] || 'N/R'}</td>
+            <td style="padding:4px; text-align:center; color:${isCorrect ? 'green':'red'}">${isCorrect ? '✓' : '✗'}</td>
+          </tr>`;
+        }).join('');
+        
+        const wrapper = document.createElement('div');
+        wrapper.innerHTML = `<div style="font-family:sans-serif; padding:20px; font-size: 14px;">
+          <h3 style="text-align:center; margin-bottom: 24px;">Resultado Final: ${record.name} (${record.matricula})</h3>
+          <p><strong>Pontuação:</strong> ${record.correctCount} de ${TOTAL_QUESTIONS} acertos (${Math.round((record.correctCount/TOTAL_QUESTIONS)*100)}%)</p>
+          <table border="1" style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#eee;"><th>Q</th><th>Gabarito</th><th>Sua Resposta</th><th>Status</th></tr></thead><tbody>${tableBody}</tbody></table>
+        </div>`;
+        
+        const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${record.name}.pdf`;
+        const opt = { margin: 0.5, filename: filePath, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, html2canvas: { scale: 2 } };
+
+        html2pdf().set(opt).from(wrapper).output('blob').then(pdfBlob => {
+            const formData = new FormData();
+            formData.append('file', pdfBlob, `${record.matricula}-${record.name}.pdf`);
+
+            // Aqui usamos o nome de arquivo diretamente no upload
+            supabaseClient.storage.from('resultados-provas').upload(filePath, formData.get('file'))
+            .then(uploadResult => {
+                if (uploadResult.error) throw uploadResult.error;
+                showToast('Prova enviada com sucesso!', 'success');
+                if (btn) btn.textContent = "Enviado!";
+                localStorage.removeItem(key);
+            })
+            .catch(err => {
+                console.error('Erro no envio para o Supabase:', err);
+                showToast('Erro ao enviar. Tente novamente ou baixe o PDF.', 'error');
+                if(btn) { btn.disabled = false; btn.textContent = "Tentar de Novo"; }
+                saveAs(pdfBlob, `${record.matricula}-${record.name}.pdf`);
+            });
+        });
+    }
+
+    function insertImagesAuto(folder = '../assets/img1nat') {
+      const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
+      if (!placeholders.length) return;
+
+      function tryLoad(candidates) {
+        return new Promise((resolve, reject) => {
+          let i = 0;
+          function next() {
+            if (i >= candidates.length) return reject();
+            const url = candidates[i++];
+            const img = new Image();
+            img.onload = () => resolve(url);
+            img.onerror = () => next();
+            img.src = url;
+          }
+          next();
+        });
+      }
+
+      placeholders.forEach((ph) => {
+        const fs = ph.closest('fieldset');
+        if (!fs) return;
+        const qid = fs.id.replace('q', '');
+        const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
+        const candidates = exts.map(ext => `${folder}/q${qid}.${ext}`);
+
+        tryLoad(candidates).then(src => {
+          ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`;
+        }).catch(() => {
+          ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada para a questão ${qid} na pasta <code>${folder}</code>.</div>`;
+        });
+      });
+      
+      if (!qs('#lb')) {
+        const lb = document.createElement('div');
+        lb.id = 'lb';
+        lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;';
+        lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
+        document.body.appendChild(lb);
+        lb.addEventListener('click', () => {
+            lb.style.display = 'none';
+            qs('#lb-img').src = '';
+        });
+      }
 
 /*******************************************************
- * GABARITO ATUALIZADO - CIÊNCIAS DA NATUREZA - 1º ANO
+ * GABARITO - CIÊNCIAS DA NATUREZA - 1º ANO
  *******************************************************/
 const TRUE_GABARITO = {
-  // Biologia
-  q1: 'A', q2: 'B', q3: 'A', q4: 'D', q5: 'D', q6: 'C', q7: 'E', 
-  q8: 'D', q9: 'C', q10: 'C', q11: 'B', q12: 'C', q13: 'A', q14: 'B',
-  // Física
-  q15: 'A', q16: 'A', q17: 'E', q18: 'C', q19: 'D', q20: 'C', q21: 'B', 
-  q22: 'B', q23: 'C', q24: 'C', q25: 'A', q26: 'C', q27: 'B',
-  // Química
-  q28: 'C', q29: 'D', q30: 'C', q31: 'C', q32: 'D', q33: 'A', q34: 'C', 
-  q35: 'B', q36: 'B', q37: 'C', q38: 'E', q39: 'C', q40: 'C'
+      q1: 'A', q2: 'B', q3: 'A', q4: 'D', q5: 'D', q6: 'C', q7: 'E', 
+      q8: 'D', q9: 'C', q10: 'C', q11: 'B', q12: 'C', q13: 'A', q14: 'B',
+      q15: 'A', q16: 'A', q17: 'E', q18: 'C', q19: 'D', q20: 'C', q21: 'B', 
+      q22: 'B', q23: 'C', q24: 'C', q25: 'A', q26: 'C', q27: 'B',
+      q28: 'C', q29: 'D', q30: 'C', q31: 'C', q32: 'D', q33: 'A', q34: 'C', 
+      q35: 'B', q36: 'B', q37: 'C', q38: 'E', q39: 'C', q40: 'C'
 };
 
-/*******************************
- * HELPERS & PROTEÇÕES
- *******************************/
-function qs(sel, ctx = document) { return ctx.querySelector(sel); }
-function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
-function nowISO() { return new Date().toISOString(); }
 
-function simpleFingerprint() {
-  const s = [navigator.userAgent, screen.width + 'x' + screen.height, Intl.DateTimeFormat().resolvedOptions().timeZone || '', navigator.language || ''].join('||');
-  let h = 5381;
-  for (let i = 0; i < s.length; i++) { h = ((h << 5) + h) + s.charCodeAt(i); h = h & 0xFFFFFFFF; }
-  return 'fp_' + (h >>> 0).toString(36);
-}
-function storageKey(matricula) { return `exam_${SERIES}_` + matricula; }
-function storageFpKey(matricula) { return `examfp_${SERIES}_` + matricula; }
-
-document.addEventListener('contextmenu', e => e.preventDefault());
-document.addEventListener('keydown', e => {
-  if ((e.ctrlKey && e.key === 'r') || e.key === 'F5') e.preventDefault();
-  if ((e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') || e.key === 'F12') e.preventDefault();
-});
-
-/*******************************
- * ELEMENTS
- *******************************/
-const studentNameInput = qs('#studentName');
-const studentIdInput = qs('#studentId');
-const studentClassInput = qs('#studentClass');
-const startBtn = qs('#startBtn');
-const infoMsg = qs('#infoMsg');
-const quizArea = qs('#quizArea');
-const quizForm = qs('#quizForm');
-const modalRoot = qs('#modalRoot');
-
-function validMatricula(s) { return /^\d{10}-\d{1}$/.test(s); }
-if (studentNameInput) studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
-
-/*******************************
- * Salvar e Restaurar Progresso
- *******************************/
-function saveProgress() {
-    if (quizArea.classList.contains('hidden')) return;
-    const matricula = studentIdInput.value.trim();
-    if (!matricula) return;
-
-    const formData = new FormData(quizForm);
-    const currentAnswers = {};
-    for (let [key, value] of formData.entries()) {
-        currentAnswers[key] = value;
-    }
-    const progressData = { matricula: matricula, answers: currentAnswers };
-    localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
-}
-
-function restoreProgress() {
-    const savedProgress = localStorage.getItem(PROGRESS_KEY);
-    if (!savedProgress) return;
-    const progress = JSON.parse(savedProgress);
-    if (!progress || !progress.matricula) return;
-
-    const key = storageKey(progress.matricula);
-    const record = JSON.parse(localStorage.getItem(key));
-
-    if (record && !record.finalized) {
-        studentIdInput.value = record.matricula;
-        studentNameInput.value = record.name;
-        studentClassInput.value = record.turma;
-        
-        qs('#studentInfo').classList.add('hidden');
-        quizArea.classList.remove('hidden');
-        showToast('Seu progresso foi restaurado com sucesso!', 'info');
-
-        Object.entries(progress.answers).forEach(([questionName, answerValue]) => {
-            const radioInput = qs(`input[name="${questionName}"][value="${answerValue}"]`);
-            if (radioInput) {
-                radioInput.checked = true;
-            }
-        });
-
-        if (record.attempts === 1 && record.retakeAllowed && record.wrongQuestions) {
-            prepareSecondAttemptView(record.matricula, record.wrongQuestions, false);
+      document.addEventListener('click', function(e) {
+        const t = e.target;
+        if (t && t.classList.contains('clickable-img')) {
+          qs('#lb-img').src = t.src;
+          qs('#lb').style.display = 'flex';
         }
-    } else {
-        localStorage.removeItem(PROGRESS_KEY);
+      });
     }
-}
 
-/*******************************
- * INICIAR PROVA
- *******************************/
-if (startBtn) startBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  if (infoMsg) infoMsg.textContent = '';
-  const name = (studentNameInput && studentNameInput.value.trim().toUpperCase()) || '';
-  const id = (studentIdInput && studentIdInput.value.trim()) || '';
-  const turma = (studentClassInput && studentClassInput.value) || '';
-
-  if (!name) { infoMsg.textContent = 'Nome obrigatório.'; return; }
-  if (!turma) { infoMsg.textContent = 'Por favor, selecione sua turma.'; return; }
-  if (!validMatricula(id)) { infoMsg.textContent = 'Matrícula inválida. Formato: 2412767146-8'; return; }
-  
-  const key = storageKey(id);
-  let record = JSON.parse(localStorage.getItem(key)) || null;
-
-  if (record && record.attempts >= MAX_ATTEMPTS) {
-    const lockedAt = record.lockedAt || null;
-    if (lockedAt) {
-      const diffDays = (Date.now() - new Date(lockedAt).getTime()) / (1000 * 60 * 60 * 24);
-      if (diffDays < LOCK_DAYS) {
-        if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas. Bloqueado por ${LOCK_DAYS} dias.`;
-        return;
-      } else {
-        localStorage.removeItem(key); record = null;
-      }
-    } else {
-       if (infoMsg) infoMsg.textContent = `Você já usou ${MAX_ATTEMPTS} tentativas.`;
-       return;
-    }
-  }
-
-  if (!record) {
-    record = { name: name, matricula: id, turma: turma, attempts: 0, history: [], wrongQuestions: [], createdAt: nowISO() };
-  } else {
-    record.name = name; record.turma = turma;
-  }
-  localStorage.setItem(key, JSON.stringify(record));
-  localStorage.setItem(storageFpKey(id), simpleFingerprint());
-  
-  const progressData = { matricula: id, answers: {} };
-  localStorage.setItem(PROGRESS_KEY, JSON.stringify(progressData));
-
-  if (qs('#studentInfo')) qs('#studentInfo').classList.add('hidden');
-  if (quizArea) quizArea.classList.remove('hidden');
-
-  if (record.attempts === 1 && Array.isArray(record.wrongQuestions) && record.wrongQuestions.length > 0 && record.retakeAllowed) {
-    prepareSecondAttemptView(id, record.wrongQuestions);
-  } else {
-    qsa('fieldset[id^="q"]', quizForm).forEach(fs => { fs.style.display = ''; fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = true); });
-  }
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-/*******************************
- * SUBMIT
- *******************************/
-if (quizForm) quizForm.addEventListener('submit', function (ev) {
-  ev.preventDefault();
-  const id = (studentIdInput && studentIdInput.value.trim()) || '';
-  const key = storageKey(id);
-  const record = JSON.parse(localStorage.getItem(key) || '{}');
-  if (!record || !record.matricula) { alert('Erro: registro do aluno não encontrado. Reinicie a página.'); return; }
-
-  const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
-  const answers = {};
-  let allAnswered = true;
-  visibleFieldsets.forEach(fs => {
-    const name = fs.id;
-    const sel = qs(`input[name="${name}"]:checked`, fs);
-    answers[name] = sel ? sel.value : '';
-    if (!sel) allAnswered = false;
-  });
-
-  if (!allAnswered) {
-    showToast('Por favor, responda todas as questões visíveis.', 'warn');
-    return;
-  }
-
-  record.attempts++;
-  const attemptEntry = { attempt: record.attempts, answers: answers, ts: nowISO() };
-  record.history = record.history || [];
-  record.history.push(attemptEntry);
-
-  if (record.attempts === 1) {
-    const wrong = [];
-    Object.keys(TRUE_GABARITO).forEach(qKey => {
-      if (attemptEntry.answers[qKey] !== TRUE_GABARITO[qKey]) {
-        wrong.push(parseInt(qKey.replace('q', '')));
-      }
+    window.addEventListener('load', () => {
+        restoreProgress();
+        if (quizForm) quizForm.addEventListener('change', saveProgress);
+        try { insertImagesAuto(); } catch(e) { console.warn("Erro ao carregar imagens."); }
     });
-    record.wrongQuestions = wrong;
-    record.retakeAllowed = wrong.length > 0;
-    record.correctCount = TOTAL_QUESTIONS - wrong.length;
-    record.gradedAt = nowISO();
-    
-    if (wrong.length === 0) {
-      localStorage.removeItem(PROGRESS_KEY);
-    }
-    
-    localStorage.setItem(key, JSON.stringify(record));
-    showModalResultPartial(record);
-  } else if (record.attempts >= 2) {
-    const firstAttemptAnswers = record.history[0] ? record.history[0].answers : {};
-    const finalAnswers = { ...firstAttemptAnswers, ...answers };
-    let correctFinal = 0;
-    Object.keys(TRUE_GABARITO).forEach(qKey => {
-      if (finalAnswers[qKey] === TRUE_GABARITO[qKey]) {
-        correctFinal++;
-      }
-    });
-    record.correctCount = correctFinal;
-    record.finalized = true;
-    record.finalAnswers = finalAnswers;
-    record.lockedAt = nowISO();
-    localStorage.setItem(key, JSON.stringify(record));
-    
-    localStorage.removeItem(PROGRESS_KEY);
-    
-    showModalResultFinal(record);
-  }
-
-  if (quizArea) quizArea.classList.add('hidden');
-});
-
-/*******************************
- * POPUPS / MODAIS / TOASTS
- *******************************/
-function createModal(htmlContent) {
-  if (!modalRoot) return;
-  modalRoot.innerHTML = '';
-  const wrapper = document.createElement('div');
-  wrapper.className = 'modal-backdrop';
-  wrapper.innerHTML = `<div class="modal" role="dialog" aria-modal="true">${htmlContent}</div>`;
-  modalRoot.appendChild(wrapper);
-  modalRoot.style.display = 'flex';
-  wrapper.addEventListener('click', (e) => {
-    if (e.target === wrapper) {
-       const record = JSON.parse(localStorage.getItem(storageKey(studentIdInput.value.trim())) || '{}');
-       if (record.finalized || !record.retakeAllowed || record.correctCount === TOTAL_QUESTIONS) {
-         closeModal();
-       }
-    }
-  });
-}
-
-function closeModal() { if (modalRoot) { modalRoot.style.display = 'none'; modalRoot.innerHTML = ''; } }
-
-function showToast(text, type = 'info') {
-  const t = document.createElement('div');
-  t.className = 'toast';
-  t.textContent = text;
-  document.body.appendChild(t);
-  setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600);
-  setTimeout(() => t.remove(), 3000);
-}
-
-function showModalResultPartial(record) {
-  const correct = record.correctCount || 0;
-  const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
-  const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
-  const allCorrect = correct === TOTAL_QUESTIONS;
-  
-  let message, btnHtml;
-
-  if (allCorrect) {
-    message = 'Parabéns — você acertou todas as questões!';
-    btnHtml = `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
-    record.finalized = true; 
-    record.finalAnswers = record.history[0].answers;
-    localStorage.setItem(storageKey(record.matricula), JSON.stringify(record));
-  } else if (canRetake) {
-    message = 'Você pode refazer apenas as questões que errou — boa sorte!';
-    btnHtml = `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Refazer (2ª tentativa)</button>`;
-  } else {
-    message = 'Você usou todas as suas tentativas.';
-    btnHtml = `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
-  }
-
-  const html = `
-    <div class="text-center">
-      <h2 class="text-xl font-semibold">Resultado Parcial — ${pct}%</h2>
-      <p class="mt-2 text-sm text-gray-600">Acertos: ${correct} / ${TOTAL_QUESTIONS}</p>
-      <div class="confetti"><span>•</span><span>•</span><span>•</span><span>•</span></div>
-      <p class="mt-3 text-sm">${message}</p>
-      ${btnHtml}
-      <div class="mt-4 text-left text-xs text-gray-500">
-        <strong>Questões erradas:</strong> ${record.wrongQuestions && record.wrongQuestions.length ? record.wrongQuestions.map(n => 'Q' + n).join(', ') : 'nenhuma'}
-      </div>
-    </div>
-  `;
-  createModal(html);
-  
-  const retakeBtn = qs('#modalRetake');
-  if (retakeBtn) retakeBtn.addEventListener('click', () => {
-    closeModal();
-    prepareSecondAttemptView(record.matricula, record.wrongQuestions);
-    if (quizArea) quizArea.classList.remove('hidden');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  });
-
-  const exportBtn = qs('#modalExport');
-  if (exportBtn) exportBtn.addEventListener('click', () => {
-      triggerExport(record.matricula);
-  });
-}
-
-function showModalResultFinal(record) {
-    const correct = record.correctCount || 0;
-    const pct = Math.round((correct / TOTAL_QUESTIONS) * 100);
-    let message = '';
-    if (pct === 100) message = 'Perfeito! Você acertou todas as questões.';
-    else if (pct >= 80) message = 'Ótimo trabalho! Continue revisando.';
-    else if (pct >= 60) message = 'Bom esforço! Reveja os conteúdos das questões erradas.';
-    else message = 'Mantenha o foco! Use a correção como roteiro de estudo.';
-
-    const wrongQuestionsFinal = Object.keys(TRUE_GABARITO).filter(qKey => record.finalAnswers[qKey] !== TRUE_GABARITO[qKey]).map(qKey => 'Q' + qKey.replace('q', ''));
-
-    const html = `
-    <div class="text-center">
-        <h2 class="text-xl font-semibold">Resultado Final — ${pct}%</h2>
-        <p class="mt-2 text-sm text-gray-600">Acertos Finais: ${correct} / ${TOTAL_QUESTIONS}</p>
-        <div class="confetti"><span>•</span><span>•</span><span>•</span><span>•</span></div>
-        <p class="mt-3 text-sm">${message}</p>
-        <div class="mt-4">
-            <button id="modalExportPdf" class="bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado</button>
-        </div>
-        <div class="mt-4 text-left text-xs text-gray-500">
-            <strong>Questões erradas na avaliação final:</strong> ${wrongQuestionsFinal.length ? wrongQuestionsFinal.join(', ') : 'nenhuma'}
-        </div>
-    </div>`;
-    createModal(html);
-
-    const exportBtn = qs('#modalExportPdf');
-    if(exportBtn) exportBtn.addEventListener('click', () => {
-        triggerExport(record.matricula);
-    });
-}
-
-/*******************************
- * Preparar 2ª tentativa
- *******************************/
-function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) {
-  if (!Array.isArray(wrongQuestions) || wrongQuestions.length === 0) return;
-  
-  qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
-    const qnum = parseInt(fs.id.replace('q', ''));
-    if (wrongQuestions.includes(qnum)) {
-      fs.style.display = '';
-      fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; });
-      if (shouldShuffle) {
-          shuffleOptions(fs);
-      }
-    } else {
-      fs.style.display = 'none';
-      fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
-    }
-  });
-  if(shouldShuffle) {
-      showToast('Responda apenas as questões que você errou.', 'info');
-  }
-}
-
-function shuffleOptions(fieldset) {
-    const container = fieldset.querySelector('.options');
-    if (!container) return;
-    const labels = Array.from(container.children);
-    for (let i = labels.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        container.appendChild(labels[j]);
-    }
-}
-
-/*******************************************************
- * Exportar PDF
- *******************************************************/
-function triggerExport(matricula) {
-    const key = storageKey(matricula);
-    const record = JSON.parse(localStorage.getItem(key) || '{}');
-    if (!record.matricula || !record.finalized || !record.turma) {
-        showToast('Informações do aluno incompletas. Não é possível enviar.', 'warn');
-        return;
-    }
-
-    const exportButton = qs('#modalExportPdf') || qs('#modalExport');
-    if (exportButton) {
-        exportButton.disabled = true;
-        exportButton.textContent = "Salvando...";
-    }
-
-    const answersToDisplay = record.finalAnswers || (record.history[0] ? record.history[0].answers : {});
-
-    const wrapper = document.createElement('div');
-    wrapper.style.cssText = "padding: 20px; font-family: Arial, sans-serif;";
-    wrapper.innerHTML = `
-        <h1 style="font-size:18px; text-align:center; margin-bottom: 20px;">Resultado — Ciências da Natureza (1ª Série)</h1>
-        <div style="margin-bottom: 20px;">
-            <p><strong>Aluno:</strong> ${record.name}</p>
-            <p><strong>Matrícula:</strong> ${record.matricula}</p>
-            <p><strong>Turma:</strong> ${record.turma}</p>
-        </div>
-        <h2 style="font-size: 16px;">Resumo do Desempenho Final</h2>
-        <p><strong>Pontuação Final:</strong> ${record.correctCount || 0} de ${TOTAL_QUESTIONS} acertos (${Math.round(((record.correctCount || 0) / TOTAL_QUESTIONS) * 100)}%)</p>
-        <h2 style="margin-top: 20px; font-size: 16px;">Detalhes das Respostas</h2>
-        <table style="width:100%; border-collapse:collapse; margin-top: 10px;" border="1">
-            <thead>
-                <tr style="background-color: #f2f2f2;">
-                    <th style="padding: 8px;">Questão</th>
-                    <th style="padding: 8px;">Gabarito</th>
-                    <th style="padding: 8px;">Sua Resposta</th>
-                    <th style="padding: 8px;">Resultado</th>
-                </tr>
-            </thead>
-            <tbody>
-            ${[...Array(TOTAL_QUESTIONS).keys()].map(i => {
-                const qKey = 'q' + (i + 1);
-                const truth = TRUE_GABARITO[qKey] || '-';
-                const finalAns = answersToDisplay[qKey] || 'N/R';
-                const isCorrect = truth === finalAns;
-                const resultText = isCorrect ? 'Correto' : 'Incorreto';
-                return `<tr style="background-color: ${isCorrect ? '#e6ffed' : '#ffe6e6'};"><td style="text-align:center; padding: 8px;">${i + 1}</td><td style="text-align:center; padding: 8px;">${truth}</td><td style="text-align:center; padding: 8px;">${finalAns}</td><td style="text-align:center; padding: 8px;">${resultText}</td></tr>`;
-            }).join('')}
-            </tbody>
-        </table>
-        <p style="margin-top:20px; font-size:10px; color:#555; text-align:center;">Relatório gerado pelo Sistema de Avaliação Online.</p>
-    `;
-    
-    const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${record.name}.pdf`;
-    
-    const opt = { margin: 0.5, filename: filePath, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-    
-    html2pdf().set(opt).from(wrapper).output('datauristring').then(function (pdfBase64) {
-        
-        const payload = {
-            pdfData: pdfBase64,
-            filePath: filePath
-        };
-
-        fetch('/.netlify/functions/save-pdf', {
-            method: 'POST',
-            body: JSON.stringify(payload),
-        })
-        .then(response => {
-            if (!response.ok) {
-                 return response.text().then(text => { throw new Error(text || 'Erro no servidor') });
-            }
-            return response.json();
-        })
-        .then(result => {
-            showToast('Prova enviada com sucesso!', 'success');
-            if (exportButton) exportButton.textContent = "Enviado!";
-        })
-        .catch(error => {
-            console.error('Erro ao enviar PDF:', error);
-            showToast(`Erro ao enviar: ${error.message}. Tente baixar.`, 'error');
-            if (exportButton) {
-                exportButton.disabled = false;
-                exportButton.textContent = "Tentar Enviar Novamente";
-            }
-            html2pdf().set(opt).from(wrapper).save();
-        });
-    });
-}
-
-/*******************************
- * INSERÇÃO AUTOMÁTICA DE IMAGENS + LIGHTBOX
- *******************************/
-function insertImagesAuto(folder = '../assets/img1nat') { // ATUALIZADO: CAMINHO CORRIGIDO PARA A PASTA NAT
-  const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
-  if (!placeholders.length) return;
-
-  function tryLoad(candidates) {
-    return new Promise((resolve, reject) => {
-      let i = 0;
-      function next() {
-        if (i >= candidates.length) return reject();
-        const url = candidates[i++];
-        const img = new Image();
-        img.onload = () => resolve(url);
-        img.onerror = () => next();
-        img.src = url;
-      }
-      next();
-    });
-  }
-
-  placeholders.forEach((ph) => {
-    const fs = ph.closest('fieldset');
-    if (!fs) return;
-    const qid = fs.id.replace('q', '');
-    const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
-    const candidates = exts.map(ext => `${folder}/q${qid}.${ext}`);
-
-    tryLoad(candidates).then(src => {
-      ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`;
-    }).catch(() => {
-      ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada para a questão ${qid} na pasta <code>${folder}</code>.</div>`;
-    });
-  });
-  
-  if (!qs('#lb')) {
-    const lb = document.createElement('div');
-    lb.id = 'lb';
-    lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;';
-    lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
-    document.body.appendChild(lb);
-    lb.addEventListener('click', () => {
-        lb.style.display = 'none';
-        qs('#lb-img').src = '';
-    });
-  }
-
-  document.addEventListener('click', function(e) {
-    const t = e.target;
-    if (t && t.classList.contains('clickable-img')) {
-      qs('#lb-img').src = t.src;
-      qs('#lb').style.display = 'flex';
-    }
-  });
-}
-
-/*******************************
- * On load
- *******************************/
-window.addEventListener('load', () => {
-  restoreProgress();
-  
-  if (quizForm) {
-    quizForm.addEventListener('change', saveProgress);
-  }
-
-  try { 
-    insertImagesAuto('../assets/img1nat'); // ATUALIZADO: CAMINHO CORRIGIDO PARA A PASTA NAT
-  } catch (e) { 
-    console.error('Erro ao inserir imagens:', e); 
-  }
-});
 </script>
-
 </body>
 </html>
