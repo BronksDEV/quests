@@ -677,6 +677,19 @@
     const PROGRESS_KEY = `progress_${SERIES}`;
 
 
+
+/*******************************************************
+ * GABARITO - CIÊNCIAS DA NATUREZA - 2º ANO
+ *******************************************************/
+const TRUE_GABARITO = {
+  q1: 'D', q2: 'D', q3: 'B', q4: 'C', q5: 'C', q6: 'B', q7: 'E', q8: 'E', q9: 'D', q10: 'B',
+  q11: 'C', q12: 'E', q13: 'A', q14: 'C', q15: 'B', q16: 'D', q17: 'C', q18: 'C', q19: 'E', q20: 'D',
+  q21: 'E', q22: 'A', q23: 'B', q24: 'C', q25: 'D', q26: 'E', q27: 'C', q28: 'D', q29: 'C', q30: 'E',
+  q31: 'B', q32: 'E', q33: 'A', q34: 'B', q35: 'E', q36: 'A', q37: 'B', q38: 'E', q39: 'E', q40: 'B'
+};
+
+
+
     const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
     const { createClient } = supabase;
@@ -1063,16 +1076,6 @@
             qs('#lb-img').src = '';
         });
       }
-
-/*******************************************************
- * GABARITO - CIÊNCIAS DA NATUREZA - 2º ANO
- *******************************************************/
-const TRUE_GABARITO = {
-  q1: 'D', q2: 'D', q3: 'B', q4: 'C', q5: 'C', q6: 'B', q7: 'E', q8: 'E', q9: 'D', q10: 'B',
-  q11: 'C', q12: 'E', q13: 'A', q14: 'C', q15: 'B', q16: 'D', q17: 'C', q18: 'C', q19: 'E', q20: 'D',
-  q21: 'E', q22: 'A', q23: 'B', q24: 'C', q25: 'D', q26: 'E', q27: 'C', q28: 'D', q29: 'C', q30: 'E',
-  q31: 'B', q32: 'E', q33: 'A', q34: 'B', q35: 'E', q36: 'A', q37: 'B', q38: 'E', q39: 'E', q40: 'B'
-};
 
 
       document.addEventListener('click', function(e) {
