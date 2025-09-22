@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Prova — Matemática e suas Tecnologias (3ª Série)</title>
+    <title>Prova — Matemática e suas Tecnologias (2ª Série)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
@@ -14,7 +14,7 @@
         .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
         .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
         .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
-        .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+        .toast { position: fixed; right: 20px; top: 20px; z-index:99999; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
         .option-label { cursor:pointer; }
         input[type="radio"] { accent-color: #2563eb; }
         .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
@@ -40,39 +40,353 @@
 </head>
 <body class="bg-slate-50 text-slate-900 no-select">
 
-  <div class="max-w-5xl mx-auto p-4 sm:p-6">
-    <header id="quiz-header" class="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
-        <!-- O JS preencherá esta área -->
-    </header>
-    
-    <main>
-        <form id="quizForm" data-image-folder="../assets/imgmat3" data-series-id="3_SERIE_MATEMATICA" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
-            
-<!-- ============================================= -->
-<!--        INÍCIO DAS QUESTÕES (MATEMÁTICA 3ª SÉRIE) -->
-<!-- ============================================= -->
+    <!-- CAMADA DE INÍCIO DA PROVA QUE FORÇA A TELA CHEIA -->
+    <div id="start-exam-overlay" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4" style="backdrop-filter: blur(8px);">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-white">Você está pronto?</h2>
+            <p class="text-slate-300 mt-2 mb-6 max-w-lg">A avaliação começará em modo tela cheia para garantir o foco. Se você sair acidentalmente, terá 3 segundos para retornar.</p>
+            <button id="start-fullscreen-btn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">
+                Iniciar Avaliação Agora
+            </button>
+        </div>
+    </div>
 
-
-
-        <!-- Fim das Questões -->
-            
-            <div class="flex items-center justify-between pt-6 border-t">
-                <button id="submitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2">
-                    <span id="submitBtnText">Enviar Prova</span>
-                    <div id="submitBtnSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
-                </button>
+    <div class="max-w-5xl mx-auto p-4 sm:p-6">
+        <header id="quiz-header" class="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+            <!-- O JS preencherá esta área -->
+        </header>
+        
+        <main>
+            <form id="quizForm" data-image-folder="../assets/imgmat2" data-series-id="2_SERIE_MATEMATICA" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
+                
+          <fieldset id="q1" class="border rounded p-4">
+            <legend class="font-semibold">Item 1 - Matemática</legend>
+            <p class="mt-2 text-sm">Um poliedro é uma figura tridimensional, formado por faces planas, arestas e vértices.</p>
+            <p class="mt-2 text-sm font-semibold">A relação entre as quantidades de faces (F), arestas (A) e vértices (V) é</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) V – F = A − 2</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) V + F = 2 · A</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) V − F − A = 2</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) V + F = A + 2</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) V + F + A = 2</span></label>
             </div>
-        </form>
-    </main>
-    
-    <footer class="mt-8 text-xs text-gray-500 text-center">
-        <p>Portal de Avaliações CEJA © 2025</p>
-    </footer>
-  </div>
+        </fieldset>
 
-  <div id="modalRoot"></div>
+        <fieldset id="q2" class="border rounded p-4">
+            <legend class="font-semibold">Item 2 - Matemática</legend>
+            <p class="mt-2 text-sm">Uma piscina está com 80% da sua capacidade cheia. Sabendo que ela possui o formato de um paralelepípedo retângulo, com 1,8 metros de profundidade, 4 metros de largura e 5 metros de comprimento.</p>
+            <p class="mt-2 text-sm font-semibold">O volume que falta para encher toda a piscina, em litros, é de:</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) 36 000 litros.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) 28 800 litros.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) 23 750 litros.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) 11 200 litros.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) 7 200 litros.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q3" class="border rounded p-4">
+            <legend class="font-semibold">Item 3 - Matemática</legend>
+            <p class="mt-2 text-sm">(UNIVESP) O nível da água contida em um reservatório na forma de um paralelepípedo reto retângulo, de 4 m de comprimento e 3 m de largura, atingia a altura de 1,5 m. Sabe-se que houve um consumo de 6 m³ de água desse reservatório, sem haver reposição, e a altura do nível da água restante no reservatório passou a ser indicada por h, conforme mostra a figura.</p>
+            <div class="border-dashed" data-img-name="q3"></div>
+            <p class="mt-2 text-sm font-semibold">Nessas condições, é correto afirmar que a medida indicada por h na figura é igual a</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) 1,25 m.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) 1,00 m.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) 0,80 m.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) 0,75 m.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) 0,50 m.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q4" class="border rounded p-4">
+            <legend class="font-semibold">Item 4 - Matemática</legend>
+            <p class="mt-2 text-sm">Para explicar a natureza do mundo, Platão "[...] apresenta a teoria segundo a qual os 'quatro elementos' admitidos como constituintes do mundo - o fogo, o ar, a água e a terra - [...] devem ter a forma de sólidos regulares. [...] Para não deixar de fora um sólido regular, atribuiu ao ___________ a representação da forma de todo o universo.”</p>
+            <div class="border-dashed" data-img-name="q4"></div>
+            <p class="mt-2 text-sm font-semibold">O nome do sólido geométrico que representa o universo é o</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Tetraedro.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) Octaedro.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) Dodecaedro.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) Hexaedro.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) Icosaedro.</span></label>
+            </div>
+        </fieldset>
 
-  <!-- Carrega o script único da prova -->
-  <script src="../js/prova-template.js"></script>
+        <fieldset id="q5" class="border rounded p-4">
+            <legend class="font-semibold">Item 5 - Matemática</legend>
+            <p class="mt-2 text-sm">(ENEM 2020 – Adaptada) A Figura 1 é composta pela casa e a planta do seu telhado, em que as setas indicam o sentido do escoamento da água de chuva. Um pedreiro precisa fazer a planta do escoamento da água de chuva de um telhado que tem três caídas de água, como apresentado na Figura 2.</p>
+            <div class="border-dashed" data-img-name="q5_1"></div>
+            <p class="mt-2 text-sm font-semibold">A figura que representa a planta do telhado da Figura 2 com o escoamento da água de chuva que o pedreiro precisa fazer é</p>
+            <div class="border-dashed" data-img-name="q5_2"></div>
+             <div class="mt-2 space-y-1 options">
+                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) Imagem A</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) Imagem B</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) Imagem C</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) Imagem D</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) Imagem E</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q6" class="border rounded p-4">
+            <legend class="font-semibold">Item 6 - Matemática</legend>
+            <p class="mt-2 text-sm">Observe a imagem de três sólidos a seguir.</p>
+            <div class="border-dashed" data-img-name="q6"></div>
+            <p class="mt-2 text-sm font-semibold">A projeção ortogonal frontal desses sólidos resulta, respectivamente, em</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) um retângulo arredondado, um quadrado e um triângulo.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) um semicírculo, um retângulo e um pentágono.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) um círculo, um quadrado e um pentágono.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) círculo e dois retângulos.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) três retângulos.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q7" class="border rounded p-4">
+            <legend class="font-semibold">Item 7 - Matemática</legend>
+            <p class="mt-2 text-sm">Um cubo foi cortado ao meio pelo plano α, conforme demonstra a figura a seguir.</p>
+            <div class="border-dashed" data-img-name="q7"></div>
+            <p class="mt-2 text-sm font-semibold">Os dois sólidos idênticos formados por esse corte são</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) pirâmides de base triangular.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) pirâmides de base quadrada.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) paralelepípedos.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) prismas de base quadrada.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) prismas de base triangular.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q8" class="border rounded p-4">
+            <legend class="font-semibold">Item 8 - Matemática</legend>
+            <p class="mt-2 text-sm">Um pedreiro precisou cortar um cano no formato de um cilindro oblíquo, para poder preencher uma tubulação que estava quebrada. Antes dele colocar o tubo no local requisitado, pediram para que o pedreiro trouxesse água dentro do cano, que seria utilizado para preparar um outro material. Além disso, sabe-se que a tubulação tem 40 mm de diâmetro, e que ele encheu completamente o cano com água.</p>
+            <div class="border-dashed" data-img-name="q8"></div>
+            <p class="mt-2 text-sm font-semibold">Qual o volume de água, em mililitros, que o pedreiro conseguiu colocar dentro do pedaço de cano cortado? (Adote π = 3 e 1 cm³ = 1 ml)</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) 120.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) 480.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) 1200.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) 4800.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) 12000.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q9" class="border rounded p-4">
+            <legend class="font-semibold">Item 9 - Matemática</legend>
+            <p class="mt-2 text-sm">Dois estudantes fizeram um experimento para determinar se dois sólidos oblíquos distintos têm o mesmo volume. Para isso, eles fizeram um molde dos sólidos, a fim de analisar melhor a situação.</p>
+            <div class="border-dashed" data-img-name="q9"></div>
+            <p class="mt-2 text-sm">Depois de alguns testes, eles escreveram as seguintes afirmações:<br>
+            I – Qualquer sólido criado distinto dos anteriores se tiver a mesma área da base (A), terá o mesmo volume dos sólidos apresentados.<br>
+            II - Se os dois sólidos tiverem o mesmo tamanho da área da base (A) e a mesma altura (h), logo ambos terão o mesmo volume.<br>
+            III - Qualquer prisma se tiver a mesma área da base (A) e a mesma altura(h), terá o mesmo volume dos sólidos apresentados.<br>
+            IV - Se os sólidos apresentados estivessem na forma reta, então teriam o mesmo volume dos sólidos oblíquos correspondentes.</p>
+            <p class="mt-2 text-sm font-semibold">Com base nas afirmações, a alternativa correta é</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) II e III.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) II e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) I, II e III.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) I, II e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) II, III e IV.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q10" class="border rounded p-4">
+            <legend class="font-semibold">Item 10 - Matemática</legend>
+            <p class="mt-2 text-sm">Um engenheiro civil precisa concretar uma viga na forma de um prisma de base triangular. A base da viga é um triângulo retângulo de catetos 50 cm e 40 cm. Além disso, sabe-se que a viga possui 4 metros de comprimento.</p>
+            <p class="mt-2 text-sm font-semibold">Qual é o volume de concreto, em metros cúbicos, necessário para preencher essa viga?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) 0,04.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) 0,08.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) 0,4.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) 0,6.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) 0,8.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q11" class="border rounded p-4">
+            <legend class="font-semibold">Item 11 - Matemática</legend>
+            <p class="mt-2 text-sm">A figura, a seguir, corresponde ao formato de uma chácara.</p>
+            <div class="border-dashed" data-img-name="q11"></div>
+            <p class="mt-2 text-sm font-semibold">Qual é a área, em metros quadrados, dessa chácara?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) 23 100</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) 19 150</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) 13 375</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) 13 655</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) 12 470</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q12" class="border rounded p-4">
+            <legend class="font-semibold">Item 12 - Matemática</legend>
+            <p class="mt-2 text-sm">Mario sabe que o reservatório de sua empresa está com problemas. Para a realização do reparo, foi informado a ele que o reservatório deve estar, no máximo, com 9 750 000 cm³ de água.</p>
+            <p class="mt-2 text-sm font-semibold">Qual é a capacidade máxima, em litros, para realizar esse reparo?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) 9,75</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) 97,5</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) 975</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) 9750</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) 97 500</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q13" class="border rounded p-4">
+            <legend class="font-semibold">Item 13 - Matemática</legend>
+            <p class="mt-2 text-sm">(ENEM PPL 2021) Um inseto percorreu sobre a superfície de um objeto, em formato de um prisma reto ABCDEFGH, com base retangular, uma trajetória poligonal, com vértices nos pontos: A–X–Y–G–F–E–X–G–E, na ordem em que foram apresentados.</p>
+            <div class="border-dashed" data-img-name="q13_1"></div>
+            <p class="mt-2 text-sm">É necessário representar a projeção ortogonal do trajeto percorrido pelo inseto sobre o plano determinado pela base do prisma.</p>
+            <p class="mt-2 text-sm font-semibold">A representação da projeção ortogonal do trajeto percorrido pelo inseto é</p>
+            <div class="border-dashed" data-img-name="q13_2"></div>
+             <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) Imagem A</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) Imagem B</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) Imagem C</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) Imagem D</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) Imagem E</span></label>
+            </div>
+        </fieldset>
+
+        <fieldset id="q14" class="border rounded p-4">
+            <legend class="font-semibold">Item 14 - Matemática</legend>
+            <p class="mt-2 text-sm">Durante uma aula de Matemática, a professora apresentou três recipientes: um copo cilíndrico reto, outro ligeiramente inclinado (oblíquo) e uma pirâmide de base quadrada — todos com a mesma altura e a mesma área de base. Após encher completamente o copo reto com água, ela despejou o conteúdo no copo oblíquo, mas parou antes de encher por completo o segundo copo. Então, perguntou aos alunos o que aconteceria a seguir.</p>
+            <p class="mt-2 text-sm font-semibold">Com base nessa situação, é correto afirmar que</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) o copo oblíquo não será preenchido completamente, pois tem o volume maior do que o copo reto.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) o copo oblíquo irá extravasar, pois tem o volume menor do que o copo reto.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) se todo o líquido fosse derramado na pirâmide, ela não seria completamente preenchida, pois apresenta volume maior do que o copo reto.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) se todo o líquido fosse derramado na pirâmide, ele iria extravasar, pois o volume da pirâmide é menor do que o do copo reto.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) o volume dos três sólidos é igual, pois têm a mesma altura e a mesma área da base.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q15" class="border rounded p-4">
+            <legend class="font-semibold">Item 15 - Matemática</legend>
+            <p class="mt-2 text-sm">A figura, a seguir, nos mostra um cone e uma pirâmide de base quadrada com área da base iguais (a₃ = A₃) e altura iguais, que foram seccionados por 3 planos paralelos entre si γ, β e α.</p>
+            <div class="border-dashed" data-img-name="q15"></div>
+            <p class="mt-2 text-sm">Com base nessa situação, analise as afirmações a seguir:<br>
+            I – Se um cone oblíquo de altura h₃ e área da base a₃ for construído ele terá o mesmo volume que o cone reto correspondente.<br>
+            II - Sabendo que a₂ = A₂, então o volume do cone e da pirâmide seccionada pelo plano β são equivalentes.<br>
+            III – A proporção a₁/a₂ = A₁/A₂ é verdadeira.<br>
+            IV - Qualquer pirâmide (reta ou oblíqua) se tiver a mesma área da base contida no plano α e a mesma altura, terá o mesmo volume que os sólidos apresentados.</p>
+            <p class="mt-2 text-sm font-semibold">As afirmações verdadeiras são:</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) I, II e III.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) I, II e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) I, III e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) II, III e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) I, II, III e IV.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q16" class="border rounded p-4">
+            <legend class="font-semibold">Item 16 - Matemática</legend>
+            <p class="mt-2 text-sm">Durante uma feira de Ciências, os estudantes utilizaram um recipiente com formato de paralelepípedo retângulo, cujas dimensões internas são: 40 cm de comprimento, 30 cm de largura e 20 cm de altura. Eles o encheram completamente com água para realizar um experimento.</p>
+            <p class="mt-2 text-sm font-semibold">Quantos litros de água foram necessários para encher o recipiente?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) 2,4.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) 12.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) 24.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 120.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 240.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q17" class="border rounded p-4">
+            <legend class="font-semibold">Item 17 - Matemática</legend>
+            <p class="mt-2 text-sm">A professora Beatriz escreveu no quadro a seguinte situação: "Uma figura plana é projetada sobre uma superfície, formando uma sombra. Um grupo de estudantes afirmou que, ao medir a área da projeção, seria possível descobrir a área da figura original, sabendo que a posição da luz é ortogonal a essa superfície."<br>
+            Ela pediu aos estudantes que comentassem sobre essa afirmação. Observe a resposta de cinco estudantes.<br>
+            Pedro: a área da projeção é sempre igual à da figura original.<br>
+            Mário: a área depende da inclinação da figura em relação à superfície.<br>
+            Maria: só vale para polígonos regulares.<br>
+            Marta: não é possível medir áreas em projeções.<br>
+            Quitéria: a área da sombra será sempre maior que a da figura original.</p>
+            <p class="mt-2 text-sm font-semibold">Qual estudante fez uma afirmação correta?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) Pedro</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) Mário</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) Maria</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) Marta</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) Quitéria</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q18" class="border rounded p-4">
+            <legend class="font-semibold">Item 18 - Matemática</legend>
+            <p class="mt-2 text-sm">A imagem, a seguir, apresenta dois sólidos geométricos, um paralelepípedo reto e um paralelepípedo oblíquo, ambos representados entre dois planos paralelos, α e β.</p>
+            <div class="border-dashed" data-img-name="q18"></div>
+            <p class="mt-2 text-sm">Onde,<br> no paralelepípedo reto (lado esquerdo): A base inferior está no plano α e tem área A₁; A base superior está no plano β e tem área a₁; A₁ = a₁.<br>
+            e no paralelepípedo oblíquo (lado direito): A base inferior está no plano α e tem área A₂; A base superior está no plano β e tem área a₂; A₂ = a₂.<br>
+            O termo h indica nos paralelepípedos a altura dos sólidos entre o topo e o plano β, e H a altura dos sólidos entre o topo e o plano α.
+            Sobre essa situação, observe as afirmações a seguir:<br>
+            I - As áreas da base dos dois sólidos A₁ e A₂ são equivalentes.<br>
+            II – Os novos sólidos formados pelo corte do plano β, que têm altura h, possuem volumes congruentes.<br>
+            III - Nesta situação, temos a proporção: a₁/A₁ = a₂/A₂ = h/H<br>
+            IV – Pelo princípio de Cavalieri, ambos os primas (reto e oblíquo) possuem volumes congruentes.</p>
+            <p class="mt-2 text-sm font-semibold">As afirmações verdadeiras são:</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) I, II e III.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) I, II e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) I, III e IV.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) II e III.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) II e IV.</span></label>
+            </div>
+        </fieldset>
+
+        <fieldset id="q19" class="border rounded p-4">
+            <legend class="font-semibold">Item 19 - Matemática</legend>
+            <p class="mt-2 text-sm">Uma figura plana está paralela a uma superfície de projeção e é iluminada por uma luz perpendicular ao plano da figura.</p>
+            <p class="mt-2 text-sm font-semibold">A área da projeção será</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) igual à área da figura.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) sempre maior do que a área da figura.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) sempre menor do que a área da figura.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) metade da área da figura.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) impossível de determinar.</span></label>
+            </div>
+        </fieldset>
+        
+        <fieldset id="q20" class="border rounded p-4">
+            <legend class="font-semibold">Item 20 - Matemática</legend>
+            <p class="mt-2 text-sm">Um novo produto foi lançado no mercado: o chá instantâneo em cápsulas para micro-ondas. Desenvolvido para atender consumidores com rotinas aceleradas, o produto permite o preparo rápido de uma bebida quente sem a necessidade de infusão tradicional. A escolha do recipiente adequado é fundamental para garantir que o volume de água necessário para dissolver a cápsula não ultrapasse a capacidade da caneca, evitando derramamentos durante o aquecimento.<br>Para o preparo, um consumidor dispõe destas duas opções: a caneca A tem formato de um prisma reto regular hexagonal de lado L = 4 cm, e a caneca B tem formato de um cilindro circular reto de diâmetro d = 8 cm e ambas têm altura igual a 10 cm. Este consumidor escolheu a caneca com maior capacidade para evitar derramamento durante o preparo. Considere π = 3,1 e √3 = 1,7.</p>
+            <div class="border-dashed" data-img-name="q20"></div>
+            <p class="mt-2 text-sm font-semibold">Qual é o volume, em centímetros cúbicos, da caneca escolhida?</p>
+            <div class="mt-2 space-y-1 options">
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) 204.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) 408.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) 496.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) 816.</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) 1984.</span></label>
+            </div>
+        </fieldset>
+
+        <!-- NOVO CONTAINER DE NAVEGAÇÃO -->
+        <div id="quiz-navigation" class="flex items-center justify-between pt-6 border-t mt-4">
+            <button id="prev-btn" type="button" class="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg hover:bg-slate-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+            </button>
+            <span id="page-indicator" class="text-sm font-medium text-slate-600"></span>
+            <button id="next-btn" type="button" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition">
+                Próximo
+            </button>
+        </div>
+
+        <!-- O BOTÃO DE ENVIAR AGORA FICA DENTRO DO PRÓPRIO CONTAINER, MAS INICIALMENTE OCULTO -->
+        <div id="submit-container" class="hidden flex items-center justify-between pt-6 border-t mt-4">
+            <button id="submitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2">
+                <span id="submitBtnText">Finalizar e Enviar Prova</span>
+                <div id="submitBtnSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+            </button>
+        </div>
+
+    </form>
+        </main>
+        
+        <footer class="mt-8 text-xs text-gray-500 text-center">
+            <p>Portal de Avaliações CEJA © 2025</p>
+        </footer>
+    </div>
+
+    <div id="modalRoot"></div>
+
+    <script src="../js/prova-template.js"></script>
 </body>
 </html>

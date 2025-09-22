@@ -1,102 +1,108 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prova — Matemática e suas Tecnologias</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
-  <style>
-    input[name="studentName"] { text-transform: uppercase; }
-    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
-    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
-    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
-    .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
-    .option-label { cursor:pointer; }
-    input[type="radio"] { accent-color: #2563eb; }
-    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .check-wrap { width: 80px; height: 80px; background-color: #dcfce7; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
-    .check-svg { width: 48px; height: 48px; }
-    .checkmark__path { stroke-dasharray: 100; stroke-dashoffset: 100; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw 0.8s 0.2s ease-out forwards; }
-    @keyframes draw { to { stroke-dashoffset: 0; } }
-    .confetti { width:100%; height:40px; overflow:hidden; position:relative; }
-    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
-    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
-    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
-    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
-    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
-    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Prova — Matemática e suas Tecnologias (1ª Série)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <style>
+        /* ESTILOS COMPLETOS PRESERVADOS */
+        input[name="studentName"] { text-transform: uppercase; }
+        .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+        .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+        .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+        .toast { position: fixed; right: 20px; top: 20px; z-index:99999; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+        .option-label { cursor:pointer; }
+        input[type="radio"] { accent-color: #2563eb; }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .check-wrap { width: 80px; height: 80px; background-color: #dcfce7; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .check-svg { width: 48px; height: 48px; }
+        .checkmark__path { stroke-dasharray: 100; stroke-dashoffset: 100; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw 0.8s 0.2s ease-out forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .confetti { width:100%; height:40px; overflow:hidden; position:relative; }
+        .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+        .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+        .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+        .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+        .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+        @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+        .border-dashed {
+            border-width: 2px; border-style: dashed; border-color: #e2e8f0; border-radius: 0.5rem;
+            text-align: center; font-size: 0.875rem; color: #64748b;
+            margin: 0.5rem 0; padding: 1rem; min-height: 100px;
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900 no-select">
-  <div class="max-w-5xl mx-auto p-6">
-    <header class="mb-4">
-      <h1 class="text-2xl font-bold">Bloco de Avaliação — Matemática e suas Tecnologias (1ª Série)</h1>
-      <p class="text-sm text-gray-600 mt-1">Bem-vindo à Plataforma de Avaliação CEJA. 1 tentativa permitida.</p>
-    </header>
+<body class="bg-slate-50 text-slate-900 no-select">
 
-    <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
-      <div class="mb-5 flex items-center gap-3"><div class="bg-blue-100 p-2 rounded-full"><svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div><h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2></div>
-      <form id="infoForm" class="space-y-4">
-        <div><label for="studentId" class="sr-only">Matrícula</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" /><path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" /></svg></div><input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1" placeholder="Sua Matrícula (Ex: 2412767146-8)" required /></div></div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label for="studentName" class="sr-only">Nome Completo</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div><input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1" placeholder="Nome Completo (em caixa alta)" required /></div></div>
-          <div><label for="studentClass" class="sr-only">Turma</label><div class="relative"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" /></svg></div><select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1" required><option value="" disabled selected>Selecione a Turma</option><option value="A">Turma A</option><option value="B">Turma B</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" /></svg></div></div></div></div>
-        <p id="infoMsg" class="text-sm text-red-600 h-5"></p>
-        <div class="pt-2"><button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:bg-blue-400 disabled:cursor-wait"><span id="startBtnText">Iniciar Avaliação</span><div id="startBtnSpinner" class="spinner hidden"></div><svg class="h-5 w-5" id="startBtnArrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" /></svg></button></div>
-      </form>
-    </section>
+    <!-- CAMADA DE INÍCIO DA PROVA QUE FORÇA A TELA CHEIA -->
+    <div id="start-exam-overlay" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4" style="backdrop-filter: blur(8px);">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-white">Você está pronto?</h2>
+            <p class="text-slate-300 mt-2 mb-6 max-w-lg">A avaliação começará em modo tela cheia para garantir o foco. Se você sair acidentalmente, terá 3 segundos para retornar.</p>
+            <button id="start-fullscreen-btn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">
+                Iniciar Avaliação Agora
+            </button>
+        </div>
+    </div>
 
-    <main id="quizArea" class="hidden">
-      <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
-
-        <!-- ============================================= -->
-        <!--        INÍCIO DAS QUESTÕES (MATEMÁTICA)       -->
-        <!-- ============================================= -->
-
-        <fieldset id="q1" class="border rounded p-4">
-            <legend class="font-semibold">Item 1.</legend>
-            <p class="mt-2 text-sm">Ao fazer um comparativo da colheita de cana-de-açúcar de um determinado estado, observou-se que a produção evoluiu de 68,74 milhões de toneladas, em 2018, para 78,5 milhões de toneladas, em 2024. A diferença, em quilogramas, de cana-de-açúcar produzida entre esses anos, foi de</p>
+    <div class="max-w-5xl mx-auto p-4 sm:p-6">
+        <header id="quiz-header" class="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+            <!-- O JS preencherá esta área -->
+        </header>
+        
+        <main>
+            <form id="quizForm" data-image-folder="../assets/imgmat" data-series-id="1_SERIE_MATEMATICA" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
+                
+         <fieldset id="q1" class="border rounded p-4">
+            <legend class="font-semibold">Item 1 - Matemática</legend>
+            <p class="mt-2 text-sm">Ao fazer um comparativo da colheita de cana-de-açúcar de um determinado estado, observou-se que a produção evoluiu de 68,74 milhões de toneladas, em 2018, para 78,5 milhões de toneladas, em 2024.</p>
+            <p class="mt-2 text-sm font-semibold">A diferença, em quilogramas, de cana-de-açúcar produzida entre esses anos, foi de</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) 9,76 ⋅ 10⁶.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) 9,76 ⋅ 10⁷.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) 9,76 ⋅ 10⁸.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) 9,76 ⋅ 10⁹.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(Ε) 9,76 ⋅ 10¹⁰.</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) 9,76 · 10<sup>6</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) 9,76 · 10<sup>7</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) 9,76 · 10<sup>8</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) 9,76 · 10<sup>9</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) 9,76 · 10<sup>10</sup></span></label>
             </div>
         </fieldset>
 
         <fieldset id="q2" class="border rounded p-4">
-            <legend class="font-semibold">Item 2.</legend>
-            <p class="mt-2 text-sm">Agências de monitoramento de qualidade do ar utilizam um determinado filtro para capturar partículas de poeira. Este filtro coleta 3,2·10² dos grãos de poeira por dia, e cada partícula de poeira tem massa aproximada de 2,5·10⁻⁶ gramas. Qual é a massa total, em gramas, de grãos de areia coletados em uma semana?</p>
+            <legend class="font-semibold">Item 2 - Matemática</legend>
+            <p class="mt-2 text-sm">Agências de monitoramento de qualidade do ar utilizam um determinado filtro para capturar partículas de poeira. Este filtro coleta 3,2 · 10² dos grãos de poeira por dia, e cada partícula de poeira tem massa aproximada de 2,5 · 10<sup>-6</sup> gramas.</p>
+            <p class="mt-2 text-sm font-semibold">Qual é a massa total, em gramas, de grãos de poeira coletados em uma semana?</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) 8·10⁻⁴</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) 8·10⁻³</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) 5,6 ⋅ 10⁻³</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) 5,6·10⁻⁴</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(Ε) 5,6 ⋅ 10⁻⁵</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) 8 · 10<sup>-4</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) 8 · 10<sup>-3</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) 5,6 · 10<sup>-3</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) 5,6 · 10<sup>-4</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) 5,6 · 10<sup>-5</sup></span></label>
             </div>
         </fieldset>
 
         <fieldset id="q3" class="border rounded p-4">
-            <legend class="font-semibold">Item 3.</legend>
-            <p class="mt-2 text-sm">Judith é uma influenciadora digital que começou a produzir conteúdo educacional em uma rede social. Em janeiro, ela tinha apenas 500 seguidores e, a cada mês, o número de seguidores dobrou, pois seu conteúdo está viralizando entre os estudantes de todo estado. Qual das notações, a seguir, representa a quantidade de seguidores que Judith terá ao final do mês de agosto?</p>
+            <legend class="font-semibold">Item 3 - Matemática</legend>
+            <p class="mt-2 text-sm">Judith é uma influenciadora digital que começou a produzir conteúdo educacional em uma rede social. Em janeiro, ela tinha apenas 500 seguidores e, a cada mês, o número de seguidores dobrou, pois seu conteúdo está viralizando entre os estudantes de todo estado.</p>
+            <p class="mt-2 text-sm font-semibold">Qual das notações, a seguir, representa a quantidade de seguidores que Judith terá ao final do mês de agosto?</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) 1,6 ⋅ 10³</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) 3,2 ⋅ 10³</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) 6,4 ⋅ 10⁴</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) 16 ⋅ 10⁴</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) 64 ⋅ 10⁴</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) 1,6 · 10<sup>3</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) 3,2 · 10<sup>3</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) 6,4 · 10<sup>4</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) 16 · 10<sup>4</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) 64 · 10<sup>4</sup></span></label>
             </div>
         </fieldset>
-        
+
         <fieldset id="q4" class="border rounded p-4">
-            <legend class="font-semibold">Item 4.</legend>
+            <legend class="font-semibold">Item 4 - Matemática</legend>
             <p class="mt-2 text-sm">Observe a sequência de figuras a seguir.</p>
-            <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500 my-2"></div>
-            <p class="mt-2 text-sm">Quatro estudantes propuseram expressões para representar a quantidade de pontos (P), no perímetro de cada figura, em função da sua posição (n). Veja:<br> • Ana: P = 5n<br> • Beto: P = n + n + n + n + n<br> • Carlos: P = 6n - n<br> • Débora: P = 4n + 1</p>
+            <div class="border-dashed" data-img-name="q4"></div>
+            <p class="mt-2 text-sm">Quatro estudantes propuseram expressões para representar a quantidade de pontos (P), no perímetro de cada figura, em função da sua posição (n). Veja:<br>• Ana: P = 5n<br>• Beto: P = n + n + n + n + n<br>• Carlos: P = 6n - n<br>• Débora: P = 4n + 1</p>
             <p class="mt-2 text-sm font-semibold">As expressões que representam corretamente a quantidade de pontos no perímetro de cada figura, são as de</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Ana e Carlos, apenas.</span></label>
@@ -120,10 +126,10 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) E = 2 · 5ⁿ.</span></label>
             </div>
         </fieldset>
-        
+
         <fieldset id="q6" class="border rounded p-4">
-            <legend class="font-semibold">Item 6.</legend>
-            <p class="mt-2 text-sm">Certa população de insetos cresce de acordo com a expressão N = 300·3<sup>t/4</sup>, sendo t o tempo em meses e N o número de insetos na população após o tempo t.</p>
+            <legend class="font-semibold">Item 6 - Matemática</legend>
+            <p class="mt-2 text-sm">Certa população de insetos cresce de acordo com a expressão N = 300 · 3<sup>t/4</sup>, sendo t o tempo em meses e N o número de insetos na população após o tempo t.</p>
             <p class="mt-2 text-sm font-semibold">Após um ano, qual será a população de insetos?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) 1500</span></label>
@@ -133,10 +139,11 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) 8100</span></label>
             </div>
         </fieldset>
-        
+
         <fieldset id="q7" class="border rounded p-4">
-            <legend class="font-semibold">Item 7.</legend>
-            <p class="mt-2 text-sm">Dada a expressão a seguir: (5³)²√5 / 10</p>
+            <legend class="font-semibold">Item 7 - Matemática</legend>
+            <p class="mt-2 text-sm">Dada a expressão a seguir:</p>
+            <div class="border-dashed" data-img-name="q7"></div>
             <p class="mt-2 text-sm font-semibold">Sua simplificação será</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) 25/2</span></label>
@@ -148,11 +155,11 @@
         </fieldset>
 
         <fieldset id="q8" class="border rounded p-4">
-            <legend class="font-semibold">Item 8.</legend>
+            <legend class="font-semibold">Item 8 - Matemática</legend>
             <p class="mt-2 text-sm">O termo “meia-vida” é utilizado para descrever o fenômeno de decaimento da massa de um composto (químico, radioativo etc.) pela metade com o passar do tempo. Observe o decaimento de 800 mg de um medicamento após sua ingestão.</p>
-            <div class="my-4 overflow-x-auto"><table class="w-full text-sm text-left text-gray-500"><tbody><tr class="bg-white border-b"><th class="px-6 py-4 font-medium text-gray-900">Tempo (h)</th><td class="px-6 py-4">0</td><td class="px-6 py-4">1</td><td class="px-6 py-4">2</td><td class="px-6 py-4">...</td></tr><tr class="bg-white border-b"><th class="px-6 py-4 font-medium text-gray-900">Massa (mg)</th><td class="px-6 py-4">800</td><td class="px-6 py-4">400</td><td class="px-6 py-4">200</td><td class="px-6 py-4">...</td></tr></tbody></table></div>
+            <div class="border-dashed" data-img-name="q8_1"></div>
             <p class="mt-2 text-sm font-semibold">Qual é o gráfico que pode representar o decaimento deste medicamento?</p>
-            <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500 my-2"></div>
+            <div class="border-dashed" data-img-name="q8_2"></div>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) Gráfico A</span></label>
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) Gráfico B</span></label>
@@ -161,9 +168,9 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) Gráfico E</span></label>
             </div>
         </fieldset>
-        
+
         <fieldset id="q9" class="border rounded p-4">
-            <legend class="font-semibold">Item 9.</legend>
+            <legend class="font-semibold">Item 9 - Matemática</legend>
             <p class="mt-2 text-sm">Um vídeo postado por um educador digital teve 2000 visualizações na primeira hora, após sua postagem. A cada doze horas, o número de visualizações triplicou em relação ao período anterior. Após dois dias, o educador observou que esse ritmo foi mantido.</p>
             <p class="mt-2 text-sm font-semibold">Quantas visualizações o vídeo teve após esses dois dias?</p>
             <div class="mt-2 space-y-1 options">
@@ -176,8 +183,8 @@
         </fieldset>
 
         <fieldset id="q10" class="border rounded p-4">
-            <legend class="font-semibold">Item 10.</legend>
-            <p class="mt-2 text-sm">Júlia estava lendo sobre medidas pequenas e descobriu que um fio de cabelo tem, em média, 6×10⁻⁵ m de diâmetro. Sabendo disso, ela quis comparar essa medida com a do diâmetro de um tubo de caneta, que tem 3 × 10⁻³ m.</p>
+            <legend class="font-semibold">Item 10 - Matemática</legend>
+            <p class="mt-2 text-sm">Júlia estava lendo sobre medidas pequenas e descobriu que um fio de cabelo tem, em média, 6 × 10<sup>-5</sup> m de diâmetro. Sabendo disso, ela quis comparar essa medida com a do diâmetro de um tubo de caneta, que tem 3 × 10<sup>-3</sup> m.</p>
             <p class="mt-2 text-sm font-semibold">Quantas vezes o diâmetro de um tubo de caneta é maior que o de um fio de cabelo?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) 2 vezes.</span></label>
@@ -187,10 +194,12 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) 100 vezes.</span></label>
             </div>
         </fieldset>
-
+        
         <fieldset id="q11" class="border rounded p-4">
-            <legend class="font-semibold">Item 11.</legend>
-            <p class="mt-2 text-sm">Observe a expressão a seguir: (100⁰·⁵ + 4)ª.<br>Considere a = 2 nesta expressão.</p>
+            <legend class="font-semibold">Item 11 - Matemática</legend>
+            <p class="mt-2 text-sm">Observe a expressão a seguir.</p>
+            <div class="border-dashed" data-img-name="q11"></div>
+            <p class="mt-2 text-sm">Considere a = 2 nesta expressão.</p>
             <p class="mt-2 text-sm font-semibold">Qual é o valor numérico dessa expressão?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) 196</span></label>
@@ -202,21 +211,21 @@
         </fieldset>
         
         <fieldset id="q12" class="border rounded p-4">
-            <legend class="font-semibold">Item 12.</legend>
-            <p class="mt-2 text-sm">Carla decidiu investir R$ 2000,00 em um fundo bancário que rende 4% ao trimestre, com capitalização composta. Ela deixará este valor durante 18 meses, sem fazer novos depósitos. Além disso, o responsável pelo fundo apresentou a fórmula dos juros compostos, para Carla fazer um acompanhamento detalhado: M = C · (1 + i)ᵗ.<br>Para efeito de cálculo, considere: 1,04⁶ ≈ 1,265.</p>
+            <legend class="font-semibold">Item 12 - Matemática</legend>
+            <p class="mt-2 text-sm">Carla decidiu investir R$ 2000,00 em um fundo bancário que rende 4% ao trimestre, com capitalização composta. Ela deixará este valor durante 18 meses, sem fazer novos depósitos. Além disso, o responsável pelo fundo apresentou a fórmula dos juros compostos, para Carla fazer um acompanhamento detalhado:<br>M = C · (1 + i)<sup>t</sup><br>Em que, M é o montante final; C é o capital inicial; i é a taxa de juros; t é o tempo da aplicação dos juros.<br>Para efeito de cálculo, considere: 1,04<sup>6</sup> = 1,265.</p>
             <p class="mt-2 text-sm font-semibold">Qual será o montante aproximado, em reais, ao final desse período?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) 1 265,00</span></label>
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) 2 530,00</span></label>
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) 8 320,00</span></label>
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) 12 480,00</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(Ε) 37 440,00</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) 37 440,00</span></label>
             </div>
         </fieldset>
-
+        
         <fieldset id="q13" class="border rounded p-4">
-            <legend class="font-semibold">Item 13.</legend>
-            <p class="mt-2 text-sm">Um vídeo educativo postado por uma equipe do Estudantes de Atitude começou a viralizar. No primeiro dia, ele teve 10 visualizações. A cada novo dia, o número de visualizações triplicava em relação ao dia anterior, pois mais pessoas compartilham o conteúdo. O número total de visualizações após x dias pode ser representado pela fórmula: V = 10 · 3ˣ</p>
+            <legend class="font-semibold">Item 13 - Matemática</legend>
+            <p class="mt-2 text-sm">Um vídeo educativo postado por uma equipe do Estudantes de Atitude começou a viralizar. No primeiro dia, ele teve 10 visualizações. A cada novo dia, o número de visualizações triplicava em relação ao dia anterior, pois mais pessoas compartilham o conteúdo. O número total de visualizações após x dias pode ser representado pela fórmula:<br>V = 10 · 3<sup>x</sup></p>
             <p class="mt-2 text-sm font-semibold">Dessa forma, no 6º dia após sua publicação, a previsão é que o vídeo tenha</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) 180 visualizações.</span></label>
@@ -226,10 +235,10 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) 7290 visualizações.</span></label>
             </div>
         </fieldset>
-        
+
         <fieldset id="q14" class="border rounded p-4">
-            <legend class="font-semibold">Item 14.</legend>
-            <p class="mt-2 text-sm">Leia a situação a seguir, para responder aos itens 14 e 15:<br>Durante seus estudos, um biólogo constatou que o número de bactérias (N) de uma cultura aumenta após t horas e pode ser descrito pela equação: N = N₀· 4ᵗ [Onde N₀ é o número inicial de bactérias]. Considere que, em um experimento, o número inicial de bactérias é igual a 200.</p>
+            <legend class="font-semibold">Item 14 - Matemática</legend>
+            <p class="mt-2 text-sm">Leia a situação a seguir, para responder aos itens 14 e 15:<br>Durante seus estudos, um biólogo constatou que o número de bactérias (N) de uma cultura aumenta após t horas e pode ser descrito pela equação: N = N<sub>o</sub> · 4<sup>t</sup> [Onde N<sub>o</sub> é o número inicial de bactérias]<br>Considere que, em um experimento, o número inicial de bactérias é igual a 200.</p>
             <p class="mt-2 text-sm font-semibold">Após quantas horas, nessa cultura, haverá um total de 204 800 bactérias?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) 5</span></label>
@@ -239,11 +248,12 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) 30</span></label>
             </div>
         </fieldset>
-
+        
         <fieldset id="q15" class="border rounded p-4">
-            <legend class="font-semibold">Item 15.</legend>
+            <legend class="font-semibold">Item 15 - Matemática</legend>
+            <p class="mt-2 text-sm">Leia a situação a seguir, para responder aos itens 14 e 15:<br>Durante seus estudos, um biólogo constatou que o número de bactérias (N) de uma cultura aumenta após t horas e pode ser descrito pela equação: N = N<sub>o</sub> · 4<sup>t</sup> [Onde N<sub>o</sub> é o número inicial de bactérias]<br>Considere que, em um experimento, o número inicial de bactérias é igual a 200.</p>
             <p class="mt-2 text-sm font-semibold">Qual é o gráfico que representa o crescimento dessa cultura de bactéria?</p>
-            <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500 my-2"></div>
+            <div class="border-dashed" data-img-name="q15"></div>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) Gráfico A</span></label>
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) Gráfico B</span></label>
@@ -252,23 +262,23 @@
                 <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) Gráfico E</span></label>
             </div>
         </fieldset>
-
+        
         <fieldset id="q16" class="border rounded p-4">
-            <legend class="font-semibold">Item 16.</legend>
-            <p class="mt-2 text-sm">O automóvel é um bem que se desvaloriza muito rapidamente, quando comparado a outros bens. A desvalorização de um certo modelo de automóvel é cerca de 10% ao ano, em relação ao seu preço inicial (V₀).</p>
+            <legend class="font-semibold">Item 16 - Matemática</legend>
+            <p class="mt-2 text-sm">O automóvel é um bem que se desvaloriza muito rapidamente, quando comparado a outros bens. A desvalorização de um certo modelo de automóvel é cerca de 10% ao ano, em relação ao seu preço inicial (V<sub>o</sub>).</p>
             <p class="mt-2 text-sm font-semibold">Qual expressão representa a desvalorização desse modelo ao passar dos anos (t)?</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) V₀ ⋅ 0,1ᵗ</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) V₀ ⋅ 0,9ᵗ</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) V₀ ⋅ 1,1ᵗ</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 0,9 · V₀ᵗ</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 0,1 · V₀ᵗ</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) V<sub>o</sub> · 0,1<sup>t</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) V<sub>o</sub> · 0,9<sup>t</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) V<sub>o</sub> · 1,1<sup>t</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 0,9 · V<sub>o</sub><sup>t</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 0,1 · V<sub>o</sub><sup>t</sup></span></label>
             </div>
         </fieldset>
         
         <fieldset id="q17" class="border rounded p-4">
-            <legend class="font-semibold">Item 17.</legend>
-            <p class="mt-2 text-sm">Observe a função exponencial, a seguir: y = (4ˣ / 4⁵) - 256.</p>
+            <legend class="font-semibold">Item 17 - Matemática</legend>
+            <p class="mt-2 text-sm">Observe a função exponencial, a seguir:<br>y = (4<sup>x</sup> / 4<sup>5</sup>) - 256</p>
             <p class="mt-2 text-sm font-semibold">Qual é o valor de x quando y = 0?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) 5</span></label>
@@ -280,9 +290,9 @@
         </fieldset>
         
         <fieldset id="q18" class="border rounded p-4">
-            <legend class="font-semibold">Item 18.</legend>
-            <p class="mt-2 text-sm">Dado o gráfico da função f(x) = aˣ.</p>
-            <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500 my-2"></div>
+            <legend class="font-semibold">Item 18 - Matemática</legend>
+            <p class="mt-2 text-sm">Dado o gráfico da função f(x) = a<sup>x</sup>.</p>
+            <div class="border-dashed" data-img-name="q18"></div>
             <p class="mt-2 text-sm font-semibold">Qual é o valor de a na função?</p>
             <div class="mt-2 space-y-1 options">
                 <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) 3/2</span></label>
@@ -294,278 +304,63 @@
         </fieldset>
 
         <fieldset id="q19" class="border rounded p-4">
-            <legend class="font-semibold">Item 19.</legend>
-            <p class="mt-2 text-sm">Para os itens 19 e 20 considere as seguintes informações:<br>I. log♭ a = x ↔ bˣ = a<br>II. log10 = 1</p>
-            <p class="mt-2 text-sm">O pH de uma solução é definido por: pH = log(1/H⁺) em que H⁺ é a concentração de hidrogênio em íons-grama por litro de solução.</p>
-            <p class="mt-2 text-sm font-semibold">Dessa forma, quando H⁺ = 10⁻⁸, temos uma solução de pH igual a</p>
+            <legend class="font-semibold">Item 19 - Matemática</legend>
+            <p class="mt-2 text-sm">Para os itens 19 e 20 considere as seguintes informações:<br>I. log<sub>b</sub> a = x ↔ b<sup>x</sup> = a<br>II. log10 = 1</p>
+            <p class="mt-2 text-sm">O pH de uma solução é definido por: pH = log(1/H<sup>+</sup>), em que pH é a concentração de hidrogênio em íons-grama por litro de solução.</p>
+            <p class="mt-2 text-sm font-semibold">Dessa forma, quando H<sup>+</sup> = 10<sup>-8</sup>, temos uma solução de pH igual a</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) – 8.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 1/8.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 8.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 10⁸.</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(Ε) 10⁻⁸.</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) -8</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 1/8</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 8</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 10<sup>8</sup></span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) 10<sup>-8</sup></span></label>
             </div>
         </fieldset>
-
+        
         <fieldset id="q20" class="border rounded p-4">
-            <legend class="font-semibold">Item 20.</legend>
-            <p class="mt-2 text-sm">Terremotos são eventos naturais que causam consequências ambientais devastadoras. A escala Richter é uma das expressões utilizadas para calcular a intensidade de um terremoto, e é representada pela seguinte fórmula: M = (2/3)·log₁₀(E/E₀) Onde: M é a magnitude do terremoto na escala Richter, E é a energia liberada em joules (J) e E₀ = 10⁴,⁵J é a energia liberada por um pequeno terremoto, usada como referência.</p>
+            <legend class="font-semibold">Item 20 - Matemática</legend>
+            <p class="mt-2 text-sm">Para os itens 19 e 20 considere as seguintes informações:<br>I. log<sub>b</sub> a = x ↔ b<sup>x</sup> = a<br>II. log10 = 1</p>
+            <p class="mt-2 text-sm">Terremotos são eventos naturais que causam consequências ambientais devastadoras, seja em terra firme ou no mar. A escala Richter é uma das expressões utilizadas para calcular a intensidade de um terremoto, e é representada pela seguinte fórmula: M = 2/3 log<sub>10</sub>(E/E<sub>o</sub>)<br>Onde: M é a magnitude do terremoto na escala Richter, E é a energia liberada em joules (J) e E<sub>o</sub> = 10<sup>4,5</sup>J é a energia liberada por um pequeno terremoto, usada como referência.</p>
             <p class="mt-2 text-sm font-semibold">Qual foi a ordem de grandeza da energia liberada por um terremoto de magnitude 5 na escala Richter?</p>
             <div class="mt-2 space-y-1 options">
-                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) 10¹⁰ joules</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) 10¹¹ joules</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) 10¹² joules</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) 10¹³ joules</span></label>
-                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) 10¹⁴ joules</span></label>
+                <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) 10<sup>10</sup> joules</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) 10<sup>11</sup> joules</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) 10<sup>12</sup> joules</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) 10<sup>13</sup> joules</span></label>
+                <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) 10<sup>14</sup> joules</span></label>
             </div>
         </fieldset>
-        
-        <div class="flex items-center justify-between"><div class="text-sm text-gray-600"></div><button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button></div>
-      </form>
-    </main>
 
-    <footer class="mt-6 text-xs text-gray-500 text-center">COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@</footer>
+
+        <!-- NOVO CONTAINER DE NAVEGAÇÃO -->
+        <div id="quiz-navigation" class="flex items-center justify-between pt-6 border-t mt-4">
+            <button id="prev-btn" type="button" class="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg hover:bg-slate-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+            </button>
+            <span id="page-indicator" class="text-sm font-medium text-slate-600"></span>
+            <button id="next-btn" type="button" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition">
+                Próximo
+            </button>
+        </div>
+
+        <!-- O BOTÃO DE ENVIAR AGORA FICA DENTRO DO PRÓPRIO CONTAINER, MAS INICIALMENTE OCULTO -->
+        <div id="submit-container" class="hidden flex items-center justify-between pt-6 border-t mt-4">
+            <button id="submitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2">
+                <span id="submitBtnText">Finalizar e Enviar Prova</span>
+                <div id="submitBtnSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+            </button>
+        </div>
+
+    </form>
+        </main>
+        
+        <footer class="mt-8 text-xs text-gray-500 text-center">
+            <p>Portal de Avaliações CEJA © 2025</p>
+        </footer>
     </div>
-    <div id="modalRoot" style="display:none;"></div>
 
-<script>
-    const SERIES = "1_SERIE_MATEMATICA"; 
-    const MAX_ATTEMPTS = 1;
-    const PROGRESS_KEY = `progress_${SERIES}`;
-    const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    <div id="modalRoot"></div>
 
-    const studentNameInput = document.getElementById('studentName');
-    const studentIdInput = document.getElementById('studentId');
-    const studentClassInput = document.getElementById('studentClass');
-    const startBtn = document.getElementById('startBtn');
-    const startBtnText = document.getElementById('startBtnText');
-    const startBtnSpinner = document.getElementById('startBtnSpinner');
-    const startBtnArrow = document.getElementById('startBtnArrow');
-    const infoMsg = document.getElementById('infoMsg');
-    const quizArea = document.getElementById('quizArea');
-    const quizForm = document.getElementById('quizForm');
-    const modalRoot = document.getElementById('modalRoot');
-
-
-    // ===>>> GERENCIADOR DE LOGIN DO SUPABASE <<<===
- async function manageAuthSession() {
-      try {
-        // 1. Tenta obter a sessão atual. Isso NÃO faz uma nova chamada de login.
-        const { data: { session } } = await supabaseClient.auth.getSession();
-
-        // 2. Se NÃO houver sessão, E somente neste caso, criamos uma nova.
-        if (!session) {
-          console.log('Nenhuma sessão encontrada. Criando nova sessão anônima...');
-          const { error } = await supabaseClient.auth.signInAnonymously();
-          if (error) {
-            // Se a criação da nova sessão ainda falhar (por exemplo, no primeiro aluno), lançamos o erro.
-            throw error;
-          }
-        } else {
-          console.log('Sessão existente encontrada e reutilizada.');
-        }
-      } catch (error) {
-        // 3. Se qualquer coisa na gestão da sessão falhar, exibe a mensagem de erro.
-        console.error('Falha crítica na gestão da sessão:', error);
-        document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: sans-serif;"><h1>Erro de Conexão</h1><p>Não foi possível iniciar uma sessão segura. Por favor, recarregue a página.</p></div>';
-        throw new Error("Falha crítica na gestão da sessão.");
-      }
-    }
-    
-    function qs(sel, ctx = document) { return ctx.querySelector(sel); }
-    function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
-    
-    function normalizeString(str) {
-      if (!str) return '';
-      let normalized = str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-      return normalized.toUpperCase().replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_-]/g, '');
-    }
-    
-    studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => { if ((e.ctrlKey && e.key === 'r') || e.key === 'F5' || (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) || e.key === 'F12') e.preventDefault(); });
-
-    startBtn.addEventListener('click', async () => {
-        infoMsg.textContent = '';
-        const name = studentNameInput.value.trim();
-        const matricula = studentIdInput.value.trim();
-        const turma = studentClassInput.value;
-        if (!matricula || !name || !turma) { infoMsg.textContent = 'Todos os campos são obrigatórios.'; return; }
-        
-        startBtn.disabled = true; startBtnText.textContent = 'Verificando...'; startBtnSpinner.classList.remove('hidden'); startBtnArrow.classList.add('hidden');
-        try {
-            const { data: aluno, error } = await supabaseClient.from('alunos').select('nome_completo').eq('matricula', matricula).single();
-            if (error || !aluno) throw new Error("Matrícula não encontrada. Verifique os dados.");
-            if (normalizeString(aluno.nome_completo) !== normalizeString(name.replace(/_/g, ' '))) throw new Error("O nome não corresponde à matrícula informada.");
-
-            const key = `exam_${SERIES}_${matricula}`;
-            let record = JSON.parse(localStorage.getItem(key));
-            if (record && record.attempts >= MAX_ATTEMPTS) throw new Error(`Você já atingiu o limite de ${MAX_ATTEMPTS} tentativa(s).`);
-
-            if (!record) { record = { name: name.toUpperCase(), matricula, turma, attempts: 0, history: [], wrongQuestions: [] }; }
-            else { record.name = name.toUpperCase(); record.turma = turma; }
-            localStorage.setItem(key, JSON.stringify(record));
-
-            qs('#studentInfo').classList.add('hidden');
-            quizArea.classList.remove('hidden');
-            if (record.attempts > 0 && Array.isArray(record.wrongQuestions)) {
-                prepareSecondAttemptView(matricula, record.wrongQuestions);
-            }
-        } catch (err) {
-            infoMsg.textContent = err.message; console.error("Falha na validação do aluno:", err.message);
-        } finally {
-            startBtn.disabled = false; startBtnText.textContent = 'Iniciar Avaliação'; startBtnSpinner.classList.add('hidden'); startBtnArrow.classList.remove('hidden');
-        }
-    });
-    
-    if (quizForm) quizForm.addEventListener('submit', async function (ev) {
-        ev.preventDefault();
-        const matricula = studentIdInput.value.trim();
-        const key = `exam_${SERIES}_${matricula}`;
-        let record = JSON.parse(localStorage.getItem(key));
-        if (!record) { alert('Erro: registro do aluno não encontrado.'); return; }
-
-        const studentAnswers = {};
-        const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
-        let allAnswered = true;
-        visibleFieldsets.forEach(fs => { const sel = qs(`input[name="${fs.id}"]:checked`, fs); if (!sel) allAnswered = false; studentAnswers[fs.id] = sel ? sel.value : null; });
-        if (!allAnswered) { showToast('Responda todas as questões antes de enviar.', 'warn'); return; }
-
-        qs('#submitBtn').disabled = true; qs('#submitBtn').textContent = 'Corrigindo...';
-        
-        try {
-            const invokeCorrection = async (answers) => {
-                const { data, error } = await supabaseClient.rpc('corrigir_respostas_aluno', { exam_id: SERIES, student_answers: answers });
-                if (error) throw new Error(`Erro na API de correção: ${error.message}`);
-                if (data.error) throw new Error(`Erro no servidor: ${data.error}`);
-                return data;
-            };
-
-            record.attempts++;
-            record.history = record.history || [];
-            record.history.push({ attempt: record.attempts, answers: studentAnswers, ts: new Date().toISOString() });
-            
-            const isSecondAttempt = record.attempts > 1;
-            const answersToCorrect = isSecondAttempt ? { ...(record.history[0]?.answers || {}), ...studentAnswers } : studentAnswers;
-            const resultData = await invokeCorrection(answersToCorrect);
-
-            record.correctCount = resultData.correctCount;
-            record.totalQuestions = resultData.totalQuestions;
-            if (record.attempts === 1) {
-                record.wrongQuestions = resultData.wrongQuestions;
-                record.retakeAllowed = resultData.wrongQuestions.length > 0 && MAX_ATTEMPTS > 1;
-            }
-            if (record.attempts >= MAX_ATTEMPTS || !record.retakeAllowed) { record.finalized = true; record.finalAnswers = answersToCorrect; }
-            
-            localStorage.setItem(key, JSON.stringify(record));
-            localStorage.removeItem(PROGRESS_KEY);
-            quizArea.classList.add('hidden');
-            if (record.finalized) { showModalResultFinal(record); } else { showModalResultPartial(record); }
-        } catch (err) {
-            console.error("Erro ao chamar a função de correção:", err.message);
-            showToast('Houve um erro ao corrigir sua prova. Tente novamente.', 'error');
-            if (record) { record.attempts--; localStorage.setItem(key, JSON.stringify(record)); }
-        } finally { qs('#submitBtn').disabled = false; qs('#submitBtn').textContent = 'Enviar prova'; }
-    });
-    
-    function animateValue(element, start, end, duration) { let startTimestamp = null; const step = (timestamp) => { if (!startTimestamp) startTimestamp = timestamp; const progress = Math.min((timestamp - startTimestamp) / duration, 1); const easedProgress = 1 - Math.pow(1 - progress, 3); element.textContent = Math.floor(easedProgress * (end - start) + start); if (progress < 1) { window.requestAnimationFrame(step); } else { element.textContent = end; } }; window.requestAnimationFrame(step); }
-    function createModal(htmlContent) { modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal">${htmlContent}</div></div>`; modalRoot.style.display = 'flex'; qs('.modal-backdrop', modalRoot).addEventListener('click', e => { if (e.target === e.currentTarget) { const record = JSON.parse(localStorage.getItem(`exam_${SERIES}_${studentIdInput.value.trim()}`)); if (!record || record.finalized || !record.retakeAllowed) closeModal(); } }); }
-    function closeModal() { modalRoot.style.display = 'none'; modalRoot.innerHTML = ''; }
-    function showToast(text, type = 'info') { const t = document.createElement('div'); t.className = 'toast'; t.textContent = text; document.body.appendChild(t); setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600); setTimeout(() => t.remove(), 3000); }
-    function showModalResultPartial(record) { const total = record.totalQuestions || 20; const pct = Math.round((record.correctCount / total) * 100); const msg = `Você pode refazer apenas as ${record.wrongQuestions.length} questões que errou. Boa sorte!`; const btn = `<button id="modalRetake" class="group flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path fill-rule="evenodd" d="M15.312 11.424a5.5 5.5 0 01-9.201-4.42 5.5 5.5 0 017.48-5.013.563.563 0 01.764.819l-1.22 1.464a.563.563 0 01-.764-.819A4.375 4.375 0 006.19 7.004a4.375 4.375 0 007.412 3.56a.563.563 0 01.81.76zM4.688 8.576a5.5 5.5 0 019.201 4.42 5.5 5.5 0 01-7.48 5.013.563.563 0 01-.764-.819l1.22-1.464a.563.563 0 01.764.819 4.375 4.375 0 007.92-3.56 4.375 4.375 0 00-7.412-3.56.563.563 0 01-.81-.76z" clip-rule="evenodd" /></svg><span>Fazer 2ª Tentativa</span></button>`; createModal(`<div class="text-center"><div class="check-wrap"><svg class="check-svg" viewBox="0 0 52 52"><path class="checkmark__path" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg></div><h2 class="text-2xl font-bold text-slate-900 mt-4">1ª Tentativa Concluída</h2><p class="text-5xl font-bold text-slate-800 my-2"><span id="score-counter">0</span>%</p><p class="text-sm text-gray-600">Acertos: ${record.correctCount} de ${total}</p><p class="mt-4 max-w-md mx-auto">${msg}</p><div id="confetti-container" class="confetti"></div><div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">${btn}</div></div>`); const scoreEl = qs('#score-counter'); setTimeout(() => { animateValue(scoreEl, 0, pct, 1500); setTimeout(() => { qs('#confetti-container').innerHTML = `<span>🎉</span><span>🎊</span><span>🥳</span><span>✨</span>`; }, 1500); }, 300); qs('#modalRetake')?.addEventListener('click', () => { closeModal(); quizArea.classList.remove('hidden'); prepareSecondAttemptView(record.matricula, record.wrongQuestions); }); }
-    function showModalResultFinal(record) { const total = record.totalQuestions || 20; const pct = Math.round((record.correctCount / total) * 100); const msg = "Desempenho finalizado. Clique abaixo para gerar e enviar seu resultado."; const btn = `<button id="modalExport" class="group flex w-full sm:w-auto items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 py-3 font-semibold text-white transition hover:bg-indigo-700 active:scale-95"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="w-5 h-5"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm.75-11.25a.75.75 0 00-1.5 0v4.59L7.3 9.24a.75.75 0 00-1.1 1.02l3.25 3.5a.75.75 0 001.1 0l3.25-3.5a.75.75 0 10-1.1-1.02l-1.95 2.1V6.75z" clip-rule="evenodd" /></svg><span>Enviar Resultado Final</span></button>`; createModal(`<div class="text-center"><div class="check-wrap"><svg class="check-svg" viewBox="0 0 52 52"><path class="checkmark__path" d="M14.1 27.2l7.1 7.2 16.7-16.8"/></svg></div><h2 class="text-2xl font-bold text-slate-900 mt-4">Avaliação Finalizada!</h2><p class="text-5xl font-bold text-slate-800 my-2"><span id="score-counter">0</span>%</p><p class="text-sm text-gray-600">Acertos: ${record.correctCount} de ${total}</p><p class="mt-4 max-w-md mx-auto">${msg}</p><div id="confetti-container" class="confetti"></div><div class="mt-6 flex flex-col sm:flex-row gap-3 justify-center">${btn}</div></div>`); const scoreEl = qs('#score-counter'); setTimeout(() => { animateValue(scoreEl, 0, pct, 1500); setTimeout(() => { qs('#confetti-container').innerHTML = `<span>🎉</span><span>🎊</span><span>🥳</span><span>✨</span>`; }, 1500); }, 300); qs('#modalExport')?.addEventListener('click', () => triggerExport(record.matricula)); }
-    
-    function saveProgress() { if (quizArea.classList.contains('hidden')) return; const matricula = studentIdInput.value.trim(); if (!matricula) return; const formData = new FormData(quizForm); const currentAnswers = {}; for (let [key, value] of formData.entries()) { currentAnswers[key] = value; } localStorage.setItem(PROGRESS_KEY, JSON.stringify({ matricula, answers: currentAnswers })); }
-    function restoreProgress() { const savedProgress = localStorage.getItem(PROGRESS_KEY); if (!savedProgress) return; const progress = JSON.parse(savedProgress); if (!progress?.matricula) return; const key = `exam_${SERIES}_${progress.matricula}`; const record = JSON.parse(localStorage.getItem(key)); if (record && !record.finalized) { studentIdInput.value = record.matricula; studentNameInput.value = record.name; studentClassInput.value = record.turma; qs('#studentInfo').classList.add('hidden'); quizArea.classList.remove('hidden'); showToast('Seu progresso foi restaurado.', 'info'); Object.entries(progress.answers).forEach(([q, a]) => { const radio = qs(`input[name="${q}"][value="${a}"]`); if (radio) radio.checked = true; }); if (record.attempts > 0 && Array.isArray(record.wrongQuestions)) { prepareSecondAttemptView(record.matricula, record.wrongQuestions, false); } } else { localStorage.removeItem(PROGRESS_KEY); } }
-    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) { qsa('fieldset[id^="q"]', quizForm).forEach(fs => { const qnum = parseInt(fs.id.replace('q', '')); if (wrongQuestions.includes(qnum)) { fs.style.display = ''; fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; }); if (shouldShuffle) shuffleOptions(fs); } else { fs.style.display = 'none'; fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false); } }); if (shouldShuffle) showToast('Responda apenas as questões que você errou.', 'info'); }
-    function shuffleOptions(fieldset) { const container = fieldset.querySelector('.options'); if (container) for (let i = container.children.length; i >= 0; i--) container.appendChild(container.children[Math.random() * i | 0]); }
-    
-    function triggerExport(matricula) {
-        const key = `exam_${SERIES}_${matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-        if (!record?.finalized) { showToast('A prova precisa ser finalizada.', 'warn'); return; }
-
-        const btn = qs('#modalExport');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>Gerando PDF...'; }
-
-        supabaseClient
-            .from('gabaritos')
-            .select('gabarito_completo')
-            .eq('serie', SERIES)
-            .single()
-        .then(({ data, error }) => {
-            if (error || !data) {
-                throw new Error(error?.message || 'Gabarito não encontrado para a geração do PDF.');
-            }
-            const GABARITO_PDF = data.gabarito_completo || {};
-            const totalQuestions = Object.keys(GABARITO_PDF).length || 20;
-            const answers = record.finalAnswers || {};
-
-            const tableBody = [...Array(totalQuestions).keys()].map(i => {
-                const qKey = `q${i + 1}`;
-                const isCorrect = answers[qKey] === GABARITO_PDF[qKey];
-                return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
-                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${i + 1}</td>
-                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${GABARITO_PDF[qKey] || '-'}</td>
-                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${answers[qKey] || 'N/R'}</td>
-                    <td style="padding: 8px; text-align: center; color:${isCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold;">${isCorrect ? '✓' : '✗'}</td>
-                </tr>`;
-            }).join('');
-            
-            const dataHora = new Date(record.gradedAt || Date.now()).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-            const safeName = normalizeString(record.name);
-            const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${safeName}.pdf`;
-            const wrapper = document.createElement('div');
-            wrapper.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 40px; font-size: 12px; color: #333;"><div style="text-align: center; margin-bottom: 20px;"><h2 style="font-size: 24px; margin: 0; color: #111;">Resultado Final da Avaliação</h2><p style="font-size: 16px; color: #555;">Matemática e suas Tecnologias</p></div><div style="margin-bottom: 25px; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa;"><p style="margin: 4px 0;"><strong>Aluno:</strong> ${record.name}</p><p style="margin: 4px 0;"><strong>Matrícula:</strong> ${record.matricula}</p><p style="margin: 4px 0;"><strong>Turma:</strong> ${record.turma}</p><p style="margin: 4px 0;"><strong>Data de Finalização:</strong> ${dataHora}</p></div><div style="margin-bottom: 20px;"><p style="font-size: 16px;"><strong>Pontuação Final:</strong> ${record.correctCount} de ${totalQuestions} acertos (${Math.round((record.correctCount / totalQuestions) * 100)}%)</p></div><table style="width: 100%; border-collapse: collapse; font-size: 11px;"><thead><tr style="background-color:#e9ecef;"><th style="padding: 10px; border: 1px solid #dee2e6; text-align: left;">Questão</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Gabarito</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Sua Resposta</th><th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Status</th></tr></thead><tbody>${tableBody}</tbody></table><p style="margin-top: 30px; font-size: 10px; color: #999; text-align: center;">Documento gerado pelo Portal de Avaliações CEJA</p></div>`;
-            const opt = { margin: 0.5, filename: `${safeName}.pdf`, jsPDF: { unit: 'in', format: 'a4' }, html2canvas: { scale: 2 } };
-
-            html2pdf().set(opt).from(wrapper).output('blob').then(pdfBlob => {
-                supabaseClient.storage.from('resultados-provas').upload(filePath, pdfBlob, { upsert: true })
-                .then(({ error: uploadError }) => {
-                    if (uploadError) throw uploadError;
-                    showToast('Prova enviada com sucesso!', 'success');
-                    if (btn) btn.textContent = "Enviado!";
-                    localStorage.removeItem(key);
-                })
-                .catch(err => {
-                    console.error('Erro no envio para Supabase:', err);
-                    showToast('Erro ao enviar. Baixando PDF localmente.', 'error');
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<span>Tentar de Novo</span>'; }
-                    saveAs(pdfBlob, `${record.matricula}-${safeName}.pdf`);
-                });
-            });
-        }).catch(err => {
-             console.error("Erro ao buscar gabarito para PDF:", err.message);
-             showToast('Erro crítico ao preparar PDF.', 'error');
-             if(btn) { btn.disabled = false; btn.innerHTML = '<span>Enviar Resultado Final</span>'; }
-        });
-    }
-
-    function insertImagesAuto(folder = '../assets/imgmat') { 
-      const placeholders = qsa('div.border-dashed');
-      if (!placeholders.length) return;
-      function tryLoad(candidates) { return new Promise((resolve,reject) => {let i=0; const next=()=>{if(i>=candidates.length)return reject(); const url=candidates[i++]; const img=new Image(); img.onload=()=>resolve(url); img.onerror=next; img.src=url;}; next();});}
-      placeholders.forEach((ph) => {
-        const fs=ph.closest('fieldset'); if(!fs)return;
-        const qid=fs.id.replace('q','');
-        const exts=['webp','jpg','jpeg','png','gif'];
-        const candidates = exts.map(ext=>`${folder}/q${qid}.${ext}`);
-        tryLoad(candidates).then(src => { ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`; }).catch(() => { ph.innerHTML = `<p class="text-xs text-gray-500">Imagem da questão indisponível.</p>` });
-      });
-      if (!qs('#lb')) { const lb=document.createElement('div'); lb.id='lb'; lb.style.cssText='position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;'; lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;"/>'; document.body.appendChild(lb); lb.addEventListener('click', ()=>{lb.style.display='none'; qs('#lb-img').src='';});}
-      document.addEventListener('click', function(e) { if (e.target?.classList.contains('clickable-img')) { qs('#lb-img').src=e.target.src; qs('#lb').style.display='flex'; } });
-    }
-
-       window.addEventListener('load', async () => { 
-      await manageAuthSession(); 
-      restoreProgress(); 
-      if(quizForm)quizForm.addEventListener('change', saveProgress); 
-      insertImagesAuto(); 
-    });
-
-</script>
+    <script src="../js/prova-template.js"></script>
 </body>
 </html>

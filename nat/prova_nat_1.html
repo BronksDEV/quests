@@ -1,1072 +1,619 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prova — Ciências da Natureza</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-  <style>
-    input[name="studentName"] { text-transform: uppercase; }
-    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
-    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
-    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
-    .check-wrap { width:96px; height:96px; border-radius:999px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; margin:0 auto; }
-    .check-svg { width:64px; height:64px; stroke:#16A34A; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .draw { stroke-dasharray: 150; stroke-dashoffset: 150; animation: draw 700ms ease-in-out forwards; }
-    @keyframes draw { to { stroke-dashoffset: 0; } }
-    .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
-    .confetti { width:100%; height:40px; overflow:hidden; position:relative; margin-top:8px; }
-    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
-    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
-    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
-    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
-    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
-    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
-    .option-label { cursor:pointer; }
-    input[type="radio"] { accent-color: #2563eb; }
-    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Prova — Ciências da natureza  (1ª Série)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <style>
+        /* ESTILOS COMPLETOS PRESERVADOS */
+        input[name="studentName"] { text-transform: uppercase; }
+        .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+        .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+        .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+        .toast { position: fixed; right: 20px; top: 20px; z-index:99999; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+        .option-label { cursor:pointer; }
+        input[type="radio"] { accent-color: #2563eb; }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .check-wrap { width: 80px; height: 80px; background-color: #dcfce7; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .check-svg { width: 48px; height: 48px; }
+        .checkmark__path { stroke-dasharray: 100; stroke-dashoffset: 100; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw 0.8s 0.2s ease-out forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .confetti { width:100%; height:40px; overflow:hidden; position:relative; }
+        .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+        .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+        .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+        .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+        .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+        @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+        .border-dashed {
+            border-width: 2px; border-style: dashed; border-color: #e2e8f0; border-radius: 0.5rem;
+            text-align: center; font-size: 0.875rem; color: #64748b;
+            margin: 0.5rem 0; padding: 1rem; min-height: 100px;
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900 no-select">
-  <div class="max-w-5xl mx-auto p-6">
-    <header class="mb-4">
-      <h1 class="text-2xl font-bold">Bloco de Avaliação — Ciências da Natureza e suas Tecnologias (1ª Série)</h1>
-      <p class="text-sm text-gray-600 mt-1">Bem-vindo à Plataforma de Avaliação CEJA. Atenção: você possui apenas 1 tentativa.</p>
-    </header>
+<body class="bg-slate-50 text-slate-900 no-select">
 
-    <!-- SEÇÃO DE IDENTIFICAÇÃO -->
-    <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
-      <div class="mb-5 flex items-center gap-3">
-        <div class="bg-blue-100 p-2 rounded-full"><svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div>
-        <h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2>
-      </div>
-      <form id="infoForm" class="space-y-4">
-        <div>
-          <label for="studentId" class="text-sm font-medium text-gray-700 sr-only">Matrícula</label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" /><path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" /></svg></div>
-            <input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula (Ex: 2412767146-8)" required />
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="studentName" class="text-sm font-medium text-gray-700 sr-only">Nome Completo</label>
-            <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div>
-              <input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)" required />
-            </div>
-          </div>
-          <div>
-            <label for="studentClass" class="text-sm font-medium text-gray-700 sr-only">Turma</label>
-            <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" /></svg></div>
-              <select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
-                <option value="" disabled selected>Selecione a Turma</option>
-                <option value="A">Turma A</option><option value="B">Turma B</option>
-              </select>
-               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" /></svg></div>
-            </div>
-          </div>
-        </div>
-        
-        <p id="infoMsg" class="text-sm text-red-600 h-5"></p>
-        
-        <div class="pt-2">
-            <button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:bg-blue-400 disabled:cursor-wait">
-                <span id="startBtnText">Iniciar Avaliação</span>
-                <div id="startBtnSpinner" class="spinner hidden"></div>
-                 <svg class="h-5 w-5" id="startBtnArrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+    <!-- CAMADA DE INÍCIO DA PROVA QUE FORÇA A TELA CHEIA -->
+    <div id="start-exam-overlay" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4" style="backdrop-filter: blur(8px);">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-white">Você está pronto?</h2>
+            <p class="text-slate-300 mt-2 mb-6 max-w-lg">A avaliação começará em modo tela cheia para garantir o foco. Se você sair acidentalmente, terá 3 segundos para retornar.</p>
+            <button id="start-fullscreen-btn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">
+                Iniciar Avaliação Agora
             </button>
         </div>
-      </form>
-    </section>
-
-    <!-- Quiz -->
-    <main id="quizArea" class="hidden">
-      <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
-        
- <!-- Item 1 - Biologia -->
-    <fieldset id="q1" class="border rounded p-4">
-        <legend class="font-semibold">Item 1</legend>
-        <p class="mt-2 text-sm">Observe equação geral da fotossíntese:<br><b>6CO₂ + 6H₂O + Luz Solar → C₆H₁₂O₆ + 6O₂</b></p>
-        <p class="mt-2 text-sm font-semibold">Quais são os produtos resultantes desse processo?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) Glicose e oxigênio.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) Oxigênio e água.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) Glicose e água.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) Glicose e dióxido de carbono.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) Dióxido de carbono e água.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 2 - Biologia -->
-    <fieldset id="q2" class="border rounded p-4">
-        <legend class="font-semibold">Item 2</legend>
-        <p class="mt-2 text-sm">Observe a imagem de uma célula vegetal, a seguir, e responda.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a imagem da Célula Vegetal (questão 2)</div>
-        <p class="mt-2 text-sm font-semibold">Qual organela celular é responsável pelo processo da fotossíntese?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) Vacúolo.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) Cloroplasto.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) Mitocôndria.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) Parede celular.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) Membrana plasmática.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 3 - Biologia -->
-    <fieldset id="q3" class="border rounded p-4">
-        <legend class="font-semibold">Item 3</legend>
-        <p class="mt-2 text-sm">A cadeia alimentar é composta por diferentes grupos de organismos, cada organismo com um papel específico na transferência de energia.</p>
-        <p class="mt-2 text-sm font-semibold">Em relação as cadeias alimentares como são chamados os organismos fotossintetizantes?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) Produtores.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) Decompositores.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) Consumidores primários.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) Consumidores terciários.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) Consumidores secundários.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 4 - Biologia -->
-    <fieldset id="q4" class="border rounded p-4">
-        <legend class="font-semibold">Item 4</legend>
-        <p class="mt-2 text-sm">O equilíbrio ecológico é um conceito fundamental na ecologia que descreve o estado de harmonia e estabilidade em um ecossistema. Isso significa que os seres vivos (componentes bióticos) e o ambiente físico (componentes abióticos) interagem para manter um balanço, garantindo a sustentabilidade e a saúde do sistema como um todo.</p>
-        <p class="mt-2 text-sm font-semibold">Em relação ao equilíbrio ecológico, qual o papel fundamental da fotossíntese?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Aumentar a acidez dos oceanos.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) Reduzir a produção de biomassa.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) Aumentar a temperatura global.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) Diminuir a concentração de CO₂ na atmosfera.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) Aumentar a concentração de CO₂ na atmosfera.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 5 - Biologia -->
-    <fieldset id="q5" class="border rounded p-4">
-        <legend class="font-semibold">Item 5</legend>
-        <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o esquema da Fotossíntese (questão 5)</div>
-        <p class="mt-2 text-sm font-semibold">O processo representado na imagem é realizado por:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) herbívoros.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) fungos fermentadores.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) bactérias heterótrofas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) organismos produtores.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) microrganismos decompositoRes.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 6 - Biologia -->
-    <fieldset id="q6" class="border rounded p-4">
-        <legend class="font-semibold">Item 6</legend>
-        <p class="mt-2 text-sm">O fluxo de energia em um ecossistema é o caminho pelo qual a energia é transferida de um organismo para outro. Esse conceito influencia diretamente a estrutura, a diversidade e a resiliência das comunidades ecológicas.</p>
-        <p class="mt-2 text-sm font-semibold">O que aconteceria com o fluxo de energia em um ecossistema se os organismos fotossintetizantes fossem drasticamente reduzidos?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) Os organismos produtores surgiriam espontaneamente para compensar a perda.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) Os consumidores passariam a se alimentar diretamente da luz solar.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) O fluxo de energia cessaria ou seria severamente comprometido, levando ao colapso do ecossistema.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) O fluxo de energia aumentaria, pois haveria mais recursos disponíveis.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) Os decompositores passariam a realizar fotossíntese, normalizando o fluxo de energia.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 7 - Biologia -->
-    <fieldset id="q7" class="border rounded p-4">
-        <legend class="font-semibold">Item 7</legend>
-        <p class="mt-2 text-sm">Processo energético é qualquer sequência de eventos ou transformações que envolve a transferência, conversão ou utilização de energia. Esse conceito é fundamental e se aplica em diversas áreas, desde a biologia, química, física e a engenharia.</p>
-        <p class="mt-2 text-sm font-semibold">Qual o nome do processo energético a nível celular responsável pela produção de ATP na presença de oxigênio, ocorrendo principalmente nas mitocôndrias?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) Quimiossíntese.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) Fotossíntese.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) Fermentação.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) Energia cinética.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) Respiração aeróbica.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 8 - Biologia -->
-    <fieldset id="q8" class="border rounded p-4">
-        <legend class="font-semibold">Item 8</legend>
-        <p class="mt-2 text-sm">O corpo humano utiliza a respiração aeróbica para produzir energia (ATP), que é um processo muito eficiente e requer oxigênio. No entanto, em algumas situações, a demanda por energia é tão alta que o oxigênio disponível não é suficiente para suprir todas as necessidades das células. Por isso, a fermentação láctica entra em ação.</p>
-        <p class="mt-2 text-sm font-semibold">No corpo humano, a fermentação láctica pode ocorrer nas células musculares quando:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) As células estão realizando fotossíntese.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) A dieta é rica em proteínas e sais minerais.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) Há um excesso de oxigênio no tecido muscular.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) Quando a demanda por ATP excede o suprimento de oxigênio.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) Quando a demanda por energia é menor que a quantidade de oxigênio.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 9 - Biologia -->
-    <fieldset id="q9" class="border rounded p-4">
-        <legend class="font-semibold">Item 9</legend>
-        <p class="mt-2 text-sm">(Enem 2019) Um dos processos biotecnológicos mais antigos é a utilização de microrganismos para a produção de alimentos. Num desses processos, certos tipos de bactérias anaeróbicas utilizam os açúcares presentes nos alimentos e realizam sua oxidação parcial, gerando como produto final da reação o ácido lático.</p>
-        <p class="mt-2 text-sm font-semibold">Qual produto destinado ao consumo humano tem sua produção baseada nesse processo?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) Pão.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) Vinho.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) Iogurte.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) Vinagre.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) Cachaça.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 10 - Biologia -->
-    <fieldset id="q10" class="border rounded p-4">
-        <legend class="font-semibold">Item 10</legend>
-        <p class="mt-2 text-sm">Para fazer um pão caseiro, utiliza-se o fermento biológico que contém o fungo Saccharomyces cerevisiae. Esse microrganismo é responsável pela liberação de gás carbônico, que provoca o crescimento da massa.</p>
-        <p class="mt-2 text-sm font-semibold">A liberação de gás carbônico está associada ao processo de:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) fermentação lática.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) glicogênese lática.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) fermentação alcoólica.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) multiplicação de lactobacilos.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) formação de ácido pirúvico.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 11 - Biologia -->
-    <fieldset id="q11" class="border rounded p-4">
-        <legend class="font-semibold">Item 11</legend>
-        <p class="mt-2 text-sm">(Enem-2021) Organismos autótrofos e heterótrofos realizam processos complementares que associam os ciclos do carbono e do oxigênio. O carbono fixado pela energia luminosa ou a partir de compostos inorgânicos é eventualmente degradado pelos organismos, resultando em fontes de carbono como metano ou gás carbônico. Ainda, outros compostos orgânicos são catabolizados pelos seres, com menor rendimento energético, produzindo compostos secundários (subprodutos) que podem funcionar como combustíveis ambientais.</p>
-        <p class="mt-2 text-sm font-semibold">O processo metabólico associado à expressão combustíveis ambientais é a:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) fotossíntese.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) fermentação.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) quimiossíntese.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) respiração aeróbica.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) fosforilação oxidativa.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 12 - Biologia -->
-    <fieldset id="q12" class="border rounded p-4">
-        <legend class="font-semibold">Item 12</legend>
-        <p class="mt-2 text-sm">A imagem a seguir representa o Ciclo do Carbono.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o Ciclo do Carbono (questão 12)</div>
-        <p class="mt-2 text-sm">As plantas são fundamentais nesse ciclo, pois sequestram o carbono da atmosfera durante a fotossíntese.</p>
-        <p class="mt-2 text-sm font-semibold">O sequestro de carbono pelas plantas é aumentado:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) reciclando papel.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) mantendo intactas as florestas nativas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) fazendo o replantio das áreas degradadas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) evitando a queima de madeira e de áreas de floresta.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) substituindo a madeira de bens duráveis por materiais alternativos.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 13 - Biologia -->
-    <fieldset id="q13" class="border rounded p-4">
-        <legend class="font-semibold">Item 13</legend>
-        <p class="mt-2 text-sm">(Enem-2012) Há milhares de anos o homem faz uso da biotecnologia para a produção de alimentos como pães, cervejas e vinhos. Na fabricação de pães, por exemplo, são usados fungos unicelulares, chamados de leveduras, que são comercializados como fermento biológico. Eles são usados para promover o crescimento da massa, deixando-a leve e macia.</p>
-        <p class="mt-2 text-sm font-semibold">O crescimento da massa do pão pelo processo citado é resultante da:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) liberação de gás carbônico.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) formação de ácido lático.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) formação de água.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) produção de ATP.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) liberação de calor.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 14 - Biologia -->
-    <fieldset id="q14" class="border rounded p-4">
-        <legend class="font-semibold">Item 14</legend>
-        <p class="mt-2 text-sm">(Enem-2023) Há muito tempo são conhecidas espécies de lesmas-do-mar com uma capacidade ímpar: guardar parte da maquinaria das células das algas que consomem — os cloroplastos — e mantê-los funcionais dentro das suas próprias células, obtendo assim parte do seu alimento. Investigadores portugueses descobriram que essas lesmas-do-mar podem ser mais eficientes nesse processo do que as próprias algas que consomem.</p>
-        <p class="mt-2 text-sm font-semibold">Essa adaptação confere a esse organismo a capacidade de obter primariamente:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) ácidos nucleicos.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) carboidratos.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) proteínas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) vitaminas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) lipídios.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 15 - Física -->
-    <fieldset id="q15" class="border rounded p-4">
-        <legend class="font-semibold">Item 15</legend>
-        <p class="mt-2 text-sm">Em um sistema conservativo, as forças dissipativas são desprezíveis e a energia mecânica permanece constante. Considere uma pedra de massa 200 g sendo lançada verticalmente para cima com uma velocidade inicial de 18 km/h. Adotando g = 10 m/s², no ponto mais alto de sua trajetória, sua energia cinética será:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) nula.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) 5 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) 10 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) 15 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) 20 J.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 16 - Física -->
-    <fieldset id="q16" class="border rounded p-4">
-        <legend class="font-semibold">Item 16</legend>
-        <p class="mt-2 text-sm">Uma esfera de massa 300 g é abandonada do topo de uma rampa inclinada. Dado que a aceleração da gravidade local seja g = 10 m/s² e que são desprezíveis as forças dissipativas.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a Rampa Inclinada (questão 16)</div>
-        <p class="mt-2 text-sm font-semibold">Qual é a velocidade com que a esfera chega ao solo?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) 2√30 m/s.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) 4√30 m/s.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) 6√20 m/s.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 8√15 m/s.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 10√12 m/s.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 17 - Física -->
-    <fieldset id="q17" class="border rounded p-4">
-        <legend class="font-semibold">Item 17</legend>
-        <p class="mt-2 text-sm">Um corpo de massa 2,0 kg cai, a partir do repouso de uma altura de 90 cm, chocando-se com uma mola de constante elástica 100 N/m comprimindo-a x cm até parar. Desprezando-se os atritos e considerando que a mola deformada fica rente ao solo, determine a medida da deformação x da mola. Adote g = 10 m/s².</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) 0,2 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) 0,3 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) 0,4 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) 0,5 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) 0,6 m.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 18 - Física -->
-    <fieldset id="q18" class="border rounded p-4">
-        <legend class="font-semibold">Item 18</legend>
-        <p class="mt-2 text-sm">(CFT – MG) Um carrinho é lançado sobre os trilhos de uma montanha russa, no ponto A, com uma velocidade inicial V₀ conforme mostra a figura. As alturas h₁, h₂ e h₃ valem, respectivamente, 16,2 m, 3,4 m e 9,8 m. Para o carrinho atingir o ponto C, desprezando o atrito, o menor valor de V₀, em m/s, deverá ser igual a:</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a Montanha Russa (questão 18)</div>
-        <p class="mt-2 text-sm">Considere (g = 10 m/s²).</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) 10.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) 14.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) 18.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) 20.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) 24.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 19 - Física -->
-    <fieldset id="q19" class="border rounded p-4">
-        <legend class="font-semibold">Item 19</legend>
-        <p class="mt-2 text-sm">Uma pedra é lançada verticalmente para cima com velocidade inicial de 20 m/s. Desprezando-se todas as resistências e adotando g = 10 m/s². Determine o ponto mais alto de sua trajetória.</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) 5 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 10 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 15 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 20 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) 25 m.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 20 - Física -->
-    <fieldset id="q20" class="border rounded p-4">
-        <legend class="font-semibold">Item 20</legend>
-        <p class="mt-2 text-sm">(IF – SP) Um atleta de salto com vara, durante sua corrida para transpor o obstáculo a sua frente, transforma a sua energia ___________ em energia ___________ devido ao ganho de altura e consequentemente ao/à ___________ de sua velocidade.</p>
-        <p class="mt-2 text-sm font-semibold">As lacunas do texto acima são, correta e respectivamente, preenchidas por:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) potencial – cinética – aumento</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) térmica – potencial – diminuição</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) cinética – potencial – diminuição</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) cinética – térmica – aumento</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) térmica – cinética – aumento</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 21 - Física -->
-    <fieldset id="q21" class="border rounded p-4">
-        <legend class="font-semibold">Item 21</legend>
-        <p class="mt-2 text-sm">Um objeto é empurrado por uma força de intensidade 100 N que forma um ângulo de 60º com a horizontal. Sabendo que a velocidade do objeto durante a atuação da força é de 2 m/s, determine a potência média desenvolvida. (Dado: cos 60° = 0,5).</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) 50 W.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) 100 W.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) 150 W.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) 200 W.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) 250 W.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 22 - Física -->
-    <fieldset id="q22" class="border rounded p-4">
-        <legend class="font-semibold">Item 22</legend>
-        <p class="mt-2 text-sm">(PUC – MG) Considere um corpo sendo arrastado, com velocidade constante, sobre uma superfície horizontal onde o atrito não é desprezível. Considere as afirmações I, II e III a respeito da situação descrita:<br>I. O trabalho da força peso é nulo.<br>II. O trabalho da força de atrito é nulo.<br>III. A força que arrasta o corpo é nula.</p>
-        <p class="mt-2 text-sm font-semibold">A afirmação está correta em:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) I, II e III.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) I, apenas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) II, apenas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) III, apenas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) I e III, apenas.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 23 - Física -->
-    <fieldset id="q23" class="border rounded p-4">
-        <legend class="font-semibold">Item 23</legend>
-        <p class="mt-2 text-sm">A figura a seguir apresenta uma mola comprimida 10 cm empurrando um corpo de massa 40 g inicialmente em repouso do ponto A até o ponto C. Considerando a constate elástica da mola 200 N/m e adotando g = 10 m/s², qual deve ser a altura h da rampa para que possa parar exatamente no ponto C? Despreze as forças dissipativas.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o esquema Mola-Rampa (questão 23)</div>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) 1,5 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) 2,0 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) 2,5 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) 3,0 m.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) 3,5 m.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 24 - Física -->
-    <fieldset id="q24" class="border rounded p-4">
-        <legend class="font-semibold">Item 24</legend>
-        <p class="mt-2 text-sm">(UEL – PR) O gráfico representa o valor algébrico da força resultante F que age sobre um corpo de massa 5,0 kg, inicialmente em repouso, em função da abscissa x.</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o gráfico F vs x (questão 24)</div>
-        <p class="mt-2 text-sm font-semibold">O trabalho realizado por F, no deslocamento de x = 0 até x = 4,0 m, em joules, vale:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) zero.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) 10.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) 20.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) 30.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) 40.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 25 - Física -->
-    <fieldset id="q25" class="border rounded p-4">
-        <legend class="font-semibold">Item 25</legend>
-        <p class="mt-2 text-sm">No ponto A de uma rampa de skate, um skatista de massa 70 kg, desliza a partir do repouso até passar pelo ponto B na base da rampa. Desprezando a resistência do ar e os atritos com a rampa e, considerando a aceleração da gravidade local g = 10 m/s², qual será o valor de sua energia potencial gravitacional ao passar pelo ponto B?</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira a rampa de skate (questão 25)</div>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) zero.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) 420 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) 4200 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) 42 000 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) 420 000 J.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 26 - Física -->
-    <fieldset id="q26" class="border rounded p-4">
-        <legend class="font-semibold">Item 26</legend>
-        <p class="mt-2 text-sm">(ESPCEX) Um bloco, puxado por meio de uma corda inextensível e de massa desprezível, desliza sobre uma superfície horizontal com atrito, descrevendo um movimento retilíneo e uniforme. A corda faz um ângulo de 53° com a horizontal e a tração que ela transmite ao bloco é de 80 N.</p>
-        <p class="mt-2 text-sm font-semibold">Se o bloco sofrer um deslocamento de 20 m ao longo da superfície, o trabalho realizado pela tração no bloco será de: (Dados: sen 53° = 0,8 e cos 53° = 0,6)</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) 480 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) 640 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) 960 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) 1280 J.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) 1600 J.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 27 - Física -->
-    <fieldset id="q27" class="border rounded p-4">
-        <legend class="font-semibold">Item 27</legend>
-        <p class="mt-2 text-sm">(UEG – GO) Em um experimento que válida a conservação da energia mecânica, um objeto de 4,0 kg colide horizontalmente com uma mola relaxada, de constante elástica de 100 N/m. Esse choque a comprime 1,6 cm.</p>
-        <p class="mt-2 text-sm font-semibold">Qual é a velocidade, em m/s, desse objeto antes de se chocar com a mola?</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) 0,02.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) 0,08.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) 0,13.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) 0,40.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) 0,65.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 28 - Química -->
-    <fieldset id="q28" class="border rounded p-4">
-        <legend class="font-semibold">Item 28</legend>
-        <p class="mt-2 text-sm font-semibold">Um sal formado pela combinação de um metal alcalino com um halogênio apresenta:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) Estrutura amorfa.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) Baixo ponto de fusão.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) Ligação iônica e estrutura cristalina.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) Ligação covalente e forma molecular.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) Alta condutividade elétrica no estado sólido.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 29 - Química -->
-    <fieldset id="q29" class="border rounded p-4">
-        <legend class="font-semibold">Item 29</legend>
-        <p class="mt-2 text-sm">A camada mais externa de um elemento X possui 3 elétrons, enquanto a camada mais externa de outro elemento Y tem 7 elétrons.</p>
-        <p class="mt-2 text-sm font-semibold">Uma provável fórmula de um composto, formado por esses elementos é:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) X₅Y.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) X₃Y.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) XY.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) XY₃.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) X₇Y₃.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 30 - Química -->
-    <fieldset id="q30" class="border rounded p-4">
-        <legend class="font-semibold">Item 30</legend>
-        <p class="mt-2 text-sm">(UEPB – PB) Dois átomos de elementos genéricos A e B apresentam as seguintes distribuições eletrônicas em camadas:<br><b>A → 2, 8, 1</b> e <b>B → 2, 8, 6.</b></p>
-        <p class="mt-2 text-sm">Na ligação química entre A e B:<br>I. O átomo A perde 1 elétron e transforma-se em um íon (cátion) monovalente.<br>II. A fórmula correta do composto formado é A₂B e a ligação que se processa é do tipo iônica.<br>III. O átomo B cede 2 elétrons e transforma-se em um ânion bivalente.</p>
-        <p class="mt-2 text-sm font-semibold">Assinale a alternativa correta:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) Apenas I é correta.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) Apenas II é correta.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) Apenas I e II são corretas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) Apenas II e III são corretas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) Todas as afirmativas são corretas.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 31 - Química -->
-    <fieldset id="q31" class="border rounded p-4">
-        <legend class="font-semibold">Item 31</legend>
-        <p class="mt-2 text-sm">(UC – BA) O modelo abaixo serve para representar as ligações covalentes na molécula de...<br><b>Dados: H (Z = 1); N (Z = 7); O (Z = 8); F (Z = 9).</b></p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira o Modelo de Ligação Dupla (questão 31)</div>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) HF.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) N₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) O₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) F₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) H₂.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 32 - Química -->
-    <fieldset id="q32" class="border rounded p-4">
-        <legend class="font-semibold">Item 32</legend>
-        <p class="mt-2 text-sm">O crescente aumento da emissão de gases poluentes pela ação do ser humano, pode levar a intensificação do efeito estufa e consequentemente a prejuízos ambientais severos por meio do aquecimento global.</p>
-        <p class="mt-2 text-sm font-semibold">O principal responsável pelo efeito estufa é o gás carbônico, em cuja estrutura encontramos: (Dados: ₆C¹² e ₈O¹⁶)</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) ligações eletrovalentes polares.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) ligações iônicas apolares.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) ligações coordenadas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) ligações covalentes.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) ligações metálicas.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 33 - Química -->
-    <fieldset id="q33" class="border rounded p-4">
-        <legend class="font-semibold">Item 33</legend>
-        <p class="mt-2 text-sm">(UNIRIO – RJ) O dióxido de carbono (CO₂) é um gás essencial no globo terrestre. Sem a presença desse gás, o globo seria gelado e vazio! Porém, quando é inalado em concentração superior a 10%, pode levar o indivíduo à morte por asfixia.</p>
-        <p class="mt-2 text-sm font-semibold">Esse gás apresenta em sua molécula um número de ligações covalentes igual a:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) 4.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) 1.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) 2.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) 3.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) 0.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 34 - Química -->
-    <fieldset id="q34" class="border rounded p-4">
-        <legend class="font-semibold">Item 34</legend>
-        <p class="mt-2 text-sm">As panelas metálicas aquecem rapidamente e distribuem bem o calor.</p>
-        <p class="mt-2 text-sm font-semibold">Isso ocorre devido à:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) presença de nêutrons móveis no metal.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) transferência de prótons entre os átomos.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) presença de elétrons livres que conduzem calor.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) estrutura amorfa dos metais.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) oxidação dos metais.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 35 - Química -->
-    <fieldset id="q35" class="border rounded p-4">
-        <legend class="font-semibold">Item 35</legend>
-        <p class="mt-2 text-sm">Assinale a alternativa que apresenta uma molécula com geometria trigonal:<br><b>Dados: ₆C; ₅B; ₈O; ₉F; ₁₇Cl.</b></p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) CO₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) BF₃.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) O₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) CH₄.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) HCl.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 36 - Química -->
-    <fieldset id="q36" class="border rounded p-4">
-        <legend class="font-semibold">Item 36</legend>
-        <p class="mt-2 text-sm">(UFPI – PI) Moléculas polares são responsáveis pela absorção de energia de micro-ondas.</p>
-        <p class="mt-2 text-sm font-semibold">Assinale a seguir a substância que mais provavelmente absorverá nesta região.</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) BF₃.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) H₂O.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) CO₂.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) CCl₄.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) BeCl₂.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 37 - Química -->
-    <fieldset id="q37" class="border rounded p-4">
-        <legend class="font-semibold">Item 37</legend>
-        <p class="mt-2 text-sm">(FGV – SP) O conhecimento das estruturas das moléculas é um assunto bastante relevante, já que as formas das moléculas determinam propriedades das substâncias como odor, sabor, coloração e solubilidade.</p>
-        <p class="mt-2 text-sm font-semibold">Quanto às forças intermoleculares, a molécula que forma ligações de hidrogênio (pontes de hidrogênio) com a água é:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) H₂S.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) CH₄.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) NH₃.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) PH₃.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) CO₂.</span></label>
-        </div>
-    </fieldset>
-
-    <!-- Item 38 - Química -->
-    <fieldset id="q38" class="border rounded p-4">
-        <legend class="font-semibold">Item 38</legend>
-        <p class="mt-2 text-sm">(UFSE – SE) Na seguinte estrutura estão representadas moléculas de água unidas entre si por ligações:</p>
-        <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI — insira as moléculas de água (questão 38)</div>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) iônicas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) peptídicas.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) covalentes.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) de oxigênio.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) de hidrogênio.</span></label>
-        </div>
-    </fieldset>
-    
-    <!-- Item 39 - Química -->
-    <fieldset id="q39" class="border rounded p-4">
-        <legend class="font-semibold">Item 39</legend>
-        <p class="mt-2 text-sm">(UFC – CE) Recentemente, uma pesquisa publicada na revista Nature (Ano: 2000, vol.405, pg. 681) mostrou que a habilidade das lagartixas (víboras) em escalar superfícies lisas como uma parede, por exemplo, é resultado de interações intermoleculares. Admitindo que a parede é recoberta por um material apolar e encontra-se seca.</p>
-        <p class="mt-2 text-sm font-semibold">Assinale a alternativa que classifica corretamente o tipo de interação que prevalece entre as lagartixas e a parede, respectivamente:</p>
-        <div class="mt-2 space-y-1 options">
-            <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) íon - íon.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) íon - dipolo permanente.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) dipolo induzido - dipolo induzido.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) dipolo permanente - dipolo induzido.</span></label>
-            <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) dipolo permanente - dipolo permanente.</span></label>
-        </div>
-    </fieldset>
-
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-600"></div>
-          <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
-        </div>
-      </form>
-    </main>
-
-    <footer class="mt-6 text-xs text-gray-500 text-center">
-      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
-    </footer>
     </div>
 
-    <div id="modalRoot" style="display:none;"></div>
-
-    <script>
-    // CÓDIGO JS COMPLETO COMEÇA AQUI
-    
-    // Configurações Globais
-    const SERIES = "2_SERIE_NATUREZA";
-    const TOTAL_QUESTIONS = 40; // Ajuste se necessário
-    const MAX_ATTEMPTS = 1;
-    const LOCK_DAYS = 1;
-    const PROGRESS_KEY = `progress_${SERIES}`;
-
-
-
-    const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Elementos do DOM
-    const studentNameInput = document.getElementById('studentName');
-    const studentIdInput = document.getElementById('studentId');
-    const studentClassInput = document.getElementById('studentClass');
-    const startBtn = document.getElementById('startBtn');
-    const startBtnText = document.getElementById('startBtnText');
-    const startBtnSpinner = document.getElementById('startBtnSpinner');
-    const startBtnArrow = document.getElementById('startBtnArrow');
-    const infoMsg = document.getElementById('infoMsg');
-    const quizArea = document.getElementById('quizArea');
-    const quizForm = document.getElementById('quizForm');
-    const modalRoot = document.getElementById('modalRoot');
-
-    // Funções Auxiliares
-    function qs(sel, ctx = document) { return ctx.querySelector(sel); }
-    function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
-    function normalizeString(str) { return str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase(); }
-
-    // Proteções e Helpers
-    studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey && e.key === 'r') || e.key === 'F5' || (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) || e.key === 'F12') {
-        e.preventDefault();
-      }
-    });
-
-    // Lógica de Início
-    startBtn.addEventListener('click', async () => {
-        infoMsg.textContent = '';
-        const name = studentNameInput.value.trim().toUpperCase();
-        const matricula = studentIdInput.value.trim();
-        const turma = studentClassInput.value;
-
-        if (!matricula || !name || !turma) {
-            infoMsg.textContent = 'Todos os campos são obrigatórios.';
-            return;
-        }
+    <div class="max-w-5xl mx-auto p-4 sm:p-6">
+        <header id="quiz-header" class="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+            <!-- O JS preencherá esta área -->
+        </header>
         
-        startBtn.disabled = true;
-        startBtnText.textContent = 'Verificando...';
-        startBtnSpinner.classList.remove('hidden');
-        startBtnArrow.classList.add('hidden');
+        <main>
+            <form id="quizForm" data-image-folder="../assets/img1nat" data-series-id="1_SERIE_NATUREZA" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
+                
+ <fieldset id="q1" class="border rounded p-4">
+    <legend class="font-semibold">Item 1 - Biologia</legend>
+    <p class="mt-2 text-sm">Observe a equação geral da fotossíntese:<br>6CO₂ + 6H₂O + Luz Solar → C₆H₁₂O₆ + 6O₂</p>
+    <p class="mt-2 text-sm font-semibold">Quais são os produtos resultantes desse processo?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) Glicose e oxigênio.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) Oxigênio e água.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) Glicose e água.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) Glicose e dióxido de carbono.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) Dióxido de carbono e água.</span></label>
+    </div>
+</fieldset>
 
-        try {
-            const { data: aluno, error } = await supabaseClient
-                .from('alunos').select('nome_completo').eq('matricula', matricula).single();
+<fieldset id="q2" class="border rounded p-4">
+    <legend class="font-semibold">Item 2 - Biologia</legend>
+    <p class="mt-2 text-sm">Observe a imagem de uma célula vegetal, a seguir, e responda:</p>
+    <div class="border-dashed" data-img-name="q2"></div>
+    <p class="mt-2 text-sm font-semibold">Qual organela celular é responsável pelo processo da fotossíntese?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) Vacúolo.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) Cloroplasto.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) Mitocôndria.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) Parede celular.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) Membrana plasmática.</span></label>
+    </div>
+</fieldset>
 
-            if (error || !aluno) {
-                infoMsg.textContent = 'Matrícula não encontrada. Verifique os dados.';
-                throw new Error("Matrícula inválida ou não encontrada.");
-            }
-            
-            if (normalizeString(aluno.nome_completo) !== normalizeString(name)) {
-                infoMsg.textContent = 'O nome não corresponde à matrícula informada.';
-                throw new Error("Nome incorreto.");
-            }
+<fieldset id="q3" class="border rounded p-4">
+    <legend class="font-semibold">Item 3 - Biologia</legend>
+    <p class="mt-2 text-sm">A cadeia alimentar é composta por diferentes grupos de organismos, cada organismo com um papel específico na transferência de energia.</p>
+    <p class="mt-2 text-sm font-semibold">Em relação as cadeias alimentares como são chamados os organismos fotossintetizantes?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) Produtores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) Decompositores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) Consumidores primários.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) Consumidores terciários</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) Consumidores secundários.</span></label>
+    </div>
+</fieldset>
 
-            const key = `exam_${SERIES}_${matricula}`;
-            let record = JSON.parse(localStorage.getItem(key));
+<fieldset id="q4" class="border rounded p-4">
+    <legend class="font-semibold">Item 4 - Biologia</legend>
+    <p class="mt-2 text-sm">O equilíbrio ecológico é um conceito fundamental na ecologia que descreve o estado de harmonia e estabilidade em um ecossistema. Isso significa que os seres vivos (componentes bióticos) e o ambiente físico (componentes abióticos) interagem para manter um balanço, garantindo a sustentabilidade e a saúde do sistema como um todo.</p>
+    <p class="mt-2 text-sm font-semibold">Em relação ao equilíbrio ecológico, qual o papel fundamental da fotossíntese?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) Aumentar a acidez dos oceanos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) Reduzir a produção de biomassa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) Aumentar a temperatura global.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) Diminuir a concentração de CO₂ na atmosfera.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) Aumentar a concentração de CO₂ na atmosfera.</span></label>
+    </div>
+</fieldset>
 
-            if (record && record.attempts >= MAX_ATTEMPTS) {
-                infoMsg.textContent = `Você já atingiu o limite de ${MAX_ATTEMPTS} tentativas.`;
-                throw new Error("Máximo de tentativas atingido.");
-            }
+<fieldset id="q5" class="border rounded p-4">
+    <legend class="font-semibold">Item 5 - Biologia</legend>
+    <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
+    <div class="border-dashed" data-img-name="q5"></div>
+    <p class="mt-2 text-sm font-semibold">O processo representado na imagem é realizado por</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) herbívoros.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) fungos fermentadores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) bactérias heterótrofas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) organismos produtores.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) microrganismos decompositores.</span></label>
+    </div>
+</fieldset>
 
-            if (!record) {
-                record = { name, matricula, turma, attempts: 0, history: [], wrongQuestions: [], createdAt: new Date().toISOString() };
-            } else {
-                record.name = name; record.turma = turma;
-            }
-            localStorage.setItem(key, JSON.stringify(record));
+<fieldset id="q6" class="border rounded p-4">
+    <legend class="font-semibold">Item 6 - Biologia</legend>
+    <p class="mt-2 text-sm">O fluxo de energia em um ecossistema é o caminho pelo qual a energia é transferida de um organismo para outro. Esse conceito influencia diretamente a estrutura, a diversidade e a resiliência das comunidades ecológicas.</p>
+    <p class="mt-2 text-sm font-semibold">O que aconteceria com o fluxo de energia em um ecossistema se os organismos fotossintetizantes fossem drasticamente reduzidos?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) Os organismos produtores surgiriam espontaneamente para compensar a perda.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) Os consumidores passariam a se alimentar diretamente da luz solar.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) O fluxo de energia cessaria ou seria severamente comprometido, levando ao colapso do ecossistema.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) O fluxo de energia aumentaria, pois haveria mais recursos disponíveis.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) Os decompositores passariam a realizar fotossíntese, normalizando o fluxo de energia.</span></label>
+    </div>
+</fieldset>
 
-            qs('#studentInfo').classList.add('hidden');
-            quizArea.classList.remove('hidden');
+<fieldset id="q7" class="border rounded p-4">
+    <legend class="font-semibold">Item 7 - Biologia</legend>
+    <p class="mt-2 text-sm">Processo energético é qualquer sequência de eventos ou transformações que envolve a transferência, conversão ou utilização de energia. Esse conceito é fundamental e se aplica em diversas áreas, desde a biologia, química, física e a engenharia.</p>
+    <p class="mt-2 text-sm font-semibold">Qual o nome do processo energético a nível celular responsável pela produção de ATP na presença de oxigênio, ocorrendo principalmente nas mitocôndrias?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) Quimiossíntese.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) Fotossíntese.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) Fermentação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) Energia cinética.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) Respiração aeróbica.</span></label>
+    </div>
+</fieldset>
 
-            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
-                prepareSecondAttemptView(matricula, record.wrongQuestions);
-            }
-        } catch (err) {
-            console.error("Falha na validação do aluno:", err.message);
-        } finally {
-            startBtn.disabled = false;
-            startBtnText.textContent = 'Iniciar Avaliação';
-            startBtnSpinner.classList.add('hidden');
-            startBtnArrow.classList.remove('hidden');
-        }
-    });
+<fieldset id="q8" class="border rounded p-4">
+    <legend class="font-semibold">Item 8 - Biologia</legend>
+    <p class="mt-2 text-sm">O corpo humano utiliza a respiração aeróbica para produzir energia (ATP), que é um processo muito eficiente e requer oxigênio. No entanto, em algumas situações, a demanda por energia é tão alta que o oxigênio disponível não é suficiente para suprir todas as necessidades das células. Por isso, a fermentação láctica entra em ação.</p>
+    <p class="mt-2 text-sm font-semibold">No corpo humano, a fermentação láctica pode ocorrer nas células musculares quando:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) As células estão realizando fotossíntese.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) A dieta é rica em proteínas e sais minerais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) Há um excesso de oxigênio no tecido muscular.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) Quando a demanda por ATP excede o suprimento de oxigênio.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) Quando a demanda por energia é menor que a quantidade de oxigênio.</span></label>
+    </div>
+</fieldset>
 
-    // Demais funções da prova...
-    function saveProgress() { /* ... */ }
-    function restoreProgress() { /* ... */ }
-    if (quizForm) quizForm.addEventListener('submit', function (ev) { /* ... */ });
-    function createModal(htmlContent) { /* ... */ }
-    function closeModal() { /* ... */ }
-    function showToast(text, type = 'info') { /* ... */ }
-    function showModalResultPartial(record) { /* ... */ }
-    function showModalResultFinal(record) { /* ... */ }
-    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) { /* ... */ }
-    function shuffleOptions(fieldset) { /* ... */ }
-    function triggerExport(matricula) { /* ... */ }
-    function insertImagesAuto(folder = '../assets/img1nat') { /* ... */ }
-    window.addEventListener('load', () => { /* ... */ });
+<fieldset id="q9" class="border rounded p-4">
+    <legend class="font-semibold">Item 9 - Biologia</legend>
+    <p class="mt-2 text-sm">(Enem - 2019) Um dos processos biotecnológicos mais antigos é a utilização de microrganismos para a produção de alimentos. Num desses processos, certos tipos de bactérias anaeróbicas utilizam os açúcares presentes nos alimentos e realizam sua oxidação parcial, gerando como produto final da reação o ácido lático.</p>
+    <p class="mt-2 text-sm font-semibold">Qual produto destinado ao consumo humano tem sua produção baseada nesse processo?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) Pão.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) Vinho.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) Iogurte.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) Vinagre.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) Cachaça.</span></label>
+    </div>
+</fieldset>
 
-    // CÓDIGO RESTANTE COMPLETO (Funções de progresso, submissão, modais, etc.)
+<fieldset id="q10" class="border rounded p-4">
+    <legend class="font-semibold">Item 10 - Biologia</legend>
+    <p class="mt-2 text-sm">Para fazer um pão caseiro, utiliza-se o fermento biológico que contém o fungo Saccharomyces cerevisiae. Esse microrganismo é responsável pela liberação de gás carbônico, que provoca o crescimento da massa.</p>
+    <p class="mt-2 text-sm font-semibold">A liberação de gás carbônico está associada ao processo de</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) fermentação lática.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) glicogênese lática.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) fermentação alcoólica.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) multiplicação de lactobacilos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) formação de ácido pirúvico.</span></label>
+    </div>
+</fieldset>
 
-    function saveProgress() {
-        if (quizArea.classList.contains('hidden')) return;
-        const matricula = studentIdInput.value.trim();
-        if (!matricula) return;
+<fieldset id="q11" class="border rounded p-4">
+    <legend class="font-semibold">Item 11 - Biologia</legend>
+    <p class="mt-2 text-sm">(Enem-2021) Organismos autótrofos e heterótrofos realizam processos complementares que associam os ciclos do carbono e do oxigênio. O carbono fixado pela energia luminosa ou a partir de compostos inorgânicos é eventualmente degradado pelos organismos, resultando em fontes de carbono como metano ou gás carbônico. Ainda, outros compostos orgânicos são catabolizados pelos seres, com menor rendimento energético, produzindo compostos secundários (subprodutos) que podem funcionar como combustíveis ambientais.</p>
+    <p class="mt-2 text-sm font-semibold">O processo metabólico associado à expressão combustíveis ambientais é a</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) fotossíntese.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) fermentação.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) quimiossíntese.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) respiração aeróbica.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) fosforilação oxidativa.</span></label>
+    </div>
+</fieldset>
 
-        const formData = new FormData(quizForm);
-        const currentAnswers = {};
-        for (let [key, value] of formData.entries()) {
-            currentAnswers[key] = value;
-        }
-        localStorage.setItem(PROGRESS_KEY, JSON.stringify({ matricula, answers: currentAnswers }));
-    }
+<fieldset id="q12" class="border rounded p-4">
+    <legend class="font-semibold">Item 12 - Biologia</legend>
+    <p class="mt-2 text-sm">A imagem a seguir representa o Ciclo do Carbono.</p>
+    <div class="border-dashed" data-img-name="q12"></div>
+    <p class="mt-2 text-sm">As plantas são fundamentais nesse ciclo, pois sequestram o carbono da atmosfera durante a fotossíntese.</p>
+    <p class="mt-2 text-sm font-semibold">O sequestro de carbono pelas plantas é aumentado</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) reciclando papel.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) mantendo intactas as florestas nativas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) fazendo o replantio das áreas degradadas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) evitando a queima de madeira e de áreas de floresta.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) substituindo a madeira de bens duráveis por materiais alternativas.</span></label>
+    </div>
+</fieldset>
 
-    function restoreProgress() {
-        const savedProgress = localStorage.getItem(PROGRESS_KEY);
-        if (!savedProgress) return;
-        const progress = JSON.parse(savedProgress);
-        if (!progress || !progress.matricula) return;
+<fieldset id="q13" class="border rounded p-4">
+    <legend class="font-semibold">Item 13 - Biologia</legend>
+    <p class="mt-2 text-sm">(Enem-2012) Há milhares de anos o homem faz uso da biotecnologia para a produção de alimentos como pães, cervejas e vinhos. Na fabricação de pães, por exemplo, são usados fungos unicelulares, chamados de leveduras, que são comercializados como fermento biológico. Eles são usados para promover o crescimento da massa, deixando-a leve e macia.</p>
+    <p class="mt-2 text-sm font-semibold">O crescimento da massa do pão pelo processo citado é resultante da</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) liberação de gás carbônico.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) formação de ácido lático.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) formação de água.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) produção de ATP.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) liberação de calor.</span></label>
+    </div>
+</fieldset>
 
-        const key = `exam_${SERIES}_${progress.matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
+<fieldset id="q14" class="border rounded p-4">
+    <legend class="font-semibold">Item 14 - Biologia</legend>
+    <p class="mt-2 text-sm">(Enem-2023) Há muito tempo são conhecidas espécies de lesmas-do-mar com uma capacidade ímpar: guardar parte da maquinaria das células das algas que consomem – os cloroplastos – e mantê-los funcionais dentro das suas próprias células, obtendo assim parte do seu alimento. Investigadores portugueses descobriram que essas lesmas-do-mar podem ser mais eficientes nesse processo do que as próprias algas que consomem.</p>
+    <p class="mt-2 text-sm font-semibold">Essa adaptação confere a esse organismo a capacidade de obter primariamente</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) ácidos nucleicos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) carboidratos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) proteínas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) vitaminas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) lipídios.</span></label>
+    </div>
+</fieldset>
 
-        if (record && !record.finalized) {
-            studentIdInput.value = record.matricula;
-            studentNameInput.value = record.name;
-            studentClassInput.value = record.turma;
-            
-            qs('#studentInfo').classList.add('hidden');
-            quizArea.classList.remove('hidden');
-            showToast('Seu progresso foi restaurado.', 'info');
+<fieldset id="q15" class="border rounded p-4">
+    <legend class="font-semibold">Item 15 - Física</legend>
+    <p class="mt-2 text-sm">Em um sistema conservativo, as forças dissipativas são desprezíveis e a energia mecânica permanece constante. Considere uma pedra de massa 200 g sendo lançada verticalmente para cima com uma velocidade inicial de 18 km/h. Adotando g = 10 m/s², no ponto mais alto de sua trajetória, sua energia cinética será</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) nula.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) 5 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) 10 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) 15 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) 20 J.</span></label>
+    </div>
+</fieldset>
 
-            Object.entries(progress.answers).forEach(([q, a]) => {
-                const radio = qs(`input[name="${q}"][value="${a}"]`);
-                if (radio) radio.checked = true;
-            });
+<fieldset id="q16" class="border rounded p-4">
+    <legend class="font-semibold">Item 16 - Física</legend>
+    <p class="mt-2 text-sm">Uma esfera de massa 300 g é abandonada do topo de uma rampa inclinada. Dado que a aceleração da gravidade local seja g = 10 m/s² e que são desprezíveis as forças dissipativas.</p>
+    <div class="border-dashed" data-img-name="q16"></div>
+    <p class="mt-2 text-sm font-semibold">Qual é a velocidade com que a esfera chega ao solo?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) 2√30 m/s.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) 4√30 m/s.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) 6√20 m/s.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 8√15 m/s.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 10√12 m/s.</span></label>
+    </div>
+</fieldset>
 
-            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
-                prepareSecondAttemptView(record.matricula, record.wrongQuestions, false);
-            }
-        } else {
-            localStorage.removeItem(PROGRESS_KEY);
-        }
-    }
+<fieldset id="q17" class="border rounded p-4">
+    <legend class="font-semibold">Item 17 - Física</legend>
+    <p class="mt-2 text-sm">Um corpo de massa 2,0 kg cai, a partir do repouso de uma altura de 90 cm, chocando-se com uma mola de constante elástica 100 N/m comprimindo-a x cm até parar. Desprezando-se os atritos e considerando que a mola deformada fica rente ao solo, determine a medida da deformação x da mola. Adote g = 10 m/s².</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) 0,2 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) 0,3 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) 0,4 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) 0,5 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) 0,6 m.</span></label>
+    </div>
+</fieldset>
 
-    if (quizForm) quizForm.addEventListener('submit', function (ev) {
-        ev.preventDefault();
-        const matricula = studentIdInput.value.trim();
-        const key = `exam_${SERIES}_${matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-        if (!record) { alert('Erro: registro não encontrado.'); return; }
+<fieldset id="q18" class="border rounded p-4">
+    <legend class="font-semibold">Item 18 - Física</legend>
+    <p class="mt-2 text-sm">(CFT – MG) Um carrinho é lançado sobre os trilhos de uma montanha russa, no ponto A, com uma velocidade inicial V₀ conforme mostra a figura. As alturas h₁, h₂ e h₃ valem, respectivamente, 16,2 m, 3,4 m e 9,8 m. Para o carrinho atingir o ponto C, desprezando o atrito, o menor valor de V₀, em m/s, deverá ser igual a: (Considere g = 10 m/s²)</p>
+    <div class="border-dashed" data-img-name="q18"></div>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) 10.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) 14.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) 18.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) 20.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) 24.</span></label>
+    </div>
+</fieldset>
 
-        const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
-        const answers = {};
-        let allAnswered = true;
-        visibleFieldsets.forEach(fs => {
-            const name = fs.id;
-            const sel = qs(`input[name="${name}"]:checked`, fs);
-            answers[name] = sel ? sel.value : null;
-            if (!sel) allAnswered = false;
-        });
+<fieldset id="q19" class="border rounded p-4">
+    <legend class="font-semibold">Item 19 - Física</legend>
+    <p class="mt-2 text-sm">Uma pedra é lançada verticalmente para cima com velocidade inicial de 20 m/s. Desprezando-se todas as resistências e adotando g = 10 m/s².</p>
+    <p class="mt-2 text-sm font-semibold">Determine o ponto mais alto de sua trajetória.</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) 5 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 10 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 15 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 20 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) 25 m.</span></label>
+    </div>
+</fieldset>
 
-        if (!allAnswered) {
-            showToast('Responda todas as questões antes de enviar.', 'warn');
-            return;
-        }
+<fieldset id="q20" class="border rounded p-4">
+    <legend class="font-semibold">Item 20 - Física</legend>
+    <p class="mt-2 text-sm">(IF – SP) Um atleta de salto com vara, durante sua corrida para transpor o obstáculo a sua frente, transforma a sua energia _________ em energia _________ devido ao ganho de altura e consequentemente ao/à _________ de sua velocidade.</p>
+    <p class="mt-2 text-sm font-semibold">As lacunas do texto acima são, correta e respectivamente, preenchidas por:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) potencial – cinética – aumento</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) térmica - potencial – diminuição</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) cinética - potencial – diminuição</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) cinética – térmica – aumento</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) térmica – cinética – aumento</span></label>
+    </div>
+</fieldset>
 
-        record.attempts++;
-        record.history = record.history || [];
-        record.history.push({ attempt: record.attempts, answers, ts: new Date().toISOString() });
+<fieldset id="q21" class="border rounded p-4">
+    <legend class="font-semibold">Item 21 - Física</legend>
+    <p class="mt-2 text-sm">Um objeto é empurrado por uma força de intensidade 100 N que forma um ângulo de 60º com a horizontal. Sabendo que a velocidade do objeto durante a atuação da força é de 2 m/s, determine a potência média desenvolvida. Dado (cos 60° = 0,5).</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) 50 W.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) 100 W.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) 150 W.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) 200 W.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) 250 W.</span></label>
+    </div>
+</fieldset>
 
-        if (record.attempts === 1) {
-            const wrong = Object.keys(TRUE_GABARITO).filter(q => answers[q] !== TRUE_GABARITO[q]);
-            record.wrongQuestions = wrong.map(q => parseInt(q.replace('q', '')));
-            record.correctCount = TOTAL_QUESTIONS - wrong.length;
-            record.retakeAllowed = wrong.length > 0;
-            record.gradedAt = new Date().toISOString();
+<fieldset id="q22" class="border rounded p-4">
+    <legend class="font-semibold">Item 22 - Física</legend>
+    <p class="mt-2 text-sm">(PUC – MG) Considere um corpo sendo arrastado, com velocidade constante, sobre uma superfície horizontal onde o atrito não é desprezível. Considere as afirmações I, II e III a respeito da situação descrita: I. O trabalho da força peso é nulo. II. O trabalho da força de atrito é nulo. III. A força que arrasta o corpo é nula.</p>
+    <p class="mt-2 text-sm font-semibold">A afirmação está correta em</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) I, II e III.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) I, apenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) II, apenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) III, apenas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) I e III, apenas.</span></label>
+    </div>
+</fieldset>
 
-            if (wrong.length === 0) {
-              record.finalized = true;
-              record.finalAnswers = answers;
-            }
+<fieldset id="q23" class="border rounded p-4">
+    <legend class="font-semibold">Item 23 - Física</legend>
+    <p class="mt-2 text-sm">A figura a seguir apresenta uma mola comprimida 10 cm empurrando um corpo de massa 40 g inicialmente em repouso do ponto A até o ponto C. Considerando a constante elástica da mola 200 N/m e adotando g = 10 m/s², qual deve ser a altura h da rampa para que possa parar exatamente no ponto C? Despreze as forças dissipativas.</p>
+    <div class="border-dashed" data-img-name="q23"></div>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) 1,5 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) 2,0 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) 2,5 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) 3,0 m.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) 3,5 m.</span></label>
+    </div>
+</fieldset>
 
-            localStorage.setItem(key, JSON.stringify(record));
-            showModalResultPartial(record);
-        } else {
-            const finalAnswers = { ...(record.history[0]?.answers || {}), ...answers };
-            record.correctCount = Object.keys(TRUE_GABARITO).filter(q => finalAnswers[q] === TRUE_GABARITO[q]).length;
-            record.finalized = true;
-            record.finalAnswers = finalAnswers;
-            localStorage.setItem(key, JSON.stringify(record));
-            showModalResultFinal(record);
-        }
+<fieldset id="q24" class="border rounded p-4">
+    <legend class="font-semibold">Item 24 - Física</legend>
+    <p class="mt-2 text-sm">(UEL – PR) O gráfico representa o valor algébrico da força resultante F que age sobre um corpo de massa 5,0 kg, inicialmente em repouso, em função da abscissa x.</p>
+    <div class="border-dashed" data-img-name="q24"></div>
+    <p class="mt-2 text-sm font-semibold">O trabalho realizado por F, no deslocamento de x = 0 até x = 4,0 m, em joules, vale</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) zero.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) 10.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) 20.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) 30.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) 40.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q25" class="border rounded p-4">
+    <legend class="font-semibold">Item 25 - Física</legend>
+    <p class="mt-2 text-sm">No ponto A de uma rampa de skate, um skatista de massa 70 kg, desliza a partir do repouso até passar pelo ponto B na base da rampa. Desprezando a resistência do ar e os atritos com a rampa e, considerando a aceleração da gravidade local g = 10 m/s²,</p>
+    <div class="border-dashed" data-img-name="q25"></div>
+    <p class="mt-2 text-sm font-semibold">qual será o valor de sua energia potencial gravitacional ao passar pelo ponto B?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) zero.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) 420 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) 4200 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) 42 000 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) 420 000 J.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q26" class="border rounded p-4">
+    <legend class="font-semibold">Item 26 - Física</legend>
+    <p class="mt-2 text-sm">(ESPCEX) Um bloco, puxado por meio de uma corda inextensível e de massa desprezível, desliza sobre uma superfície horizontal com atrito, descrevendo um movimento retilíneo e uniforme. A corda faz um ângulo de 53° com a horizontal e a tração que ela transmite ao bloco é de 80 N.</p>
+    <p class="mt-2 text-sm font-semibold">Se o bloco sofrer um deslocamento de 20 m ao longo da superfície, o trabalho realizado pela tração no bloco será de: (Dados: sen 53° = 0,8 e cos 53° = 0,6)</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) 480 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) 640 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) 960 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) 1280 J.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) 1600 J.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q27" class="border rounded p-4">
+    <legend class="font-semibold">Item 27 - Física</legend>
+    <p class="mt-2 text-sm">(UEG – GO) Em um experimento que valida a conservação da energia mecânica, um objeto de 4,0 kg colide horizontalmente com uma mola relaxada, de constante elástica de 100 N/m. Esse choque a comprime 1,6 cm.</p>
+    <p class="mt-2 text-sm font-semibold">Qual é a velocidade, em m/s, desse objeto antes de se chocar com a mola?</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) 0,02.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) 0,08.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) 0,13.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) 0,40.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) 0,65.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q28" class="border rounded p-4">
+    <legend class="font-semibold">Item 28 - Química</legend>
+    <p class="mt-2 text-sm">Um sal formado pela combinação de um metal alcalino com um halogênio apresenta:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) Estrutura amorfa.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) Baixo ponto de fusão.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) Ligação iônica e estrutura cristalina.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) Ligação covalente e forma molecular.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) Alta condutividade elétrica no estado sólido.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q29" class="border rounded p-4">
+    <legend class="font-semibold">Item 29 - Química</legend>
+    <p class="mt-2 text-sm">A camada mais externa de um elemento X possui 3 elétrons, enquanto a camada mais externa de outro elemento Y tem 7 elétrons.</p>
+    <p class="mt-2 text-sm font-semibold">Uma provável fórmula de um composto, formado por esses elementos é</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) XY₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) X₅Y.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) X₃Y.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) XY₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) X₇Y₃.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q30" class="border rounded p-4">
+    <legend class="font-semibold">Item 30 - Química</legend>
+    <p class="mt-2 text-sm">(UEPB – PB) Dois átomos de elementos genéricos A e B apresentam as seguintes distribuições eletrônicas em camadas: A → 2, 8, 1 e B → 2, 8, 6. Na ligação química entre A e B,</p>
+    <p class="mt-2 text-sm">I. O átomo A perde 1 elétron e transforma-se em um íon (cátion) monovalente.</p>
+    <p class="mt-2 text-sm">II. A fórmula correta do composto formado é A₂B e a ligação que se processa é do tipo iônica.</p>
+    <p class="mt-2 text-sm">III. O átomo B cede 2 elétrons e transforma-se em um ânion bivalente.</p>
+    <p class="mt-2 text-sm font-semibold">Assinale a alternativa correta:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) Apenas I é correta.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) Apenas II é correta.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) Apenas I e II são corretas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) Apenas II e III são corretas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) Todas as afirmativas são corretas.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q31" class="border rounded p-4">
+    <legend class="font-semibold">Item 31 - Química</legend>
+    <p class="mt-2 text-sm">(UC – BA) O modelo abaixo serve para representar as ligações covalentes na molécula de... Dados: H (Z = 1); N (Z = 7); O (Z = 8); F (Z = 9).</p>
+    <div class="border-dashed" data-img-name="q31"></div>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) HF.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) N₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) O₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) F₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) H₂.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q32" class="border rounded p-4">
+    <legend class="font-semibold">Item 32 - Química</legend>
+    <p class="mt-2 text-sm">O crescente aumento da emissão de gases poluentes pela ação do ser humano, pode levar a intensificação do efeito estufa e consequentemente a prejuízos ambientais severos por meio do aquecimento global. O principal responsável pelo efeito estufa é o gás carbônico, em cuja estrutura encontramos. Dados: 6C12 e 8O16</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) ligações eletrovalentes polares.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) ligações iônicas apolares.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) ligações coordenadas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) ligações covalentes.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) ligações metálicas.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q33" class="border rounded p-4">
+    <legend class="font-semibold">Item 33 - Química</legend>
+    <p class="mt-2 text-sm">(UNIRIO – RJ) O dióxido de carbono (CO₂) é um gás essencial no globo terrestre. Sem a presença desse gás, o globo seria gelado e vazio! Porém, quando é inalado em concentração superior a 10%, pode levar o indivíduo à morte por asfixia.</p>
+    <p class="mt-2 text-sm font-semibold">Esse gás apresenta em sua molécula um número de ligações covalentes igual a:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) 4.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) 1.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) 2.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) 3.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) 0.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q34" class="border rounded p-4">
+    <legend class="font-semibold">Item 34 - Química</legend>
+    <p class="mt-2 text-sm">As panelas metálicas aquecem rapidamente e distribuem bem o calor.</p>
+    <p class="mt-2 text-sm font-semibold">Isso ocorre devido à</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) presença de nêutrons móveis no metal.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) transferência de prótons entre os átomos.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) presença de elétrons livres que conduzem calor.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) estrutura amorfa dos metais.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) oxidação dos metais.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q35" class="border rounded p-4">
+    <legend class="font-semibold">Item 35 - Química</legend>
+    <p class="mt-2 text-sm">Assinale a alternativa que apresenta uma molécula com geometria trigonal: Dados: 5B; 6C; 8O; 9F; 17Cl.</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) CO₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) BF₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) O₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) CH₄.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) HCl.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q36" class="border rounded p-4">
+    <legend class="font-semibold">Item 36 - Química</legend>
+    <p class="mt-2 text-sm">(UFPI – PI) Moléculas polares são responsáveis pela absorção de energia de micro-ondas.</p>
+    <p class="mt-2 text-sm font-semibold">Assinale a seguir a substância que mais provavelmente absorverá nesta região.</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) BF₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) H₂O.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) CO₂.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) CCl₄.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) BeCl₂.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q37" class="border rounded p-4">
+    <legend class="font-semibold">Item 37 - Química</legend>
+    <p class="mt-2 text-sm">(FGV – SP) O conhecimento das estruturas das moléculas é um assunto bastante relevante, já que as formas das moléculas determinam propriedades das substâncias como odor, sabor, coloração e solubilidade. As figuras apresentam as estruturas das moléculas de CO₂, H₂O, NH₃, CH₄, H₂S e PH₃.</p>
+    <div class="border-dashed" data-img-name="q37"></div>
+    <p class="mt-2 text-sm font-semibold">Quanto às forças intermoleculares, a molécula que forma ligações de hidrogênio (pontes de hidrogênio) com a água é:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) H₂S.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) CH₄.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) NH₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) PH₃.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) CO₂.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q38" class="border rounded p-4">
+    <legend class="font-semibold">Item 38 - Química</legend>
+    <p class="mt-2 text-sm">(UFSE – SE) Na seguinte estrutura estão representadas moléculas de água unidas entre si por ligações:</p>
+    <div class="border-dashed" data-img-name="q38"></div>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) iônicas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) peptídicas.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) covalentes.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) de oxigênio.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) de hidrogênio.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q39" class="border rounded p-4">
+    <legend class="font-semibold">Item 39 - Química</legend>
+    <p class="mt-2 text-sm">(UFC – CE) Recentemente, uma pesquisa publicada na revista Nature (Ano: 2000, vol.405, pg. 681,) mostrou que a habilidade das lagartixas (víboras) em escalar superfícies lisas como uma parede, por exemplo, é resultado de interações intermoleculares. Admitindo que a parede é recoberta por um material apolar e encontra-se seca.</p>
+    <p class="mt-2 text-sm font-semibold">Assinale a alternativa que classifica corretamente o tipo de interação que prevalece entre as lagartixas e a parede, respectivamente:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) íon - ion.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) íon - dipolo permanente.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) dipolo induzido - dipolo induzido.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) dipolo permanente - dipolo induzido.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) dipolo permanente - dipolo permanente.</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q40" class="border rounded p-4">
+    <legend class="font-semibold">Item 40 - Química</legend>
+    <p class="mt-2 text-sm">Para responder à questão, numere a Coluna B, que contém algumas fórmulas de substâncias químicas, de acordo com a Coluna A, na qual estão relacionados tipos de atrações intermoleculares.</p>
+    <div class="border-dashed" data-img-name="q40"></div>
+    <p class="mt-2 text-sm font-semibold">A numeração correta da Coluna B, de cima para baixo, é:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) 1 - 3 - 3 - 2 - 1</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) 2 - 1 - 1 - 3 - 2</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) 1 - 2 - 2 - 1 - 3</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) 3 - 1 - 1 - 2 - 3</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) 3 - 2 - 3 - 1 - 1</span></label>
+    </div>
+</fieldset>
+
+        <!-- NOVO CONTAINER DE NAVEGAÇÃO -->
+        <div id="quiz-navigation" class="flex items-center justify-between pt-6 border-t mt-4">
+            <button id="prev-btn" type="button" class="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg hover:bg-slate-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+            </button>
+            <span id="page-indicator" class="text-sm font-medium text-slate-600"></span>
+            <button id="next-btn" type="button" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition">
+                Próximo
+            </button>
+        </div>
+
+        <!-- O BOTÃO DE ENVIAR AGORA FICA DENTRO DO PRÓPRIO CONTAINER, MAS INICIALMENTE OCULTO -->
+        <div id="submit-container" class="hidden flex items-center justify-between pt-6 border-t mt-4">
+            <button id="submitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2">
+                <span id="submitBtnText">Finalizar e Enviar Prova</span>
+                <div id="submitBtnSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+            </button>
+        </div>
+
+    </form>
+        </main>
         
-        localStorage.removeItem(PROGRESS_KEY);
-        quizArea.classList.add('hidden');
-    });
+        <footer class="mt-8 text-xs text-gray-500 text-center">
+            <p>Portal de Avaliações CEJA © 2025</p>
+        </footer>
+    </div>
 
-    function createModal(htmlContent) {
-        modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal">${htmlContent}</div></div>`;
-        modalRoot.style.display = 'flex';
-        modalRoot.querySelector('.modal-backdrop').addEventListener('click', e => {
-            if (e.target === e.currentTarget) {
-              const record = JSON.parse(localStorage.getItem(`exam_${SERIES}_${studentIdInput.value.trim()}`));
-              if(!record || record.finalized || !record.retakeAllowed || record.correctCount === TOTAL_QUESTIONS) closeModal();
-            }
-        });
-    }
+    <div id="modalRoot"></div>
 
-    function closeModal() {
-        modalRoot.style.display = 'none';
-        modalRoot.innerHTML = '';
-    }
-
-    function showToast(text, type = 'info') {
-        const t = document.createElement('div');
-        t.className = 'toast'; t.textContent = text;
-        document.body.appendChild(t);
-        setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600);
-        setTimeout(() => t.remove(), 3000);
-    }
-
-    function showModalResultPartial(record) {
-        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
-        const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
-        const allCorrect = record.correctCount === TOTAL_QUESTIONS;
-        let message = canRetake ? 'Você pode refazer apenas as questões que errou!' : (allCorrect ? 'Parabéns, você acertou tudo!' : 'Tentativas finalizadas.');
-        let btnHtml = canRetake 
-            ? `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fazer 2ª tentativa</button>`
-            : `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
-
-        createModal(`
-            <div class="text-center">
-                <h2 class="text-xl font-semibold">1ª Tentativa — ${pct}%</h2>
-                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
-                <p class="mt-3 text-sm">${message}</p>${btnHtml}
-                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${record.wrongQuestions.length ? 'Q' + record.wrongQuestions.join(', Q') : 'Nenhuma'}</div>
-            </div>
-        `);
-        
-        qs('#modalRetake')?.addEventListener('click', () => {
-            closeModal();
-            quizArea.classList.remove('hidden');
-            prepareSecondAttemptView(record.matricula, record.wrongQuestions);
-        });
-        qs('#modalExport')?.addEventListener('click', () => triggerExport(record.matricula));
-    }
-
-    function showModalResultFinal(record) {
-        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
-        const wrongFinal = Object.keys(TRUE_GABARITO).filter(q => record.finalAnswers[q] !== TRUE_GABARITO[q]);
-        createModal(`
-            <div class="text-center">
-                <h2 class="text-xl font-semibold">Resultado Final — ${pct}%</h2>
-                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
-                <button id="modalExportPdf" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado</button>
-                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${wrongFinal.length ? 'Q' + wrongFinal.map(q=>q.replace('q','')).join(', Q') : 'Nenhuma'}</div>
-            </div>
-        `);
-        qs('#modalExportPdf')?.addEventListener('click', () => triggerExport(record.matricula));
-    }
-
-    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) {
-        qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
-            const qnum = parseInt(fs.id.replace('q', ''));
-            if (wrongQuestions.includes(qnum)) {
-                fs.style.display = '';
-                fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; });
-                if (shouldShuffle) shuffleOptions(fs);
-            } else {
-                fs.style.display = 'none';
-                fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
-            }
-        });
-        if(shouldShuffle) showToast('Responda apenas as questões que você errou.', 'info');
-    }
-
-    function shuffleOptions(fieldset) {
-        const container = fieldset.querySelector('.options');
-        if (container) for (let i = container.children.length; i >= 0; i--) container.appendChild(container.children[Math.random() * i | 0]);
-    }
-
-    function triggerExport(matricula) {
-        const key = `exam_${SERIES}_${matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-        if (!record || !record.finalized) { showToast('A prova precisa ser finalizada.', 'warn'); return; }
-        
-        const btn = qs('#modalExportPdf') || qs('#modalExport');
-        if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
-        
-        const answers = record.finalAnswers || record.history[0]?.answers || {};
-        const tableBody = Object.keys(TRUE_GABARITO).map((q, i) => {
-          const isCorrect = answers[q] === TRUE_GABARITO[q];
-          return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
-            <td style="padding:4px; text-align:center;">${i + 1}</td>
-            <td style="padding:4px; text-align:center;">${TRUE_GABARITO[q]}</td>
-            <td style="padding:4px; text-align:center;">${answers[q] || 'N/R'}</td>
-            <td style="padding:4px; text-align:center; color:${isCorrect ? 'green':'red'}">${isCorrect ? '✓' : '✗'}</td>
-          </tr>`;
-        }).join('');
-        
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `<div style="font-family:sans-serif; padding:20px; font-size: 14px;">
-          <h3 style="text-align:center; margin-bottom: 24px;">Resultado Final: ${record.name} (${record.matricula})</h3>
-          <p><strong>Pontuação:</strong> ${record.correctCount} de ${TOTAL_QUESTIONS} acertos (${Math.round((record.correctCount/TOTAL_QUESTIONS)*100)}%)</p>
-          <table border="1" style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#eee;"><th>Q</th><th>Gabarito</th><th>Sua Resposta</th><th>Status</th></tr></thead><tbody>${tableBody}</tbody></table>
-        </div>`;
-        
-        const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${record.name}.pdf`;
-        const opt = { margin: 0.5, filename: filePath, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, html2canvas: { scale: 2 } };
-
-        html2pdf().set(opt).from(wrapper).output('blob').then(pdfBlob => {
-            const formData = new FormData();
-            formData.append('file', pdfBlob, `${record.matricula}-${record.name}.pdf`);
-
-            // Aqui usamos o nome de arquivo diretamente no upload
-            supabaseClient.storage.from('resultados-provas').upload(filePath, formData.get('file'))
-            .then(uploadResult => {
-                if (uploadResult.error) throw uploadResult.error;
-                showToast('Prova enviada com sucesso!', 'success');
-                if (btn) btn.textContent = "Enviado!";
-                localStorage.removeItem(key);
-            })
-            .catch(err => {
-                console.error('Erro no envio para o Supabase:', err);
-                showToast('Erro ao enviar. Tente novamente ou baixe o PDF.', 'error');
-                if(btn) { btn.disabled = false; btn.textContent = "Tentar de Novo"; }
-                saveAs(pdfBlob, `${record.matricula}-${record.name}.pdf`);
-            });
-        });
-    }
-
-    function insertImagesAuto(folder = '../assets/img1nat') {
-      const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
-      if (!placeholders.length) return;
-
-      function tryLoad(candidates) {
-        return new Promise((resolve, reject) => {
-          let i = 0;
-          function next() {
-            if (i >= candidates.length) return reject();
-            const url = candidates[i++];
-            const img = new Image();
-            img.onload = () => resolve(url);
-            img.onerror = () => next();
-            img.src = url;
-          }
-          next();
-        });
-      }
-
-      placeholders.forEach((ph) => {
-        const fs = ph.closest('fieldset');
-        if (!fs) return;
-        const qid = fs.id.replace('q', '');
-        const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
-        const candidates = exts.map(ext => `${folder}/q${qid}.${ext}`);
-
-        tryLoad(candidates).then(src => {
-          ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`;
-        }).catch(() => {
-          ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada para a questão ${qid} na pasta <code>${folder}</code>.</div>`;
-        });
-      });
-      
-      if (!qs('#lb')) {
-        const lb = document.createElement('div');
-        lb.id = 'lb';
-        lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;';
-        lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
-        document.body.appendChild(lb);
-        lb.addEventListener('click', () => {
-            lb.style.display = 'none';
-            qs('#lb-img').src = '';
-        });
-      }
-
-
-
-      document.addEventListener('click', function(e) {
-        const t = e.target;
-        if (t && t.classList.contains('clickable-img')) {
-          qs('#lb-img').src = t.src;
-          qs('#lb').style.display = 'flex';
-        }
-      });
-    }
-
-    window.addEventListener('load', () => {
-        restoreProgress();
-        if (quizForm) quizForm.addEventListener('change', saveProgress);
-        try { insertImagesAuto(); } catch(e) { console.warn("Erro ao carregar imagens."); }
-    });
-</script>
+    <script src="../js/prova-template.js"></script>
 </body>
 </html>

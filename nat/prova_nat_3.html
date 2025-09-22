@@ -1,1088 +1,617 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Prova — Ciências da Natureza</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
-  <style>
-    input[name="studentName"] { text-transform: uppercase; }
-    .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
-    .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
-    .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
-    .check-wrap { width:96px; height:96px; border-radius:999px; background:#ECFDF5; display:flex; align-items:center; justify-content:center; margin:0 auto; }
-    .check-svg { width:64px; height:64px; stroke:#16A34A; stroke-width:6; fill:none; stroke-linecap:round; stroke-linejoin:round; }
-    .draw { stroke-dasharray: 150; stroke-dashoffset: 150; animation: draw 700ms ease-in-out forwards; }
-    @keyframes draw { to { stroke-dashoffset: 0; } }
-    .toast { position: fixed; right: 20px; top: 20px; z-index:70; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
-    .confetti { width:100%; height:40px; overflow:hidden; position:relative; margin-top:8px; }
-    .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
-    .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
-    .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
-    .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
-    .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
-    @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
-    .option-label { cursor:pointer; }
-    input[type="radio"] { accent-color: #2563eb; }
-    .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-  </style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Prova — Ciências da natureza  (3ª Série)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.3/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
+    <style>
+        /* ESTILOS COMPLETOS PRESERVADOS */
+        input[name="studentName"] { text-transform: uppercase; }
+        .no-select { user-select: none; -webkit-user-select: none; -ms-user-select: none; }
+        .modal-backdrop { background: rgba(16,24,40,0.65); position: fixed; inset:0; display:flex; align-items:center; justify-content:center; z-index:60; }
+        .modal { max-width:720px; width:94%; background:white; border-radius:12px; padding:24px; box-shadow:0 10px 30px rgba(2,6,23,0.2); }
+        .toast { position: fixed; right: 20px; top: 20px; z-index:99999; background: rgba(2,6,23,0.92); color: #fff; padding: 10px 14px; border-radius: 8px; box-shadow: 0 6px 18px rgba(2,6,23,0.3); display:flex; gap:10px; align-items:center; }
+        .option-label { cursor:pointer; }
+        input[type="radio"] { accent-color: #2563eb; }
+        .spinner { width: 20px; height: 20px; border: 2px solid rgba(255,255,255,0.3); border-left-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .check-wrap { width: 80px; height: 80px; background-color: #dcfce7; border-radius: 50%; margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+        .check-svg { width: 48px; height: 48px; }
+        .checkmark__path { stroke-dasharray: 100; stroke-dashoffset: 100; stroke: #22c55e; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; fill: none; animation: draw 0.8s 0.2s ease-out forwards; }
+        @keyframes draw { to { stroke-dashoffset: 0; } }
+        .confetti { width:100%; height:40px; overflow:hidden; position:relative; }
+        .confetti span{ position:absolute; top:-10px; font-size:12px; opacity:0; animation: conf 1400ms linear forwards; }
+        .confetti span:nth-child(1){ left:10%; animation-delay:0ms; }
+        .confetti span:nth-child(2){ left:30%; animation-delay:120ms; }
+        .confetti span:nth-child(3){ left:50%; animation-delay:240ms; }
+        .confetti span:nth-child(4){ left:70%; animation-delay:360ms; }
+        @keyframes conf { to { transform: translateY(36px) rotate(25deg); opacity:1; } }
+        .border-dashed {
+            border-width: 2px; border-style: dashed; border-color: #e2e8f0; border-radius: 0.5rem;
+            text-align: center; font-size: 0.875rem; color: #64748b;
+            margin: 0.5rem 0; padding: 1rem; min-height: 100px;
+            display: flex; align-items: center; justify-content: center;
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900 no-select">
-  <div class="max-w-5xl mx-auto p-6">
-    <header class="mb-4">
-      <h1 class="text-2xl font-bold">Bloco de Avaliação — Ciências da Natureza e suas Tecnologias (3ª Série)</h1>
-      <p class="text-sm text-gray-600 mt-1">Bem-vindo à Plataforma de Avaliação CEJA. Atenção: você possui apenas 1 tentativa.</p>
-    </header>
+<body class="bg-slate-50 text-slate-900 no-select">
 
-    <!-- SEÇÃO DE IDENTIFICAÇÃO -->
-    <section id="studentInfo" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80 mb-6">
-      <div class="mb-5 flex items-center gap-3">
-        <div class="bg-blue-100 p-2 rounded-full"><svg class="w-6 h-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg></div>
-        <h2 class="text-xl font-bold text-slate-800">Identificação do Aluno</h2>
-      </div>
-      <form id="infoForm" class="space-y-4">
-        <div>
-          <label for="studentId" class="text-sm font-medium text-gray-700 sr-only">Matrícula</label>
-          <div class="relative">
-            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10.75 2.75a.75.75 0 00-1.5 0v8.5a.75.75 0 001.5 0v-8.5z" /><path d="M3.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0zM11.5 12a2.5 2.5 0 115 0 2.5 2.5 0 01-5 0z" /><path fill-rule="evenodd" d="M5.057 14.42a.75.75 0 01.488.943 9.972 9.972 0 001.619 2.592.75.75 0 01-1.129.981 11.472 11.472 0 01-1.85-2.968.75.75 0 01.943-.488zM14.943 14.42a.75.75 0 00-.488.943 9.973 9.973 0 01-1.619 2.592.75.75 0 101.129.981 11.472 11.472 0 001.85-2.968.75.75 0 00-.943-.488z" clip-rule="evenodd" /></svg></div>
-            <input id="studentId" name="studentId" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula (Ex: 2412767146-8)" required />
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label for="studentName" class="text-sm font-medium text-gray-700 sr-only">Nome Completo</label>
-            <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg></div>
-              <input id="studentName" name="studentName" type="text" class="w-full rounded-lg border-gray-300 py-3 pl-10 pr-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)" required />
-            </div>
-          </div>
-          <div>
-            <label for="studentClass" class="text-sm font-medium text-gray-700 sr-only">Turma</label>
-            <div class="relative">
-              <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><svg class="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM6 6a.75.75 0 011.5 0v1.25a.75.75 0 01-1.5 0V6zM6 9.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zM8.5 6a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0V6zM12 6.75a.75.75 0 00-1.5 0V13a.75.75 0 001.5 0V6.75z" clip-rule="evenodd" /></svg></div>
-              <select id="studentClass" name="studentClass" class="w-full appearance-none rounded-lg border-gray-300 py-3 pl-10 pr-8 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" required>
-                <option value="" disabled selected>Selecione a Turma</option>
-                <option value="A">Turma A</option><option value="B">Turma B</option>
-              </select>
-               <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"><svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" /></svg></div>
-            </div>
-          </div>
-        </div>
-        
-        <p id="infoMsg" class="text-sm text-red-600 h-5"></p>
-        
-        <div class="pt-2">
-            <button id="startBtn" type="button" class="group flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700 active:scale-95 disabled:bg-blue-400 disabled:cursor-wait">
-                <span id="startBtnText">Iniciar Avaliação</span>
-                <div id="startBtnSpinner" class="spinner hidden"></div>
-                 <svg class="h-5 w-5" id="startBtnArrow" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
+    <!-- CAMADA DE INÍCIO DA PROVA QUE FORÇA A TELA CHEIA -->
+    <div id="start-exam-overlay" class="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4" style="backdrop-filter: blur(8px);">
+        <div class="text-center">
+            <h2 class="text-3xl font-bold text-white">Você está pronto?</h2>
+            <p class="text-slate-300 mt-2 mb-6 max-w-lg">A avaliação começará em modo tela cheia para garantir o foco. Se você sair acidentalmente, terá 3 segundos para retornar.</p>
+            <button id="start-fullscreen-btn" class="bg-blue-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-blue-700 transition-transform hover:scale-105">
+                Iniciar Avaliação Agora
             </button>
         </div>
-      </form>
-    </section>
+    </div>
 
-    <!-- Quiz -->
-    <main id="quizArea" class="hidden">
-      <form id="quizForm" class="space-y-6 bg-white p-6 rounded shadow">
+    <div class="max-w-5xl mx-auto p-4 sm:p-6">
+        <header id="quiz-header" class="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+            <!-- O JS preencherá esta área -->
+        </header>
         
-    <!-- Item 1 - Biologia -->
-    <fieldset id="q1" class="border rounded p-4">
-      <legend class="font-semibold">Item 1</legend>
-      <p class="mt-2 text-sm">Uma criança passou vários dias de férias no Rio Araguaia e não usou protetor solar. Ao voltar, sua mãe notou que sua pele estava mais escura devido à exposição aos raios solares.</p>
-      <p class="mt-2 text-sm font-semibold">Essa mudança na cor da pele da criança ocorreu devido à uma variação do:</p>
-      <div class="mt-2 space-y-1 options">
+        <main>
+            <form id="quizForm" data-image-folder="../assets/img3nat" data-series-id="3_SERIE_NATUREZA" class="space-y-6 bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
+                
+  <fieldset id="q1" class="border rounded p-4">
+    <legend class="font-semibold">Item 1 - Biologia</legend>
+    <p class="mt-2 text-sm">Uma criança passou vários dias de férias no Rio Araguaia e não usou protetor solar. Ao voltar, sua mãe notou que sua pele estava mais escura devido à exposição aos raios solares.</p>
+    <p class="mt-2 text-sm font-semibold">Essa mudança na cor da pele da criança ocorreu devido à uma variação do</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q1" value="A"><span>(A) gene.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="B"><span>(B) genótipo.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="C"><span>(C) fenótipo.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="D"><span>(D) cariótipo.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q1" value="E"><span>(E) heredograma.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 2 - Biologia -->
-    <fieldset id="q2" class="border rounded p-4">
-      <legend class="font-semibold">Item 2</legend>
-      <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
-      <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
-      <p class="mt-2 text-sm font-semibold">A característica do indivíduo que falta na geração F2 é representada pelo par:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q2" class="border rounded p-4">
+    <legend class="font-semibold">Item 2 - Biologia</legend>
+    <p class="mt-2 text-sm">Observe a imagem a seguir.</p>
+    <div class="border-dashed" data-img-name="q2"></div>
+    <p class="mt-2 text-sm font-semibold">A característica do indivíduo que falta na geração F2 é representada pelo par:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q2" value="A"><span>(A) vv</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="B"><span>(B) VV</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="C"><span>(C) Vv</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="D"><span>(D) VV e Vv</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) Vv e Vv</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q2" value="E"><span>(E) Vv e vv</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 3 - Biologia -->
-    <fieldset id="q3" class="border rounded p-4">
-      <legend class="font-semibold">Item 3</legend>
-      <p class="mt-2 text-sm">(UERJ) Sabe-se que a transmissão hereditária da cor das flores conhecidas como copo-de-leite se dá por herança mendeliana simples, com dominância completa. Em um cruzamento experimental de copos-de-leite vermelhos, obteve-se uma primeira geração – F1 - bastante numerosa, numa proporção de 3 descendentes vermelhos para cada branco (3:1). Analisando o genótipo da F1, os cientistas constataram que apenas um em cada três descendentes vermelhos era homozigoto para essa característica.</p>
-      <p class="mt-2 text-sm font-semibold">De acordo com tais dados, pode-se afirmar que a produção genotípica da F1 desse cruzamento experimental foi:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q3" class="border rounded p-4">
+    <legend class="font-semibold">Item 3 - Biologia</legend>
+    <p class="mt-2 text-sm">(UERJ) Sabe-se que a transmissão hereditária da cor das flores conhecidas como copo-de-leite se dá por herança mendeliana simples, com dominância completa. Em um cruzamento experimental de copos-de-leite vermelhos, obteve-se uma primeira geração – F1 - bastante numerosa, numa proporção de 3 descendentes vermelhos para cada branco (3:1). Analisando o genótipo da F1, os cientistas constataram que apenas um em cada três descendentes vermelhos era homozigoto para essa característica.</p>
+    <p class="mt-2 text-sm font-semibold">De acordo com tais dados, pode-se afirmar que a produção genotípica da F1 desse cruzamento experimental foi:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q3" value="A"><span>(A) 4 Aa</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="B"><span>(B) 2 Aa : 2 aa</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="C"><span>(C) 3 AA: 1 Aa</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="D"><span>(D) 1 AA : 2 Aa : 1 aa</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q3" value="E"><span>(E) 1 AA : 1 Aa : 1 aa</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 4 - Biologia -->
-    <fieldset id="q4" class="border rounded p-4">
-      <legend class="font-semibold">Item 4</legend>
-      <p class="mt-2 text-sm">(Enem-2009) Em um experimento, preparou-se um conjunto de plantas por técnica de clonagem a partir de uma planta original que apresentava folhas verdes. Esse conjunto foi dividido em dois grupos, que foram tratados de maneira idêntica, com exceção das condições de iluminação. Após alguns dias, observou-se que o grupo exposto à luz apresentava folhas verdes como a planta original e o grupo cultivado no escuro apresentava folhas amareladas.</p>
-      <p class="mt-2 text-sm font-semibold">Ao final do experimento, os dois grupos de plantas apresentaram:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q4" class="border rounded p-4">
+    <legend class="font-semibold">Item 4 - Biologia</legend>
+    <p class="mt-2 text-sm">(Enem-2009) Em um experimento, preparou-se um conjunto de plantas por técnica de clonagem a partir de uma planta original que apresentava folhas verdes. Esse conjunto foi dividido em dois grupos, que foram tratados de maneira idêntica, com exceção das condições de iluminação, sendo um grupo exposto a ciclos de iluminação solar natural e outro mantido no escuro. Após alguns dias, observou-se que o grupo exposto à luz apresentava folhas verdes como a planta original e o grupo cultivado no escuro apresentava folhas amareladas.</p>
+    <p class="mt-2 text-sm font-semibold">Ao final do experimento, os dois grupos de plantas apresentaram</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q4" value="A"><span>(A) os genótipos e os fenótipos idênticos.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="B"><span>(B) os genótipos idênticos e os fenótipos diferentes.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="C"><span>(C) diferenças nos genótipos e fenótipos.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="D"><span>(D) o mesmo fenótipo e apenas dois genótipos diferentes.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q4" value="E"><span>(E) o mesmo fenótipo e grande variedade de genótipos.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 5 - Biologia -->
-    <fieldset id="q5" class="border rounded p-4">
-      <legend class="font-semibold">Item 5</legend>
-      <p class="mt-2 text-sm">(URCA) Uma mulher normal para a hemofilia teve um filho hemofílico embora seja casada com um homem sem nenhum problema de coagulação sanguínea.</p>
-      <p class="mt-2 text-sm font-semibold">Essa situação pode ser explicada se:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q5" class="border rounded p-4">
+    <legend class="font-semibold">Item 5 - Biologia</legend>
+    <p class="mt-2 text-sm">(URCA) Uma mulher normal para a hemofilia teve um filho hemofílico embora seja casada com um homem sem nenhum problema de coagulação sanguínea.</p>
+    <p class="mt-2 text-sm font-semibold">Essa situação pode ser explicada se:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q5" value="A"><span>(A) O pai for heterozigoto para a hemofilia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="B"><span>(B) O filho for homozigoto para a hemofilia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="C"><span>(C) A mãe for portadora de um gene para a hemofilia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="D"><span>(D) Se o pai for portador de um gene para a hemofilia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q5" value="E"><span>(E) Certamente o homem não for pai da criança.</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 6 - Biologia -->
-    <fieldset id="q6" class="border rounded p-4">
-      <legend class="font-semibold">Item 6</legend>
-      <p class="mt-2 text-sm">A hemofilia é uma doença genética ligada ao cromossomo X que afeta a coagulação sanguínea. Uma mulher é heterozigota para a hemofilia e o seu marido é normal.</p>
-      <p class="mt-2 text-sm font-semibold">Considerando essa informação, qual é a probabilidade de nascimento de uma criança do sexo masculino e hemofílica?</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q6" class="border rounded p-4">
+    <legend class="font-semibold">Item 6 - Biologia</legend>
+    <p class="mt-2 text-sm">A hemofilia é uma doença genética ligada ao cromossomo X que afeta a coagulação sanguínea. Uma mulher é heterozigota para a hemofilia e o seu marido é normal.</p>
+    <p class="mt-2 text-sm font-semibold">Considerando essa informação, qual é a probabilidade de nascimento de uma criança do sexo masculino e hemofílica?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q6" value="A"><span>(A) 10%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="B"><span>(B) 15%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="C"><span>(C) 25%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="D"><span>(D) 50%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q6" value="E"><span>(E) 75%</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 7 - Biologia -->
-    <fieldset id="q7" class="border rounded p-4">
-      <legend class="font-semibold">Item 7</legend>
-      <p class="mt-2 text-sm">O daltonismo é uma condição genética causada por um alelo recessivo de um gene, localizado no cromossomo X. Considere um casal em que a mulher é heterozigota para o daltonismo e o marido é normal.</p>
-      <p class="mt-2 text-sm font-semibold">Qual é a probabilidade de nascer um menino daltônico?</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q7" class="border rounded p-4">
+    <legend class="font-semibold">Item 7 - Biologia</legend>
+    <p class="mt-2 text-sm">O daltonismo é uma condição genética caracterizada pela dificuldade em distinguir as cores verde e vermelha. Trata-se de uma condição causada por um alelo recessivo de um gene, localizado no cromossomo X.<br>Considere um casal em que a mulher é heterozigota para o daltonismo e o marido é normal.</p>
+    <p class="mt-2 text-sm font-semibold">Qual é a probabilidade de nascer um menino daltônico?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q7" value="A"><span>(A) 1/2</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="B"><span>(B) 1/3</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="C"><span>(C) 1/4</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="D"><span>(D) 1/8</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q7" value="E"><span>(E) 3/4</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 8 - Biologia -->
-    <fieldset id="q8" class="border rounded p-4">
-      <legend class="font-semibold">Item 8</legend>
-      <p class="mt-2 text-sm">Em uma espécie de mamífero a pelagem preta é determinada por um alelo dominante B e a branca, por um alelo recessivo b. Sabendo-se que se trata de uma dominância completa, que cor terá o mamífero com genótipo Bb?</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q8" class="border rounded p-4">
+    <legend class="font-semibold">Item 8 - Biologia</legend>
+    <p class="mt-2 text-sm">Em uma espécie de mamífero a pelagem preta é determinada por um alelo dominante B e a branca, por um alelo recessivo b.</p>
+    <p class="mt-2 text-sm font-semibold">Sabendo-se que se trata de uma dominância completa, que cor terá o mamífero com genótipo Bb?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q8" value="A"><span>(A) Preto</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="B"><span>(B) Branco</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="C"><span>(C) Cinza</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="D"><span>(D) 50% branco e 50% preto</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q8" value="E"><span>(E) 25% branco e 75% preto</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 9 - Biologia -->
-    <fieldset id="q9" class="border rounded p-4">
-      <legend class="font-semibold">Item 9</legend>
-      <p class="mt-2 text-sm">Um exemplo bastante conhecido de codominância é o sistema ABO. Nele observamos que os alelos Iᴬ e Iᴮ, quando aparecem em um mesmo indivíduo, expressam-se e determinam o sangue AB.</p>
-      <p class="mt-2 text-sm font-semibold">Com essa informação, qual a probabilidade de um indivíduo de sangue AB ter um filho com uma pessoa do sangue O (ii) e esse filho ter o sangue AB?</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q9" class="border rounded p-4">
+    <legend class="font-semibold">Item 9 - Biologia</legend>
+    <p class="mt-2 text-sm">Um exemplo bastante conhecido de codominância é o sistema ABO. Nele observamos que os alelos Iᴬ e Iᴮ, quando aparecem em um mesmo indivíduo, expressam-se e determinam o sangue AB.</p>
+    <p class="mt-2 text-sm font-semibold">Com essa informação, qual a probabilidade de um indivíduo de sangue AB ter um filho com uma pessoa do sangue O (ii) e esse filho ter o sangue AB?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q9" value="A"><span>(A) 0%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="B"><span>(B) 25%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="C"><span>(C) 50%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="D"><span>(D) 75%</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q9" value="E"><span>(E) 100%</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 10 - Biologia -->
-    <fieldset id="q10" class="border rounded p-4">
-      <legend class="font-semibold">Item 10</legend>
-      <p class="mt-2 text-sm">(UERJ) Em algumas raças de gado bovino, o cruzamento de indivíduos de pelagem totalmente vermelha com outros de pelagem totalmente branca produz sempre indivíduos malhados [...]. Admita um grupo de indivíduos malhados, cruzados apenas entre si, que gerou uma prole de 20 indivíduos de coloração totalmente vermelha, 40 indivíduos com pelagem malhada e 20 indivíduos com coloração inteiramente branca.</p>
-      <p class="mt-2 text-sm font-semibold">O resultado desse cruzamento é exemplo do seguinte fenômeno genético de:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q10" class="border rounded p-4">
+    <legend class="font-semibold">Item 10 - Biologia</legend>
+    <p class="mt-2 text-sm">(UERJ) Em algumas raças de gado bovino, o cruzamento de indivíduos de pelagem totalmente vermelha com outros de pelagem totalmente branca produz sempre indivíduos malhados, com pelagem de manchas vermelhas e brancas. Admita um grupo de indivíduos malhados, cruzados apenas entre si, que gerou uma prole de 20 indivíduos de coloração totalmente vermelha, 40 indivíduos com pelagem malhada e 20 indivíduos com coloração inteiramente branca.</p>
+    <p class="mt-2 text-sm font-semibold">O resultado desse cruzamento é exemplo do seguinte fenômeno genético de</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q10" value="A"><span>(A) epistasia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="B"><span>(B) pleiotropia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="C"><span>(C) dominância.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="D"><span>(D) codominância.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q10" value="E"><span>(E) dominância parcial.</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 11 - Biologia -->
-    <fieldset id="q11" class="border rounded p-4">
-      <legend class="font-semibold">Item 11</legend>
-      <p class="mt-2 text-sm">A flor Mirabilis jalapa, conhecida popularmente como maravilha, é uma planta que apresenta flores vermelhas, brancas e rosas. O fenótipo rosa é determinado quando a planta é heterozigota e caracteriza-se por ser uma coloração intermediária.</p>
-      <p class="mt-2 text-sm font-semibold">A flor Mirabilis jalapa é, portanto, um exemplo clássico de:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q11" class="border rounded p-4">
+    <legend class="font-semibold">Item 11 - Biologia</legend>
+    <p class="mt-2 text-sm">A flor Mirabilis jalapa, conhecida popularmente como maravilha, é uma planta que apresenta flores vermelhas, brancas e rosas. O fenótipo rosa é determinado quando a planta é heterozigota e caracteriza-se por ser uma coloração intermediária.</p>
+    <p class="mt-2 text-sm font-semibold">A flor Mirabilis jalapa é, portanto, um exemplo clássico de:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q11" value="A"><span>(A) Epistasia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="B"><span>(B) Alelos letais.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="C"><span>(C) Codominância.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="D"><span>(D) Dominância completa.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q11" value="E"><span>(E) Dominância incompleta.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 12 - Biologia -->
-    <fieldset id="q12" class="border rounded p-4">
-      <legend class="font-semibold">Item 12</legend>
-      <p class="mt-2 text-sm">Observe a imagem a seguir:</p>
-      <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
-      <p class="mt-2 text-sm font-semibold">O resultado desse cruzamento é exemplo de qual fenômeno genético?</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q12" class="border rounded p-4">
+    <legend class="font-semibold">Item 12 - Biologia</legend>
+    <p class="mt-2 text-sm">Observe a imagem a seguir</p>
+    <div class="border-dashed" data-img-name="q12"></div>
+    <p class="mt-2 text-sm font-semibold">O resultado desse cruzamento é exemplo de qual fenômeno genético?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q12" value="A"><span>(A) Codominância.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="B"><span>(B) Epistasia genética.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="C"><span>(C) Dominância incompleta.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="D"><span>(D) Herança ligada ao sexo.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q12" value="E"><span>(E) Herança ligada ao cromossomo X.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 13 - Biologia -->
-    <fieldset id="q13" class="border rounded p-4">
-      <legend class="font-semibold">Item 13</legend>
-      <p class="mt-2 text-sm">A produção de uma proteína é processada basicamente em duas fases:<br>1 – O DNA promove a produção de RNA.<br>2 – O RNA codifica a proteína.</p>
-      <p class="mt-2 text-sm font-semibold">Qual o nome dessas fases?</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q13" class="border rounded p-4">
+    <legend class="font-semibold">Item 13 - Biologia</legend>
+    <p class="mt-2 text-sm">A produção de uma proteína é processada basicamente em duas fases:<br>1 – O DNA promove a produção de RNA.<br>2 – O RNA codifica a proteína.</p>
+    <p class="mt-2 text-sm font-semibold">Qual o nome dessas fases?</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q13" value="A"><span>(A) 1-transmissão 2-tradução.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="B"><span>(B) 1-tradução 2-transcrição.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="C"><span>(C) 1-transcrição 2-transcrição.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="D"><span>(D) 1-tradução 2-tradução.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q13" value="E"><span>(E) 1-transcrição 2-tradução.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 14 - Biologia -->
-    <fieldset id="q14" class="border rounded p-4">
-      <legend class="font-semibold">Item 14</legend>
-      <p class="mt-2 text-sm">O dogma central da Biologia Molecular, proposto por Francis Crick em 1958, consiste em explicar como as informações contidas no DNA são transmitidas, ou seja, como ocorre o fluxo das informações genéticas.</p>
-      <p class="mt-2 text-sm font-semibold">De acordo com esse dogma, o fluxo da informação genética ocorre no sentido:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q14" class="border rounded p-4">
+    <legend class="font-semibold">Item 14 - Biologia</legend>
+    <p class="mt-2 text-sm">O dogma central da Biologia Molecular, proposto por Francis Crick em 1958, consiste em explicar como as informações contidas no DNA são transmitidas, ou seja, como ocorre o fluxo das informações genéticas.</p>
+    <p class="mt-2 text-sm font-semibold">De acordo com esse dogma, o fluxo da informação genética ocorre no sentido:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q14" value="A"><span>(A) Proteínas → RNA → DNA.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="B"><span>(B) RNA → DNA → Proteínas.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="C"><span>(C) Proteínas → DNA → RNA.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="D"><span>(D) DNA → Proteínas → RNA.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q14" value="E"><span>(E) DNA → RNA → Proteínas.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 15 - Física -->
-    <fieldset id="q15" class="border rounded p-4">
-      <legend class="font-semibold">Item 15</legend>
-      <p class="mt-2 text-sm">(CESMAC – AL 2018) A captação de imagens em um equipamento de ressonância magnética é realizada por um dispositivo que contém um solenóide. Considere que este solenóide seja ideal, com densidade de 10 espiras por centímetro. Em seu interior existe ar, cuja permeabilidade magnética pode ser considerada igual a μ₀ = 4π·10⁻⁷ T·m/A.</p>
-      <p class="mt-2 text-sm font-semibold">O módulo do campo magnético no interior do solenoide, quando uma corrente de 2,0 A o percorre, é igual a:</p>
-      <div class="mt-2 space-y-1 options">
-        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(A) 2π·10⁻⁶ T</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(B) 4π·10⁻⁴ T</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) 4π·10⁻⁶ T</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) 8π·10⁻⁴ T</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(E) 8π·10⁻⁶ T</span></label>
-      </div>
-    </fieldset>
+<fieldset id="q15" class="border rounded p-4">
+    <legend class="font-semibold">Item 15 - Física</legend>
+    <p class="mt-2 text-sm">(CESMAC – AL 2018) A captação de imagens em um equipamento de ressonância magnética é realizada por um dispositivo que contém um solenóide. Considere que este solenóide seja ideal, com densidade de 10 espiras por centímetro. Em seu interior existe ar, cuja permeabilidade magnética pode ser considerada igual a μο = 4π· 10⁻⁷ T·m/A.</p>
+    <p class="mt-2 text-sm font-semibold">O módulo do campo magnético no interior do solenoide, quando uma corrente de 2,0 A o percorre, é igual a:</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q15" value="A"><span>(Α) 2π·10⁻⁶T</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="B"><span>(Β) 4π·10⁻⁴T</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="C"><span>(C) 4π·10⁻⁶T</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="D"><span>(D) 8π·10⁻⁴T</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q15" value="E"><span>(Ε) 8π·10⁻⁶Τ</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 16 - Física -->
-    <fieldset id="q16" class="border rounded p-4">
-      <legend class="font-semibold">Item 16</legend>
-      <p class="mt-2 text-sm">Um fio longo e reto é percorrido por uma corrente elétrica de intensidade 12 A. Sendo o meio o vácuo em que μ₀ = 4π·10⁻⁷ T·m/A, a intensidade do vetor campo magnético no ponto 10 cm, distante do fio será:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q16" class="border rounded p-4">
+    <legend class="font-semibold">Item 16 - Física</legend>
+    <p class="mt-2 text-sm">Um fio longo e reto é percorrido por uma corrente elétrica de intensidade 12 A. Sendo o meio o vácuo em que μο = 4π·10⁻⁷ T·m/A, a intensidade do vetor campo magnético no ponto 10 cm, distante do fio será</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q16" value="A"><span>(A) 24mT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(B) 24μT.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="B"><span>(Β) 24μΤ.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="C"><span>(C) 24nT.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="D"><span>(D) 24pT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(E) 24T.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q16" value="E"><span>(Ε) 24T.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 17 - Física -->
-    <fieldset id="q17" class="border rounded p-4">
-      <legend class="font-semibold">Item 17</legend>
-      <p class="mt-2 text-sm">Uma corrente elétrica de intensidade 15A percorre uma espira circular cujo raio mede 5cm, localizada no vácuo. A permeabilidade magnética do vácuo mede μ₀ = 4π·10⁻⁷ T·m/A.</p>
-      <p class="mt-2 text-sm font-semibold">A intensidade do vetor indução magnética perpendicular ao plano da figura no centro dessa espira é:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q17" class="border rounded p-4">
+    <legend class="font-semibold">Item 17 - Física</legend>
+    <p class="mt-2 text-sm">Uma corrente elétrica de intensidade 15A percorre uma espira circular cujo raio mede 5cm, localizada no vácuo. A permeabilidade magnética do vácuo mede μο = 4π·10⁻⁷ T·m/A.</p>
+    <p class="mt-2 text-sm font-semibold">A intensidade do vetor indução magnética perpendicular ao plano da figura no centro dessa espira é</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q17" value="A"><span>(A) 6·10⁻³T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="B"><span>(B) 6·10⁻⁴T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="C"><span>(C) 6·10⁻⁵T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="D"><span>(D) 6·10⁻⁶T.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(E) 6·10⁻⁷T.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q17" value="E"><span>(Ε) 6·10⁻⁷T.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 18 - Física -->
-    <fieldset id="q18" class="border rounded p-4">
-      <legend class="font-semibold">Item 18</legend>
-      <p class="mt-2 text-sm">Dada uma espira circular de raio 3π cm, localizada no vácuo, sendo percorrida por uma corrente elétrica de intensidade 6mA. Considerando que a permeabilidade magnética do vácuo mede μ₀ = 4π·10⁻⁷ T·m/A, o módulo do campo de indução magnética no centro da espira será:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q18" class="border rounded p-4">
+    <legend class="font-semibold">Item 18 - Física</legend>
+    <p class="mt-2 text-sm">Dada uma espira circular de raio 3π cm, localizada no vácuo, sendo percorrida por uma corrente elétrica de intensidade 6mA. Considerando que a permeabilidade magnética do vácuo mede μο = 4π·10⁻⁷T·m/A, o módulo do campo de indução magnética no centro da espira será</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q18" value="A"><span>(A) 2·10⁻⁸T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="B"><span>(B) 4·10⁻⁸T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="C"><span>(C) 6·10⁻⁸T.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="D"><span>(D) 12·10⁻⁸T.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(E) 24·10⁻³T.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q18" value="E"><span>(Ε) 24·10⁻³T.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 19 - Física -->
-    <fieldset id="q19" class="border rounded p-4">
-      <legend class="font-semibold">Item 19</legend>
-      <p class="mt-2 text-sm">Um solenóide é atravessado por uma corrente elétrica de intensidade 300A. Esse solenoide possui 1,5m e é composto de 600 espiras. Dada a permeabilidade magnética do vácuo que mede μ₀ = 4π·10⁻⁷ T·m/A, a intensidade do campo de indução magnética em seu interior será de:</p>
-      <div class="mt-2 space-y-1 options">
-        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(A) 0,024πT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 0,24πT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 0,048πT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 0,48πT.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(E) 4,8πT.</span></label>
-      </div>
-    </fieldset>
+<fieldset id="q19" class="border rounded p-4">
+    <legend class="font-semibold">Item 19 - Física</legend>
+    <p class="mt-2 text-sm">Um solenóide é atravessado por uma corrente elétrica de intensidade 300A. Esse solenoide possui 1,5m e é composto de 600 espiras. Dada a permeabilidade magnética do vácuo que mede μο = 4π·10⁻⁷T·m/A, a intensidade do campo de indução magnética em seu interior será de</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q19" value="A"><span>(Α) 0,024πΤ.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="B"><span>(B) 0,24πΤ.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="C"><span>(C) 0,048πΤ.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="D"><span>(D) 0,48πΤ.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q19" value="E"><span>(Ε) 4,8πΤ.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 20 - Física -->
-    <fieldset id="q20" class="border rounded p-4">
-      <legend class="font-semibold">Item 20</legend>
-      <p class="mt-2 text-sm">Um fio condutor reto de 60 cm, é percorrido por uma corrente elétrica de intensidade 8 A. Quando colocado paralelamente às linhas de um campo magnético uniforme de intensidade 6T, a intensidade da força magnética exercida sobre esse fio será de valor igual a:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q20" class="border rounded p-4">
+    <legend class="font-semibold">Item 20 - Física</legend>
+    <p class="mt-2 text-sm">Um fio condutor reto de 60 cm, é percorrido por uma corrente elétrica de intensidade 8 A. Quando colocado paralelamente às linhas de um campo magnético uniforme de intensidade 6 T, a intensidade da força magnética exercida sobre esse fio será de valor igual a</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q20" value="A"><span>(A) zero.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="B"><span>(B) 28,8 N.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="C"><span>(C) 57,6 N.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="D"><span>(D) 288 N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(E) 576 N.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q20" value="E"><span>(Ε) 576 N.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 21 - Física -->
-    <fieldset id="q21" class="border rounded p-4">
-      <legend class="font-semibold">Item 21</legend>
-      <p class="mt-2 text-sm">O campo magnético no interior de um solenoide de comprimento L possui N espiras e, quando percorrido por uma corrente i, apresenta um campo magnético B. Se o número de espiras for quadruplicado e a corrente reduzida à metade, mantendo o comprimento constante, a intensidade do campo de indução magnética no seu interior apresentará um valor de:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q21" class="border rounded p-4">
+    <legend class="font-semibold">Item 21 - Física</legend>
+    <p class="mt-2 text-sm">O campo magnético no interior de um solenoide de comprimento igual a L possui N espiras e, quando percorrido por uma corrente elétrica de intensidade i apresenta em seu interior um campo magnético de intensidade B. Se o número de espiras for quadruplicado e a corrente que o atravessa reduzida à metade, mantendo o seu comprimento constante, a intensidade do campo de indução magnética no seu interior apresentará um valor de</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q21" value="A"><span>(A) B/4</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="B"><span>(B) B/2</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) B</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) 2B</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) 4B</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="C"><span>(C) B.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="D"><span>(D) 2B.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q21" value="E"><span>(E) 2B.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 22 - Física -->
-    <fieldset id="q22" class="border rounded p-4">
-      <legend class="font-semibold">Item 22</legend>
-      <p class="mt-2 text-sm">(FATEC – SP 2019 – adaptada) Dois fios condutores idênticos, paralelos entre si, e de comprimento infinito são percorridos simultaneamente por correntes elétricas de mesmo sentido e de mesma intensidade. Considere que eles estejam dispostos perpendiculares ao plano do papel desta prova. Nessas condições, é correto afirmar que:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q22" class="border rounded p-4">
+    <legend class="font-semibold">Item 22 - Física</legend>
+    <p class="mt-2 text-sm">(FATEC – SP 2019 – adaptada) Dois fios condutores idênticos, paralelos entre si, e de comprimento infinito são percorridos simultaneamente por correntes elétricas de mesmo sentido e de mesma intensidade. Considere que eles estejam dispostos perpendiculares ao plano do papel desta prova.</p>
+    <p class="mt-2 text-sm font-semibold">Nessas condições, é correto afirmar que</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q22" value="A"><span>(A) geram campos magnéticos perpendiculares ao plano do papel.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="B"><span>(B) geram campos magnéticos circulares ao plano do papel, não havendo interação entre eles.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="C"><span>(C) geram campos magnéticos repulsivos entre si.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="D"><span>(D) sofrem entre si uma força de repulsão.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q22" value="E"><span>(E) sofrem entre si uma força de atração.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 23 - Física -->
-    <fieldset id="q23" class="border rounded p-4">
-      <legend class="font-semibold">Item 23</legend>
-      <p class="mt-2 text-sm">(FAMERP - SP 2025) Ao penetrar, com velocidade v, em uma região na qual existe um campo magnético uniforme, um próton fica sujeito à ação de uma força magnética [...]. A ação dessa força:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q23" class="border rounded p-4">
+    <legend class="font-semibold">Item 23 - Física</legend>
+    <p class="mt-2 text-sm">(FAMERP SP 2025) Ao penetrar, com velocidade v, em uma região na qual existe um campo magnético uniforme, um próton fica sujeito à ação de uma força magnética devido a esse campo. Considere que apenas essa força esteja agindo sobre o próton e que as direções da velocidade do próton e do campo magnético sejam perpendiculares entre si.</p>
+    <p class="mt-2 text-sm font-semibold">A ação dessa força</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q23" value="A"><span>(A) altera tanto o módulo da velocidade do próton quanto a direção dessa velocidade.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="B"><span>(B) não altera o módulo da velocidade do próton nem a direção dessa velocidade.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="C"><span>(C) não altera o módulo da velocidade do próton, mas altera a direção dessa velocidade.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="D"><span>(D) diminui o módulo da velocidade do próton, mas não altera a direção dessa velocidade.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q23" value="E"><span>(E) aumenta o módulo da velocidade do próton, mas não altera a direção dessa velocidade.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 24 - Física -->
-    <fieldset id="q24" class="border rounded p-4">
-      <legend class="font-semibold">Item 24</legend>
-      <p class="mt-2 text-sm">Uma partícula inserida em um campo magnético uniforme, na mesma direção que as linhas desse campo, descreve uma trajetória paralela às linhas do campo com uma velocidade de 36 000 km/h. Sendo a intensidade desse campo 9T e a carga da partícula 4 μC, a força magnética que agirá sobre essa partícula terá uma intensidade igual a:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q24" class="border rounded p-4">
+    <legend class="font-semibold">Item 24 - Física</legend>
+    <p class="mt-2 text-sm">Uma partícula inserida em um campo magnético uniforme, na mesma direção que as linhas desse campo, descreve uma trajetória paralela às linhas do campo com uma velocidade de 36 000 km/h. Sendo a intensidade desse campo 9T e a carga da partícula 4 μC, a força magnética que agirá sobre essa partícula terá uma intensidade igual a</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q24" value="A"><span>(A) zero.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="B"><span>(B) 3,6 mN.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="C"><span>(C) 360 mN.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="D"><span>(D) 3,6 N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(E) 360 N.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q24" value="E"><span>(Ε) 360 Ν.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 25 - Física -->
-    <fieldset id="q25" class="border rounded p-4">
-      <legend class="font-semibold">Item 25</legend>
-      <p class="mt-2 text-sm">Dois fios, longos e paralelos, localizados no vácuo, são percorridos por correntes elétricas de intensidades 3A e 2A no mesmo sentido. Sabendo que o valor da permeabilidade magnética é μ₀ = 4π·10⁻⁷ T·m/A e que a distância entre esses fios é de 6cm, determine a força de ação mútua que age em cada metro de fio.</p>
-      <div class="mt-2 space-y-1 options">
-        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) 0,5 · 10⁻⁵ N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(B) 1,0 · 10⁻⁵ N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) 1,5 · 10⁻⁵ N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) 2,0 · 10⁻⁵ N.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(E) 2,5 · 10⁻⁵ N.</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 26 - Física -->
-    <fieldset id="q26" class="border rounded p-4">
-      <legend class="font-semibold">Item 26</legend>
-      <p class="mt-2 text-sm">(UFPR – PR 2024) Uma partícula contendo uma carga Q = 1,6·10⁻¹⁹C entra numa região onde há um campo magnético B = 1,0T com uma velocidade v. Sobre ela, passa a agir uma força magnética F = 3,2·10⁻¹⁶N. O ângulo entre os vetores velocidade e campo magnético vale θ, com cosθ = 1/2 e senθ = √3/2.</p>
-      <p class="mt-2 text-sm font-semibold">Considerando as informações, assinale a alternativa que apresenta corretamente o valor do módulo v da velocidade da partícula.</p>
-      <div class="mt-2 space-y-1 options">
-        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) v = (4√3)/3 · 10³ m/s</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) v = 4,0 · 10³ m/s</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) v = 2,0 · 10³ m/s</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) v = 2√3 · 10³ m/s</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) v = 1,0 · 10³ m/s</span></label>
-      </div>
-    </fieldset>
+<fieldset id="q25" class="border rounded p-4">
+    <legend class="font-semibold">Item 25 - Física</legend>
+    <p class="mt-2 text-sm">Dois fios, longos e paralelos, localizados no vácuo, são percorridos por correntes elétricas de intensidades 3A e 2A no mesmo sentido. Sabendo que o valor da permeabilidade magnética é μο = 4π· 10⁻⁷ T·m/A e que, a distância entre esses fios é de 6cm, determine a força de ação mútua que age em cada metro de fio.</p>
+    <p class="mt-2 text-sm font-semibold"></p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q25" value="A"><span>(A) 0,5·10⁻⁵N.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="B"><span>(Β) 1,0·10⁻⁵Ν.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="C"><span>(C) 1,5·10⁻⁵N.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="D"><span>(D) 2,0·10⁻⁵N.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q25" value="E"><span>(Ε) 2,5·10⁻⁵N.</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 27 - Física -->
-    <fieldset id="q27" class="border rounded p-4">
-      <legend class="font-semibold">Item 27</legend>
-      <p class="mt-2 text-sm">Um fio condutor reto de 50 cm de comprimento, quando colocado no interior de um campo magnético e formando um ângulo de 45° com as linhas do campo, fica sujeito a ação de uma força F. Esse fio é percorrido por uma corrente de 80A e o campo magnético apresenta uma intensidade de 0,6T.</p>
-      <p class="mt-2 text-sm font-semibold">Qual é o valor dessa força magnética em newtons? (dado: sen45° = √2/2)</p>
-      <div class="mt-2 space-y-1 options">
-        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) 3√2 N</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) 6√2 N</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) 9√2 N</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) 12√2 N</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(E) 15√2 N</span></label>
-      </div>
-    </fieldset>
+<fieldset id="q26" class="border rounded p-4">
+    <legend class="font-semibold">Item 26 - Física</legend>
+    <p class="mt-2 text-sm">(UFPR – PR 2024) Uma partícula contendo uma carga Q = 1,6·10⁻¹⁹C entra numa região onde há um campo magnético de intensidade B = 1,0 T com uma velocidade de módulo v. Sobre ela, passa a agir uma força magnética de intensidade F = 3,2·10⁻¹⁶N. O ângulo entre os vetores velocidade e campo magnético vale θ, e sabe-se que cosθ = 1/2 e senθ = √3/2. </p>
+    <p class="mt-2 text-sm font-semibold">Considerando as informações apresentadas, assinale a alternativa que apresenta corretamente o valor do módulo v da velocidade da partícula.</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q26" value="A"><span>(A) v = (4√3)/3 · 10³m/s</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="B"><span>(B) v = 4,0·10³m/s</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="C"><span>(C) v = 2,0·10³m/s</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="D"><span>(D) v = 2√3·10³m/s</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q26" value="E"><span>(E) v = 1,0·10³m/s</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 28 - Química -->
-    <fieldset id="q28" class="border rounded p-4">
-      <legend class="font-semibold">Item 28</legend>
-      <p class="mt-2 text-sm">Várias características e propriedades de moléculas orgânicas podem ser inferidas analisando sua fórmula estrutural. Na natureza, alguns compostos apresentam a mesma fórmula molecular e diferentes fórmulas estruturais.</p>
-      <p class="mt-2 text-sm font-semibold">Compostos com essas características são chamados:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q27" class="border rounded p-4">
+    <legend class="font-semibold">Item 27 - Física</legend>
+    <p class="mt-2 text-sm">Um fio condutor reto de 50 cm de comprimento quando colocado no interior de um campo magnético, formando um ângulo de 45° com as linhas do campo magnético, fica sujeito a ação de uma força magnética F. Esse fio é percorrido por uma corrente elétrica de intensidade 80A e o campo magnético apresenta uma intensidade de 0,6T.</p>
+    <p class="mt-2 text-sm font-semibold">Qual é o valor dessa força magnética em newtons? (dado: sen45° = cos45° = √2/2)</p>
+    <div class="mt-2 space-y-1 options">
+        <label class="flex items-center gap-2 option-label"><input required type="radio" name="q27" value="A"><span>(A) 3√2N</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="B"><span>(B) 6√2N</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="C"><span>(C) 9√2N</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="D"><span>(D) 12√2N</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q27" value="E"><span>(Ε) 15√2N</span></label>
+    </div>
+</fieldset>
+
+<fieldset id="q28" class="border rounded p-4">
+    <legend class="font-semibold">Item 28 - Química</legend>
+    <p class="mt-2 text-sm">Várias características e propriedades de moléculas orgânicas podem ser inferidas analisando sua fórmula estrutural. Na natureza, alguns compostos apresentam a mesma fórmula molecular e diferentes fórmulas estruturais.</p>
+    <p class="mt-2 text-sm font-semibold">Compostos com essas características são chamados</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q28" value="A"><span>(A) alômeros.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="B"><span>(B) isômeros.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="C"><span>(C) metômeros</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="D"><span>(D) taulômeros.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q28" value="E"><span>(E) ansiômeros.</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 29 - Química -->
-    <fieldset id="q29" class="border rounded p-4">
-      <legend class="font-semibold">Item 29</legend>
-      <p class="mt-2 text-sm">(Enem - 2018) Várias características e propriedades de moléculas orgânicas podem ser inferidas analisando sua fórmula estrutural. [...] São os chamados isômeros, como ilustrado nas estruturas.</p>
-      <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
-      <p class="mt-2 text-sm font-semibold">Entre as moléculas apresentadas, observa-se a ocorrência de isomeria:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q29" class="border rounded p-4">
+    <legend class="font-semibold">Item 29 - Química</legend>
+    <p class="mt-2 text-sm">(Enem - 2018) Várias características e propriedades de moléculas orgânicas podem ser inferidas analisando sua fórmula estrutural. Na natureza, alguns compostos apresentam a mesma fórmula molecular e diferentes fórmulas estruturais. São os chamados isômeros, como ilustrado nas estruturas.</p>
+    <div class="border-dashed" data-img-name="q29"></div>
+    <p class="mt-2 text-sm font-semibold">Entre as moléculas apresentadas, observa-se a ocorrência de isomeria</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q29" value="A"><span>(A) ótica.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="B"><span>(B) de função.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="C"><span>(C) de cadeia.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="D"><span>(D) geométrica.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q29" value="E"><span>(E) de compensação.</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 30 - Química -->
-    <fieldset id="q30" class="border rounded p-4">
-      <legend class="font-semibold">Item 30</legend>
-      <p class="mt-2 text-sm">(UERJ) A fórmula a seguir representa um composto responsável pelo fenômeno da visão nos seres humanos, [...].</p>
-      <div class="border-dashed border-2 border-gray-300 p-4 rounded text-center text-sm text-gray-500">IMAGEM AQUI</div>
-      <p class="mt-2 text-sm font-semibold">Um isômero de função deste composto pertence à função denominada:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q30" class="border rounded p-4">
+    <legend class="font-semibold">Item 30 - Química</legend>
+    <p class="mt-2 text-sm">(UERJ) A fórmula a seguir representa um composto responsável pelo fenômeno da visão nos seres humanos, pois o impulso nervoso que estimula a formação da imagem no cérebro ocorre quando há interconversão entre isômeros deste composto.</p>
+    <div class="border-dashed" data-img-name="q30"></div>
+    <p class="mt-2 text-sm font-semibold">Um isômero de função deste composto pertence à função denominada:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q30" value="A"><span>(A) Éster</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="B"><span>(B) Amida</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="C"><span>(C) Cetona</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="D"><span>(D) Amina</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q30" value="E"><span>(E) Ácido carboxílico</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 31 - Química -->
-    <fieldset id="q31" class="border rounded p-4">
-      <legend class="font-semibold">Item 31</legend>
-      <p class="mt-2 text-sm">(UFPA-Adaptada) – Observe a fórmula a seguir: HOOC-CH(CH₃)-CH(OH)-CH(Cl)-COOH</p>
-      <p class="mt-2 text-sm font-semibold">O número de isômeros ópticos possíveis para o composto acima, sem contar as misturas racêmicas, é:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q31" class="border rounded p-4">
+    <legend class="font-semibold">Item 31 - Química</legend>
+    <p class="mt-2 text-sm">(UFPA-Adaptada) – Observe a fórmula a seguir.<br>HOOC—CH(CH₃)—CH(OH)—CH(Cl)—COOH</p>
+    <p class="mt-2 text-sm font-semibold">O número de isômeros ópticos possíveis para o composto acima, sem contar as misturas racêmicas, é:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q31" value="A"><span>(A) 2</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="B"><span>(B) 4</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="C"><span>(C) 6</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="D"><span>(D) 8</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q31" value="E"><span>(E) 10</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 32 - Química -->
-    <fieldset id="q32" class="border rounded p-4">
-      <legend class="font-semibold">Item 32</legend>
-      <p class="mt-2 text-sm">Polímeros são macromoléculas formadas pela repetição de unidades menores, chamadas monômeros, que se ligam entre si por meio de reações químicas, geralmente chamadas de polimerização.</p>
-      <p class="mt-2 text-sm font-semibold">São exemplos de polímeros em nosso cotidiano:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q32" class="border rounded p-4">
+    <legend class="font-semibold">Item 32 - Química</legend>
+    <p class="mt-2 text-sm">Polímeros são macromoléculas formadas pela repetição de unidades menores, chamadas monômeros, que se ligam entre si por meio de reações químicas, geralmente chamadas de polimerização.</p>
+    <p class="mt-2 text-sm font-semibold">São exemplos de polímeros em nosso cotidiano</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q32" value="A"><span>(A) Garrafas PET.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="B"><span>(B) Copos de vidro.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="C"><span>(C) Sacos de papel.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="D"><span>(D) Prateleiras MDF.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q32" value="E"><span>(E) Panelas de alumínio.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 33 - Química -->
-    <fieldset id="q33" class="border rounded p-4">
-      <legend class="font-semibold">Item 33</legend>
-      <p class="mt-2 text-sm">A Química Verde tem ganhado destaque diante das crescentes demandas por sustentabilidade. Muitas empresas têm adotado seus princípios, que visam reduzir impactos ambientais e proteger a saúde humana.</p>
-      <p class="mt-2 text-sm font-semibold">Um exemplo de princípio da química Verde é:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q33" class="border rounded p-4">
+    <legend class="font-semibold">Item 33 - Química</legend>
+    <p class="mt-2 text-sm">A Química Verde tem ganhado destaque diante das crescentes demandas por sustentabilidade. Muitas empresas têm adotado seus princípios, que visam reduzir impactos ambientais e proteger a saúde humana.</p>
+    <p class="mt-2 text-sm font-semibold">Um exemplo de princípio da química Verde é</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q33" value="A"><span>(A) Desenvolvimento para degradação.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="B"><span>(B) Eficiência no aumento da produção.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="C"><span>(C) Redução do uso de matérias renováveis.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="D"><span>(D) Rentabilidade nos produtos e processos.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q33" value="E"><span>(E) Durabilidade dos produtos desenvolvidos.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 34 - Química -->
-    <fieldset id="q34" class="border rounded p-4">
-      <legend class="font-semibold">Item 34</legend>
-      <p class="mt-2 text-sm">As características hidrofílicas e absorventes da celulose são conhecidas há muito tempo [...].</p>
-      <p class="mt-2 text-sm font-semibold">A celulose é um polímero natural formado pela condensação de moléculas de:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q34" class="border rounded p-4">
+    <legend class="font-semibold">Item 34 - Química</legend>
+    <p class="mt-2 text-sm">As características hidrofílicas e absorventes da celulose são conhecidas há muito tempo, e com o advento dos absorventes descartáveis nos últimos anos, a demanda por fibras de celulose aumentou dramaticamente (Hon, 1994).</p>
+    <p class="mt-2 text-sm font-semibold">A celulose é um polímero natural formado pela condensação de moléculas de:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q34" value="A"><span>(A) sacarose.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="B"><span>(B) ribulose.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="C"><span>(C) maltose.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="D"><span>(D) glicose.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q34" value="E"><span>(E) ribose.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 35 - Química -->
-    <fieldset id="q35" class="border rounded p-4">
-      <legend class="font-semibold">Item 35</legend>
-      <p class="mt-2 text-sm">A borracha sintética é um tipo de polímeros de adição fabricado a partir de subprodutos do petróleo.</p>
-      <p class="mt-2 text-sm font-semibold">Também são polímeros de adição:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q35" class="border rounded p-4">
+    <legend class="font-semibold">Item 35 - Química</legend>
+    <p class="mt-2 text-sm">A borracha sintética é um tipo de polímeros de adição fabricado a partir de subprodutos do petróleo.</p>
+    <p class="mt-2 text-sm font-semibold">Também são polímeros de adição:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q35" value="A"><span>(A) náilon e PVC.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) Teflon e isopor.</span></label>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="B"><span>(B) Teflon e isopor</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="C"><span>(C) náilon e isopor.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="D"><span>(D) PVC e poliéster.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) poliéster e Teflon.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q35" value="E"><span>(E) poliéster e Teflon</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 36 - Química -->
-    <fieldset id="q36" class="border rounded p-4">
-      <legend class="font-semibold">Item 36</legend>
-      <p class="mt-2 text-sm">O nylon, no português náilon, é uma fibra têxtil muito usada na fabricação de roupas femininas como lingeries, roupas de banho (biquínis, maiôs).</p>
-      <p class="mt-2 text-sm font-semibold">Na química, essa fibra é classificada como:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q36" class="border rounded p-4">
+    <legend class="font-semibold">Item 36 - Química</legend>
+    <p class="mt-2 text-sm">O nylon, no português náilon, é uma fibra têxtil muito usada na fabricação de roupas femininas como lingeries, roupas de banho (biquínis, maiôs).</p>
+    <p class="mt-2 text-sm font-semibold">Na química, essa fibra é classificada como</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q36" value="A"><span>(A) hidratos de carbono</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="B"><span>(B) proteínas</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="C"><span>(C) polímeros</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="D"><span>(D) enzimas</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q36" value="E"><span>(E) lipídios</span></label>
-      </div>
-    </fieldset>
-    
-    <!-- Item 37 - Química -->
-    <fieldset id="q37" class="border rounded p-4">
-      <legend class="font-semibold">Item 37</legend>
-      <p class="mt-2 text-sm">A borracha artificial normalmente é chamada de borracha sintética. [...].</p>
-      <p class="mt-2 text-sm font-semibold">Alguns tipos específicos de borracha sintética incluem:</p>
-      <div class="mt-2 space-y-1 options">
+    </div>
+</fieldset>
+
+<fieldset id="q37" class="border rounded p-4">
+    <legend class="font-semibold">Item 37 - Química</legend>
+    <p class="mt-2 text-sm">A borracha artificial normalmente é chamada de borracha sintética. O termo "sintético" indica que a borracha é sintetizada quimicamente, e não derivada naturalmente da seringueira. Ela é criada por meio da polimerização de vários monômeros, que formam a estrutura básica do polímero da borracha.</p>
+    <p class="mt-2 text-sm font-semibold">Alguns tipos específicos de borracha sintética incluem:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q37" value="A"><span>(A) Vinil.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="B"><span>(B) Látex.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="C"><span>(C) Cloropreno.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="D"><span>(D) Polietileno.</span></label>
-        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) Polipropileno.</span></label>
-      </div>
-    </fieldset>
+        <label class="flex items-center gap-2 option-label"><input type="radio" name="q37" value="E"><span>(E) Polipropileno</span></label>
+    </div>
+</fieldset>
 
-    <!-- Item 38 - Química -->
-    <fieldset id="q38" class="border rounded p-4">
-      <legend class="font-semibold">Item 38</legend>
-      <p class="mt-2 text-sm">Os polímeros são macromoléculas [...]. Eles podem ser divididos em duas categorias principais: polímeros naturais e polímeros sintéticos.</p>
-      <p class="mt-2 text-sm font-semibold">São exemplos de polímeros naturais:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q38" class="border rounded p-4">
+    <legend class="font-semibold">Item 38 - Química</legend>
+    <p class="mt-2 text-sm">Os polímeros são macromoléculas formadas pela repetição de unidades menores, os monômeros, por meio do processo de polimerização. Eles podem ser divididos em duas categorias principais: polímeros naturais e polímeros sintéticos.</p>
+    <p class="mt-2 text-sm font-semibold">São exemplos de polímeros naturais:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q38" value="A"><span>(A) Látex.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="B"><span>(B) PVC.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="C"><span>(C) PET.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="D"><span>(D) Teflon.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q38" value="E"><span>(E) Nylon.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 39 - Química -->
-    <fieldset id="q39" class="border rounded p-4">
-      <legend class="font-semibold">Item 39</legend>
-      <p class="mt-2 text-sm">A frase a seguir tem uma lacuna que corresponde a um termo. Observe. "A química ________ é a área da Ciência que se preocupa com desenvolvimento de produtos e processos químicos que busquem reduzir ou eliminar produtos perigosos à nossa saúde ou ao meio ambiente."</p>
-      <p class="mt-2 text-sm font-semibold">O termo que preenche a lacuna é a química:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q39" class="border rounded p-4">
+    <legend class="font-semibold">Item 39 - Química</legend>
+    <p class="mt-2 text-sm">A frase a seguir tem uma lacuna que corresponde a um termo. Observe.<br>A química ________ é a área da Ciência que se preocupa com desenvolvimento de produtos e processos químicos que busquem reduzir ou eliminar produtos perigosos à nossa saúde ou ao meio ambiente.</p>
+    <p class="mt-2 text-sm font-semibold">O termo que preenche a lacuna é a química</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q39" value="A"><span>(A) orgânica.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="B"><span>(B) industrial.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="C"><span>(C) nuclear.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="D"><span>(D) verde.</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q39" value="E"><span>(E) Geral.</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-    <!-- Item 40 - Química -->
-    <fieldset id="q40" class="border rounded p-4">
-      <legend class="font-semibold">Item 40</legend>
-      <p class="mt-2 text-sm">(UFSCar) - A borracha natural é um elastômero (polímero elástico), que é obtida do látex coagulado da Hevea brasiliensis. Suas propriedades elásticas melhoram quando aquecida com enxofre, processo inventado por Charles Goodyear.</p>
-      <p class="mt-2 text-sm font-semibold">Esse processo recebe o nome de:</p>
-      <div class="mt-2 space-y-1 options">
+<fieldset id="q40" class="border rounded p-4">
+    <legend class="font-semibold">Item 40 - Química</legend>
+    <p class="mt-2 text-sm">(UFSCar) A borracha natural é um elastômero (polímero elástico), que é obtida do látex coagulado da Hevea brasiliensis. Suas propriedades elásticas melhoram quando aquecida com enxofre, processo inventado por Charles Goodyear.</p>
+    <p class="mt-2 text-sm font-semibold">Esse processo recebe o nome de:</p>
+    <div class="mt-2 space-y-1 options">
         <label class="flex items-center gap-2 option-label"><input required type="radio" name="q40" value="A"><span>(A) ustulação</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="B"><span>(B) vulcanização</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="C"><span>(C) destilação</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="D"><span>(D) sintetização</span></label>
         <label class="flex items-center gap-2 option-label"><input type="radio" name="q40" value="E"><span>(E) galvanização</span></label>
-      </div>
-    </fieldset>
+    </div>
+</fieldset>
 
-        <div class="flex items-center justify-between">
-          <div class="text-sm text-gray-600"></div>
-          <button id="submitBtn" type="submit" class="bg-green-600 text-white px-4 py-2 rounded">Enviar prova</button>
+        <!-- NOVO CONTAINER DE NAVEGAÇÃO -->
+        <div id="quiz-navigation" class="flex items-center justify-between pt-6 border-t mt-4">
+            <button id="prev-btn" type="button" class="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg hover:bg-slate-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                Anterior
+            </button>
+            <span id="page-indicator" class="text-sm font-medium text-slate-600"></span>
+            <button id="next-btn" type="button" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition">
+                Próximo
+            </button>
         </div>
-      </form>
-    </main>
 
-    <footer class="mt-6 text-xs text-gray-500 text-center">
-      COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@
-    </footer>
+        <!-- O BOTÃO DE ENVIAR AGORA FICA DENTRO DO PRÓPRIO CONTAINER, MAS INICIALMENTE OCULTO -->
+        <div id="submit-container" class="hidden flex items-center justify-between pt-6 border-t mt-4">
+            <button id="submitBtn" type="submit" class="w-full bg-green-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2">
+                <span id="submitBtnText">Finalizar e Enviar Prova</span>
+                <div id="submitBtnSpinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+            </button>
+        </div>
+
+    </form>
+        </main>
+        
+        <footer class="mt-8 text-xs text-gray-500 text-center">
+            <p>Portal de Avaliações CEJA © 2025</p>
+        </footer>
     </div>
 
-    <div id="modalRoot" style="display:none;"></div>
+    <div id="modalRoot"></div>
 
-    <script>
-    // CÓDIGO JS COMPLETO COMEÇA AQUI
-    
-    // Configurações Globais
-    const SERIES = "3_SERIE_NATUREZA";
-    const TOTAL_QUESTIONS = 40; // Ajuste se necessário
-    const MAX_ATTEMPTS = 2;
-    const LOCK_DAYS = 1;
-    const PROGRESS_KEY = `progress_${SERIES}`;
-
-    
-
-/*******************************************************
- * GABARITO - CIÊNCIAS DA NATUREZA - 3º ANO
- *******************************************************/
-const TRUE_GABARITO = {
-  q1: 'C', q2: 'A', q3: 'D', q4: 'B', q5: 'C', q6: 'C', q7: 'C', q8: 'A', q9: 'A', q10: 'D',
-  q11: 'E', q12: 'A', q13: 'E', q14: 'E', q15: 'B', q16: 'B', q17: 'C', q18: 'B', q19: 'B', q20: 'A',
-  q21: 'D', q22: 'E', q23: 'C', q24: 'A', q25: 'D', q26: 'A', q27: 'D', q28: 'B', q29: 'A', q30: 'C',
-  q31: 'D', q32: 'A', q33: 'A', q34: 'D', q35: 'B', q36: 'C', q37: 'C', q38: 'A', q39: 'D', q40: 'B'
-};
-
-
-    const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
-    const { createClient } = supabase;
-    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-    // Elementos do DOM
-    const studentNameInput = document.getElementById('studentName');
-    const studentIdInput = document.getElementById('studentId');
-    const studentClassInput = document.getElementById('studentClass');
-    const startBtn = document.getElementById('startBtn');
-    const startBtnText = document.getElementById('startBtnText');
-    const startBtnSpinner = document.getElementById('startBtnSpinner');
-    const startBtnArrow = document.getElementById('startBtnArrow');
-    const infoMsg = document.getElementById('infoMsg');
-    const quizArea = document.getElementById('quizArea');
-    const quizForm = document.getElementById('quizForm');
-    const modalRoot = document.getElementById('modalRoot');
-
-    // Funções Auxiliares
-    function qs(sel, ctx = document) { return ctx.querySelector(sel); }
-    function qsa(sel, ctx = document) { return Array.from(ctx.querySelectorAll(sel)); }
-    function normalizeString(str) { return str.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase(); }
-
-    // Proteções e Helpers
-    studentNameInput.addEventListener('input', () => studentNameInput.value = studentNameInput.value.toUpperCase());
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-      if ((e.ctrlKey && e.key === 'r') || e.key === 'F5' || (e.ctrlKey && e.shiftKey && (e.key === 'i' || e.key === 'I')) || e.key === 'F12') {
-        e.preventDefault();
-      }
-    });
-
-    // Lógica de Início
-    startBtn.addEventListener('click', async () => {
-        infoMsg.textContent = '';
-        const name = studentNameInput.value.trim().toUpperCase();
-        const matricula = studentIdInput.value.trim();
-        const turma = studentClassInput.value;
-
-        if (!matricula || !name || !turma) {
-            infoMsg.textContent = 'Todos os campos são obrigatórios.';
-            return;
-        }
-        
-        startBtn.disabled = true;
-        startBtnText.textContent = 'Verificando...';
-        startBtnSpinner.classList.remove('hidden');
-        startBtnArrow.classList.add('hidden');
-
-        try {
-            const { data: aluno, error } = await supabaseClient
-                .from('alunos').select('nome_completo').eq('matricula', matricula).single();
-
-            if (error || !aluno) {
-                infoMsg.textContent = 'Matrícula não encontrada. Verifique os dados.';
-                throw new Error("Matrícula inválida ou não encontrada.");
-            }
-            
-            if (normalizeString(aluno.nome_completo) !== normalizeString(name)) {
-                infoMsg.textContent = 'O nome não corresponde à matrícula informada.';
-                throw new Error("Nome incorreto.");
-            }
-
-            const key = `exam_${SERIES}_${matricula}`;
-            let record = JSON.parse(localStorage.getItem(key));
-
-            if (record && record.attempts >= MAX_ATTEMPTS) {
-                infoMsg.textContent = `Você já atingiu o limite de ${MAX_ATTEMPTS} tentativas.`;
-                throw new Error("Máximo de tentativas atingido.");
-            }
-
-            if (!record) {
-                record = { name, matricula, turma, attempts: 0, history: [], wrongQuestions: [], createdAt: new Date().toISOString() };
-            } else {
-                record.name = name; record.turma = turma;
-            }
-            localStorage.setItem(key, JSON.stringify(record));
-
-            qs('#studentInfo').classList.add('hidden');
-            quizArea.classList.remove('hidden');
-
-            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
-                prepareSecondAttemptView(matricula, record.wrongQuestions);
-            }
-        } catch (err) {
-            console.error("Falha na validação do aluno:", err.message);
-        } finally {
-            startBtn.disabled = false;
-            startBtnText.textContent = 'Iniciar Avaliação';
-            startBtnSpinner.classList.add('hidden');
-            startBtnArrow.classList.remove('hidden');
-        }
-    });
-
-    // Demais funções da prova...
-    function saveProgress() { /* ... */ }
-    function restoreProgress() { /* ... */ }
-    if (quizForm) quizForm.addEventListener('submit', function (ev) { /* ... */ });
-    function createModal(htmlContent) { /* ... */ }
-    function closeModal() { /* ... */ }
-    function showToast(text, type = 'info') { /* ... */ }
-    function showModalResultPartial(record) { /* ... */ }
-    function showModalResultFinal(record) { /* ... */ }
-    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) { /* ... */ }
-    function shuffleOptions(fieldset) { /* ... */ }
-    function triggerExport(matricula) { /* ... */ }
-    function insertImagesAuto(folder = '../assets/img2nat') { /* ... */ }
-    window.addEventListener('load', () => { /* ... */ });
-
-    // CÓDIGO RESTANTE COMPLETO (Funções de progresso, submissão, modais, etc.)
-
-    function saveProgress() {
-        if (quizArea.classList.contains('hidden')) return;
-        const matricula = studentIdInput.value.trim();
-        if (!matricula) return;
-
-        const formData = new FormData(quizForm);
-        const currentAnswers = {};
-        for (let [key, value] of formData.entries()) {
-            currentAnswers[key] = value;
-        }
-        localStorage.setItem(PROGRESS_KEY, JSON.stringify({ matricula, answers: currentAnswers }));
-    }
-
-    function restoreProgress() {
-        const savedProgress = localStorage.getItem(PROGRESS_KEY);
-        if (!savedProgress) return;
-        const progress = JSON.parse(savedProgress);
-        if (!progress || !progress.matricula) return;
-
-        const key = `exam_${SERIES}_${progress.matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-
-        if (record && !record.finalized) {
-            studentIdInput.value = record.matricula;
-            studentNameInput.value = record.name;
-            studentClassInput.value = record.turma;
-            
-            qs('#studentInfo').classList.add('hidden');
-            quizArea.classList.remove('hidden');
-            showToast('Seu progresso foi restaurado.', 'info');
-
-            Object.entries(progress.answers).forEach(([q, a]) => {
-                const radio = qs(`input[name="${q}"][value="${a}"]`);
-                if (radio) radio.checked = true;
-            });
-
-            if (record.attempts === 1 && record.retakeAllowed && Array.isArray(record.wrongQuestions)) {
-                prepareSecondAttemptView(record.matricula, record.wrongQuestions, false);
-            }
-        } else {
-            localStorage.removeItem(PROGRESS_KEY);
-        }
-    }
-
-    if (quizForm) quizForm.addEventListener('submit', function (ev) {
-        ev.preventDefault();
-        const matricula = studentIdInput.value.trim();
-        const key = `exam_${SERIES}_${matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-        if (!record) { alert('Erro: registro não encontrado.'); return; }
-
-        const visibleFieldsets = qsa('fieldset[id^="q"]', quizForm).filter(fs => fs.style.display !== 'none');
-        const answers = {};
-        let allAnswered = true;
-        visibleFieldsets.forEach(fs => {
-            const name = fs.id;
-            const sel = qs(`input[name="${name}"]:checked`, fs);
-            answers[name] = sel ? sel.value : null;
-            if (!sel) allAnswered = false;
-        });
-
-        if (!allAnswered) {
-            showToast('Responda todas as questões antes de enviar.', 'warn');
-            return;
-        }
-
-        record.attempts++;
-        record.history = record.history || [];
-        record.history.push({ attempt: record.attempts, answers, ts: new Date().toISOString() });
-
-        if (record.attempts === 1) {
-            const wrong = Object.keys(TRUE_GABARITO).filter(q => answers[q] !== TRUE_GABARITO[q]);
-            record.wrongQuestions = wrong.map(q => parseInt(q.replace('q', '')));
-            record.correctCount = TOTAL_QUESTIONS - wrong.length;
-            record.retakeAllowed = wrong.length > 0;
-            record.gradedAt = new Date().toISOString();
-
-            if (wrong.length === 0) {
-              record.finalized = true;
-              record.finalAnswers = answers;
-            }
-
-            localStorage.setItem(key, JSON.stringify(record));
-            showModalResultPartial(record);
-        } else {
-            const finalAnswers = { ...(record.history[0]?.answers || {}), ...answers };
-            record.correctCount = Object.keys(TRUE_GABARITO).filter(q => finalAnswers[q] === TRUE_GABARITO[q]).length;
-            record.finalized = true;
-            record.finalAnswers = finalAnswers;
-            localStorage.setItem(key, JSON.stringify(record));
-            showModalResultFinal(record);
-        }
-        
-        localStorage.removeItem(PROGRESS_KEY);
-        quizArea.classList.add('hidden');
-    });
-
-    function createModal(htmlContent) {
-        modalRoot.innerHTML = `<div class="modal-backdrop"><div class="modal">${htmlContent}</div></div>`;
-        modalRoot.style.display = 'flex';
-        modalRoot.querySelector('.modal-backdrop').addEventListener('click', e => {
-            if (e.target === e.currentTarget) {
-              const record = JSON.parse(localStorage.getItem(`exam_${SERIES}_${studentIdInput.value.trim()}`));
-              if(!record || record.finalized || !record.retakeAllowed || record.correctCount === TOTAL_QUESTIONS) closeModal();
-            }
-        });
-    }
-
-    function closeModal() {
-        modalRoot.style.display = 'none';
-        modalRoot.innerHTML = '';
-    }
-
-    function showToast(text, type = 'info') {
-        const t = document.createElement('div');
-        t.className = 'toast'; t.textContent = text;
-        document.body.appendChild(t);
-        setTimeout(() => { t.style.transition = 'opacity 400ms'; t.style.opacity = '0'; }, 2600);
-        setTimeout(() => t.remove(), 3000);
-    }
-
-    function showModalResultPartial(record) {
-        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
-        const canRetake = record.retakeAllowed && record.attempts < MAX_ATTEMPTS;
-        const allCorrect = record.correctCount === TOTAL_QUESTIONS;
-        let message = canRetake ? 'Você pode refazer apenas as questões que errou!' : (allCorrect ? 'Parabéns, você acertou tudo!' : 'Tentativas finalizadas.');
-        let btnHtml = canRetake 
-            ? `<button id="modalRetake" class="mt-4 bg-blue-600 text-white px-4 py-2 rounded">Fazer 2ª tentativa</button>`
-            : `<button id="modalExport" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado Final</button>`;
-
-        createModal(`
-            <div class="text-center">
-                <h2 class="text-xl font-semibold">1ª Tentativa — ${pct}%</h2>
-                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
-                <p class="mt-3 text-sm">${message}</p>${btnHtml}
-                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${record.wrongQuestions.length ? 'Q' + record.wrongQuestions.join(', Q') : 'Nenhuma'}</div>
-            </div>
-        `);
-        
-        qs('#modalRetake')?.addEventListener('click', () => {
-            closeModal();
-            quizArea.classList.remove('hidden');
-            prepareSecondAttemptView(record.matricula, record.wrongQuestions);
-        });
-        qs('#modalExport')?.addEventListener('click', () => triggerExport(record.matricula));
-    }
-
-    function showModalResultFinal(record) {
-        const pct = Math.round((record.correctCount / TOTAL_QUESTIONS) * 100);
-        const wrongFinal = Object.keys(TRUE_GABARITO).filter(q => record.finalAnswers[q] !== TRUE_GABARITO[q]);
-        createModal(`
-            <div class="text-center">
-                <h2 class="text-xl font-semibold">Resultado Final — ${pct}%</h2>
-                <p class="mt-2 text-sm text-gray-600">Acertos: ${record.correctCount} / ${TOTAL_QUESTIONS}</p>
-                <button id="modalExportPdf" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Enviar Resultado</button>
-                <div class="mt-4 text-left text-xs text-gray-500"><strong>Erradas:</strong> ${wrongFinal.length ? 'Q' + wrongFinal.map(q=>q.replace('q','')).join(', Q') : 'Nenhuma'}</div>
-            </div>
-        `);
-        qs('#modalExportPdf')?.addEventListener('click', () => triggerExport(record.matricula));
-    }
-
-    function prepareSecondAttemptView(matricula, wrongQuestions, shouldShuffle = true) {
-        qsa('fieldset[id^="q"]', quizForm).forEach(fs => {
-            const qnum = parseInt(fs.id.replace('q', ''));
-            if (wrongQuestions.includes(qnum)) {
-                fs.style.display = '';
-                fs.querySelectorAll('input[type="radio"]').forEach(r => { r.checked = false; r.required = true; });
-                if (shouldShuffle) shuffleOptions(fs);
-            } else {
-                fs.style.display = 'none';
-                fs.querySelectorAll('input[type="radio"]').forEach(r => r.required = false);
-            }
-        });
-        if(shouldShuffle) showToast('Responda apenas as questões que você errou.', 'info');
-    }
-
-    function shuffleOptions(fieldset) {
-        const container = fieldset.querySelector('.options');
-        if (container) for (let i = container.children.length; i >= 0; i--) container.appendChild(container.children[Math.random() * i | 0]);
-    }
-
-    function triggerExport(matricula) {
-        const key = `exam_${SERIES}_${matricula}`;
-        const record = JSON.parse(localStorage.getItem(key));
-        if (!record || !record.finalized) { showToast('A prova precisa ser finalizada.', 'warn'); return; }
-        
-        const btn = qs('#modalExportPdf') || qs('#modalExport');
-        if (btn) { btn.disabled = true; btn.textContent = "Enviando..."; }
-        
-        const answers = record.finalAnswers || record.history[0]?.answers || {};
-        const tableBody = Object.keys(TRUE_GABARITO).map((q, i) => {
-          const isCorrect = answers[q] === TRUE_GABARITO[q];
-          return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
-            <td style="padding:4px; text-align:center;">${i + 1}</td>
-            <td style="padding:4px; text-align:center;">${TRUE_GABARITO[q]}</td>
-            <td style="padding:4px; text-align:center;">${answers[q] || 'N/R'}</td>
-            <td style="padding:4px; text-align:center; color:${isCorrect ? 'green':'red'}">${isCorrect ? '✓' : '✗'}</td>
-          </tr>`;
-        }).join('');
-        
-        const wrapper = document.createElement('div');
-        wrapper.innerHTML = `<div style="font-family:sans-serif; padding:20px; font-size: 14px;">
-          <h3 style="text-align:center; margin-bottom: 24px;">Resultado Final: ${record.name} (${record.matricula})</h3>
-          <p><strong>Pontuação:</strong> ${record.correctCount} de ${TOTAL_QUESTIONS} acertos (${Math.round((record.correctCount/TOTAL_QUESTIONS)*100)}%)</p>
-          <table border="1" style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#eee;"><th>Q</th><th>Gabarito</th><th>Sua Resposta</th><th>Status</th></tr></thead><tbody>${tableBody}</tbody></table>
-        </div>`;
-        
-        const filePath = `${SERIES}/TURMA_${record.turma}/${record.matricula}-${record.name}.pdf`;
-        const opt = { margin: 0.5, filename: filePath, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }, html2canvas: { scale: 2 } };
-
-        html2pdf().set(opt).from(wrapper).output('blob').then(pdfBlob => {
-            const formData = new FormData();
-            formData.append('file', pdfBlob, `${record.matricula}-${record.name}.pdf`);
-
-            // Aqui usamos o nome de arquivo diretamente no upload
-            supabaseClient.storage.from('resultados-provas').upload(filePath, formData.get('file'))
-            .then(uploadResult => {
-                if (uploadResult.error) throw uploadResult.error;
-                showToast('Prova enviada com sucesso!', 'success');
-                if (btn) btn.textContent = "Enviado!";
-                localStorage.removeItem(key);
-            })
-            .catch(err => {
-                console.error('Erro no envio para o Supabase:', err);
-                showToast('Erro ao enviar. Tente novamente ou baixe o PDF.', 'error');
-                if(btn) { btn.disabled = false; btn.textContent = "Tentar de Novo"; }
-                saveAs(pdfBlob, `${record.matricula}-${record.name}.pdf`);
-            });
-        });
-    }
-
-    function insertImagesAuto(folder = '../assets/img2nat') {
-      const placeholders = qsa('div.border-dashed').filter(d => /IMAGEM\s*AQUI/i.test(d.textContent || ''));
-      if (!placeholders.length) return;
-
-      function tryLoad(candidates) {
-        return new Promise((resolve, reject) => {
-          let i = 0;
-          function next() {
-            if (i >= candidates.length) return reject();
-            const url = candidates[i++];
-            const img = new Image();
-            img.onload = () => resolve(url);
-            img.onerror = () => next();
-            img.src = url;
-          }
-          next();
-        });
-      }
-
-      placeholders.forEach((ph) => {
-        const fs = ph.closest('fieldset');
-        if (!fs) return;
-        const qid = fs.id.replace('q', '');
-        const exts = ['webp', 'jpg', 'jpeg', 'png', 'gif'];
-        const candidates = exts.map(ext => `${folder}/q${qid}.${ext}`);
-
-        tryLoad(candidates).then(src => {
-          ph.innerHTML = `<img src="${src}" alt="Imagem da questão ${qid}" class="mx-auto max-w-full h-auto rounded shadow clickable-img" loading="lazy">`;
-        }).catch(() => {
-          ph.innerHTML = `<div style="padding:12px;color:#a00;font-size:13px;">Imagem não encontrada para a questão ${qid} na pasta <code>${folder}</code>.</div>`;
-        });
-      });
-      
-      if (!qs('#lb')) {
-        const lb = document.createElement('div');
-        lb.id = 'lb';
-        lb.style.cssText = 'position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.8);z-index:9999;padding:20px;cursor:zoom-out;';
-        lb.innerHTML = '<img id="lb-img" style="max-width:95%;max-height:95%;border-radius:6px;box-shadow:0 8px 30px rgba(0,0,0,.6)"/>';
-        document.body.appendChild(lb);
-        lb.addEventListener('click', () => {
-            lb.style.display = 'none';
-            qs('#lb-img').src = '';
-        });
-      }
-
-      document.addEventListener('click', function(e) {
-        const t = e.target;
-        if (t && t.classList.contains('clickable-img')) {
-          qs('#lb-img').src = t.src;
-          qs('#lb').style.display = 'flex';
-        }
-      });
-    }
-
-    window.addEventListener('load', () => {
-        restoreProgress();
-        if (quizForm) quizForm.addEventListener('change', saveProgress);
-        try { insertImagesAuto(); } catch(e) { console.warn("Erro ao carregar imagens."); }
-    });
-</script>
+    <script src="../js/prova-template.js"></script>
 </body>
-
 </html>
