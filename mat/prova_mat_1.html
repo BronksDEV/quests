@@ -349,13 +349,30 @@
     const quizForm = document.getElementById('quizForm');
     const modalRoot = document.getElementById('modalRoot');
 
-    async function signInAnonymously() {
-        const { error } = await supabaseClient.auth.signInAnonymously();
-        if (error) {
-            console.error('Erro ao fazer login anônimo:', error);
-            document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: sans-serif;"><h1>Erro de Conexão</h1><p>Não foi possível iniciar uma sessão segura. Por favor, recarregue a página.</p></div>';
-            throw new Error("Falha na sessão anônima.");
+
+    // ===>>> GERENCIADOR DE LOGIN DO SUPABASE <<<===
+ async function manageAuthSession() {
+      try {
+        // 1. Tenta obter a sessão atual. Isso NÃO faz uma nova chamada de login.
+        const { data: { session } } = await supabaseClient.auth.getSession();
+
+        // 2. Se NÃO houver sessão, E somente neste caso, criamos uma nova.
+        if (!session) {
+          console.log('Nenhuma sessão encontrada. Criando nova sessão anônima...');
+          const { error } = await supabaseClient.auth.signInAnonymously();
+          if (error) {
+            // Se a criação da nova sessão ainda falhar (por exemplo, no primeiro aluno), lançamos o erro.
+            throw error;
+          }
+        } else {
+          console.log('Sessão existente encontrada e reutilizada.');
         }
+      } catch (error) {
+        // 3. Se qualquer coisa na gestão da sessão falhar, exibe a mensagem de erro.
+        console.error('Falha crítica na gestão da sessão:', error);
+        document.body.innerHTML = '<div style="text-align: center; padding: 50px; font-family: sans-serif;"><h1>Erro de Conexão</h1><p>Não foi possível iniciar uma sessão segura. Por favor, recarregue a página.</p></div>';
+        throw new Error("Falha crítica na gestão da sessão.");
+      }
     }
     
     function qs(sel, ctx = document) { return ctx.querySelector(sel); }
@@ -542,7 +559,13 @@
       document.addEventListener('click', function(e) { if (e.target?.classList.contains('clickable-img')) { qs('#lb-img').src=e.target.src; qs('#lb').style.display='flex'; } });
     }
 
-    window.addEventListener('load', async () => { await signInAnonymously(); restoreProgress(); if(quizForm)quizForm.addEventListener('change', saveProgress); insertImagesAuto(); });
+       window.addEventListener('load', async () => { 
+      await manageAuthSession(); 
+      restoreProgress(); 
+      if(quizForm)quizForm.addEventListener('change', saveProgress); 
+      insertImagesAuto(); 
+    });
+
 </script>
 </body>
 </html>

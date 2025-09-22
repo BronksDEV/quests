@@ -9,50 +9,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.0/FileSaver.min.js"></script>
     <style>
-        /* ESTILOS E ANIMAÇÕES ORIGINAIS RESTAURADOS */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes progressBarFill { from { width: 0%; } to { width: 100%; } }
         @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
         @keyframes spin { to { transform: rotate(360deg); } }
         @property --gradient-angle { syntax: '<angle>'; inherits: false; initial-value: 0deg; }
         @keyframes gradient-rotation { to { --gradient-angle: 360deg; } }
-
         body { background-color: #f1f5f9; }
         .page-container { animation: fadeIn 600ms ease-out; }
         #page-loader, .modal-backdrop { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); animation: fadeInOverlay 300ms ease-out; }
         .loader-bar { animation: progressBarFill 1.5s ease-out forwards; }
-        #password-modal-content, #admin-login-modal-content, #admin-area-content { animation: fadeIn 500ms ease-out forwards; }
+        .modal-content-anim { animation: fadeIn 500ms ease-out forwards; }
         .spinner { width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-left-color: #3b82f6; border-radius: 50%; animation: spin 1s linear infinite; }
         .tab-content { animation: fadeIn 400ms ease-out; }
-        
         .exam-card-wrapper { position: relative; }
         .exam-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); transition: transform 0.3s ease, box-shadow 0.3s ease; position: relative; z-index: 1; }
-        /* EFEITO DE BORDA DEGRADÊ RESTAURADO */
         .exam-card-wrapper::before { content: ''; position: absolute; inset: -2px; z-index: 0; border-radius: 1.1rem; background: conic-gradient(from var(--gradient-angle), #a78bfa, #3b82f6, #6ee7b7, #a78bfa); opacity: 0; transition: opacity 0.4s ease-out; animation: gradient-rotation 4s linear infinite; }
         .exam-card-wrapper.available:hover::before { opacity: 1; }
-
         #admin-area-content { transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased">
 
-    <!-- MODAL DE SENHA DE ACESSO ANTECIPADO -->
-    <div id="password-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <div id="password-modal-content" class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm">
-            <button id="password-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            <h3 id="password-modal-title" class="text-lg font-bold text-slate-800 text-center">Acesso Antecipado</h3><p id="password-modal-text" class="text-sm text-slate-500 text-center mt-2">Insira a senha para continuar.</p><div class="relative mt-6"><input type="password" id="password-input" class="w-full rounded-lg border-gray-300 py-3 pl-4 pr-10 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••"><button id="password-submit-btn" class="absolute inset-y-0 right-0 flex items-center pr-3 group"><svg class="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 10a.75.75 0 01.75-.75h10.638L10.23 5.28a.75.75 0 111.04-1.08l5.5 5.25a.75.75 0 010 1.08l-5.5 5.25a.75.75 0 11-1.04-1.08l4.158-3.96H3.75A.75.75 0 013 10z" clip-rule="evenodd" /></svg></button></div><p id="password-error" class="text-xs text-red-500 mt-2 h-4 text-center"></p>
-        </div>
-    </div>
-    
-    <!-- MODAL DE LOGIN DO PROFESSOR -->
-    <div id="admin-login-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
-        <div id="admin-login-modal-content" class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm">
-            <button id="admin-login-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
-            <h3 class="text-lg font-bold text-slate-800 text-center">Área do Professor</h3>
-            <p class="text-sm text-slate-500 text-center mt-2">Faça login para gerenciar as avaliações.</p>
+    <!-- MODAL DE LOGIN ÚNICO -->
+    <div id="login-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-sm modal-content-anim">
+            <button id="login-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <h3 class="text-lg font-bold text-slate-800 text-center">Acesso ao Portal</h3>
+            <p class="text-sm text-slate-500 text-center mt-2">Insira suas credenciais para continuar.</p>
             <div class="space-y-4 mt-6">
-                <input type="email" id="email-input" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="seu-email@dominio.com">
-                <input type="password" id="admin-password-input" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••">
+                <input type="email" id="login-email" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="seu-email@dominio.com">
+                <input type="password" id="login-password" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="••••••••">
                 <button id="login-submit-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
                     <span id="login-btn-text">Entrar</span>
                     <div id="login-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
@@ -62,35 +49,100 @@
         </div>
     </div>
     
+    <!-- MODAL PARA COMPLETAR PERFIL DO ALUNO -->
+    <div id="profile-modal" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div class="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-md modal-content-anim">
+            <button id="profile-close-btn" class="absolute top-2 right-2 p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
+            <h3 class="text-lg font-bold text-slate-800 text-center">Complete seu Cadastro</h3>
+            <p class="text-sm text-slate-500 text-center mt-2">Por favor, preencha suas informações para poder realizar as avaliações. Você só precisará fazer isso uma vez.</p>
+            <div class="space-y-4 mt-6">
+                <input type="text" id="profile-nome" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Nome Completo (em caixa alta)">
+                <input type="text" id="profile-matricula" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" placeholder="Sua Matrícula (Ex: 202512345)">
+                <select id="profile-turma" class="w-full rounded-lg border-gray-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                    <option value="" disabled selected>Selecione sua Turma</option>
+                    <option value="1A">1ª Série - Turma A</option>
+                    <option value="2A">2ª Série - Turma A</option>
+                    <option value="2B">2ª Série - Turma B</option>
+                    <option value="3A">3ª Série - Turma A</option>
+                    <option value="3B">3ª Série - Turma B</option>
+                </select>
+                <button id="profile-submit-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                    <span id="profile-btn-text">Salvar Informações</span>
+                    <div id="profile-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+                </button>
+            </div>
+            <p id="profile-error" class="text-xs text-red-500 mt-2 h-4 text-center"></p>
+        </div>
+    </div>
+    
     <!-- LOADER DE TRANSIÇÃO DE PÁGINA -->
     <div id="page-loader" class="hidden fixed inset-0 bg-white/80 z-[60] flex items-center justify-center">
         <div class="w-full max-w-sm text-center"><div class="text-lg font-semibold text-slate-700 mb-3">Carregando avaliação...</div><div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden"><div class="loader-bar bg-blue-600 h-2 rounded-full"></div></div></div>
     </div>
     
     <div class="page-container relative z-10 p-4 sm:p-6 min-h-screen flex flex-col">
-        <main class="w-full max-w-5xl mx-auto flex-grow">
-            <header class="text-center my-12">
-                <h1 class="text-4xl font-bold tracking-tight text-slate-900">Portal de Avaliações 2025</h1>
-                <p class="text-lg text-slate-600 mt-2">Selecione uma avaliação para iniciar.</p>
-            </header>
+        <div class="w-full max-w-5xl mx-auto flex justify-between items-center mb-12">
+            <h1 class="text-2xl font-bold tracking-tight text-slate-900">Portal CEJA</h1>
+            <div id="user-controls">
+                <button id="main-login-btn" class="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg hover:bg-blue-700 transition text-sm">Login</button>
+                
+                <div id="user-info" class="hidden">
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p id="user-name-display" class="font-semibold text-slate-800 text-sm truncate max-w-[200px]" title="Nome do Usuário"></p>
+                            <p id="user-role-display" class="text-xs text-slate-500 capitalize"></p>
+                        </div>
+                        <div id="user-avatar" class="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center border-2 border-white shadow">
+                            <svg class="w-6 h-6 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 mt-2 justify-end">
+                        <button id="my-profile-btn" class="hidden bg-white text-slate-700 font-semibold p-2.5 rounded-lg hover:bg-slate-50 border transition" title="Meu Perfil">
+                             <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                        </button>
+                        <button id="admin-panel-btn" class="hidden bg-slate-700 text-white font-semibold p-2.5 rounded-lg hover:bg-slate-800 transition" title="Painel do Professor">
+                            <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 12h9.75M10.5 18h9.75M3.75 6H7.5M3.75 12H7.5M3.75 18H7.5" /></svg>
+                        </button>
+                        <button id="main-logout-btn" class="bg-red-500 text-white font-semibold p-2.5 rounded-lg hover:bg-red-600 transition flex items-center justify-center w-[42px] h-[42px]" title="Sair">
+                           <div id="logout-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-width: 2px; border-left-color: #fff;"></div>
+                           <svg id="logout-icon" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" /></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            <div id="loading-exams" class="flex flex-col items-center justify-center p-12">
-                <div class="spinner"></div>
-                <p class="mt-4 text-slate-500">Carregando agendamento de provas...</p>
+        <main id="main-content" class="w-full max-w-5xl mx-auto flex-grow">
+            <div id="student-view" class="hidden">
+                 <header class="text-center mb-12">
+                    <h2 class="text-3xl font-bold tracking-tight text-slate-900">Avaliações Agendadas</h2>
+                    <p class="text-lg text-slate-600 mt-2">Selecione uma avaliação para iniciar.</p>
+                </header>
+
+                <div id="loading-exams" class="flex flex-col items-center justify-center p-12">
+                    <div class="spinner"></div>
+                    <p class="mt-4 text-slate-500">Carregando agendamento de provas...</p>
+                </div>
+                
+                <div id="exam-portal" class="hidden w-full mx-auto">
+                    <div class="border-b border-gray-200 mb-8">
+                        <nav id="tabs" class="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs"></nav>
+                    </div>
+                    <div id="tab-container" class="mt-8"></div>
+                </div>
             </div>
             
-            <div id="exam-portal" class="hidden w-full mx-auto">
-                <div class="border-b border-gray-200 mb-8">
-                    <nav id="tabs" class="-mb-px flex space-x-6 sm:space-x-8 overflow-x-auto" aria-label="Tabs"></nav>
-                </div>
-                <div id="tab-container" class="mt-8"></div>
+            <div id="quiz-container"></div>
+            
+            <div id="welcome-view" class="text-center py-20">
+                <h2 class="text-4xl font-bold tracking-tight text-slate-900">Bem-vindo ao Portal de Avaliações 2025</h2>
+                <p class="text-lg text-slate-600 mt-2">Faça o login para acessar as provas disponíveis.</p>
             </div>
         </main>
         
         <footer class="mt-16 text-xs text-gray-500 text-center">COLÉGIO ESTADUAL JOSÉ ABÍLIO: 2025@</footer>
     </div>
     
-    <!-- PAINEL DO PROFESSOR -->
     <div id="admin-area" class="hidden fixed inset-0 bg-slate-900/60 z-50 flex justify-end modal-backdrop">
         <div id="admin-area-content" class="w-full max-w-4xl h-full bg-white shadow-2xl transform translate-x-full">
             <div class="flex flex-col h-full">
@@ -100,21 +152,36 @@
                         <p id="professor-email" class="text-sm text-slate-500"></p>
                     </div>
                     <div>
-                        <button id="logout-btn" class="bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition text-sm">Sair</button>
                         <button id="admin-close-btn" class="p-2 text-slate-400 hover:text-slate-600 transition"><svg class="w-8 h-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg></button>
                     </div>
                 </header>
-
                 <main class="flex-grow p-6 overflow-y-auto">
                     <nav class="flex border-b mb-6">
                         <button data-panel="provas" class="admin-panel-tab border-b-2 border-blue-600 text-blue-600 py-3 px-4 font-semibold">Gerenciar Provas</button>
+                        <button data-panel="presenca" class="admin-panel-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4 font-semibold">Lista de Chamada</button>
                         <button data-panel="gabaritos" class="admin-panel-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4 font-semibold">Consultar Gabaritos</button>
+                        <button data-panel="criar-conta" id="admin-create-user-tab" class="hidden admin-panel-tab border-b-2 border-transparent text-gray-500 hover:text-gray-700 py-3 px-4 font-semibold">Criar Contas</button>
                     </nav>
-                    <div id="admin-panel-provas">
+
+                    <div id="admin-panel-provas" class="admin-panel">
                          <div id="exams-admin-list" class="space-y-4"></div>
                          <p id="no-exams-admin" class="hidden text-center text-slate-500 p-8">Nenhuma prova encontrada para gerenciar.</p>
                     </div>
-                    <div id="admin-panel-gabaritos" class="hidden">
+
+                    <div id="admin-panel-presenca" class="admin-panel hidden">
+                         <div id="presence-loader" class="hidden flex-col items-center justify-center py-10"><div class="spinner"></div><p class="mt-4 text-sm text-slate-500">Buscando turmas...</p></div>
+                         <div id="presence-content" class="hidden">
+                             <div class="mb-4">
+                                <label for="class-select" class="block text-sm font-medium text-gray-700 mb-1">Selecione a Turma:</label>
+                                <select id="class-select" class="w-full rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500"></select>
+                            </div>
+                            <input type="text" id="filter-presence" class="w-full mb-4 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="🔎︎ Buscar aluno na turma...">
+                            <div id="presence-list" class="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-2"></div>
+                            <p id="no-presence-message" class="hidden text-center text-slate-500 py-8">Nenhum aluno encontrado para esta turma.</p>
+                         </div>
+                    </div>
+
+                    <div id="admin-panel-gabaritos" class="admin-panel hidden">
                          <div id="results-loader" class="hidden w-full flex-col items-center justify-center py-10"><div class="spinner"></div><p class="mt-4 text-sm text-slate-500">Buscando resultados...</p></div>
                          <div id="results-content" class="hidden">
                             <input type="text" id="filter-student" class="w-full mb-4 rounded-lg border-gray-300 focus:ring-blue-500 focus:border-blue-500" placeholder="🔎︎ Buscar por nome, matrícula, série ou turma...">
@@ -123,368 +190,40 @@
                             <p id="no-results-message" class="hidden text-center text-slate-500 py-8">Nenhum resultado encontrado.</p>
                          </div>
                     </div>
+                    
+                    <div id="admin-panel-criar-conta" class="admin-panel hidden">
+                        <h3 class="text-xl font-bold text-slate-800 mb-4">Criar Novo Usuário</h3>
+                        <div class="bg-slate-50 p-6 rounded-lg border max-w-lg mx-auto">
+                            <div class="space-y-4">
+                                <div>
+                                    <label for="new-user-email" class="block text-sm font-medium text-gray-700">Email do Usuário</label>
+                                    <input type="email" id="new-user-email" class="mt-1 w-full rounded-lg border-gray-300" placeholder="email@exemplo.com">
+                                </div>
+                                <div>
+                                    <label for="new-user-password" class="block text-sm font-medium text-gray-700">Senha Inicial</label>
+                                    <input type="password" id="new-user-password" class="mt-1 w-full rounded-lg border-gray-300" placeholder="••••••••">
+                                </div>
+                                <div>
+                                    <label for="new-user-role" class="block text-sm font-medium text-gray-700">Função (Role)</label>
+                                    <select id="new-user-role" class="mt-1 w-full rounded-lg border-gray-300">
+                                        <option value="aluno">Aluno</option>
+                                        <option value="professor">Professor</option>
+                                        <option value="admin">Administrador</option>
+                                    </select>
+                                </div>
+                                <button id="create-user-submit-btn" class="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2">
+                                    <span id="create-user-btn-text">Criar Usuário</span>
+                                    <div id="create-user-spinner" class="spinner hidden" style="width: 20px; height: 20px; border-left-color: #fff;"></div>
+                                </button>
+                                <p id="create-user-feedback" class="text-sm h-4 text-center"></p>
+                            </div>
+                        </div>
+                    </div>
                 </main>
             </div>
         </div>
     </div>
     
-    <button id="admin-toggle-btn" class="fixed bottom-6 right-6 z-40 h-16 w-16 bg-slate-800 rounded-full shadow-lg text-white flex items-center justify-center hover:bg-slate-900 transition-all active:scale-95 group">
-        <svg class="h-8 w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-        <span class="absolute -left-4 top-1/2 -translate-y-1/2 -translate-x-full whitespace-nowrap bg-slate-800 text-white text-xs font-semibold px-3 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity">Área do Professor</span>
-    </button>
-    
-<script>
-    document.addEventListener('DOMContentLoaded', async () => {
-        // --- CONFIGURAÇÃO SUPABASE ---
-        const SUPABASE_URL = "https://ggqljtbbjavvyvawiwus.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdncWxqdGJiamF2dnl2YXdpd3VzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTgwNzY0MTgsImV4cCI6MjA3MzY1MjQxOH0.PnMwg10Hu_02lytY91JkfyqlDtAUdB_LpgQLOAJKi04";
-        const SUPABASE_BUCKET_NAME = "resultados-provas";
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        // --- FIM DA CONFIGURAÇÃO ---
-
-        let examSchedule = [];
-        let allFilesCache = [];
-        let onPasswordSuccess = null;
-
-        async function fetchExams() {
-            const { data, error } = await supabaseClient.from('provas').select('*').order('area', { ascending: true }).order('serie', { ascending: true });
-            if (error) { console.error("Erro ao buscar provas:", error); return []; }
-            
-            const groupedByArea = data.reduce((acc, exam) => {
-                const { id, area, id_area, serie, arquivo_url, data_inicio, data_fim, senha_acesso_antecipado } = exam;
-                if (!acc[id_area]) acc[id_area] = { area: area, id: id_area, exams: [] };
-                
-                acc[id_area].exams.push({ id, series: serie, file: arquivo_url, startDate: data_inicio, endDate: data_fim, password: senha_acesso_antecipado });
-                return acc;
-            }, {});
-
-            return Object.values(groupedByArea);
-        }
-
-        function renderTabsAndContents() {
-            const portal = document.getElementById('exam-portal');
-            const loader = document.getElementById('loading-exams');
-            if (examSchedule.length === 0) {
-                loader.innerHTML = '<p class="text-slate-500">Nenhuma avaliação agendada no momento.</p>';
-                return;
-            }
-            loader.classList.add('hidden');
-            portal.classList.remove('hidden');
-
-            const tabsContainer = document.getElementById('tabs');
-            const tabContainer = document.getElementById('tab-container');
-            tabsContainer.innerHTML = ''; tabContainer.innerHTML = '';
-            
-            examSchedule.forEach((areaData, index) => {
-                const isActive = index === 0;
-                tabsContainer.innerHTML += `<button class="tab-btn shrink-0 border-b-2 px-1 py-4 text-sm font-medium ${isActive ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'}" data-tab="${areaData.id}">${areaData.area}</button>`;
-                tabContainer.innerHTML += `<div id="${areaData.id}-content" class="${isActive ? '' : 'hidden'} tab-content grid grid-cols-1 md:grid-cols-3 gap-8"></div>`;
-            });
-            renderExamsForTab(examSchedule[0].id);
-        }
-
-        function handleTabClick(e) {
-            const tabId = e.target.dataset.tab;
-            document.querySelectorAll('.tab-btn').forEach(t => { t.classList.remove('border-blue-600', 'text-blue-600'); t.classList.add('border-transparent', 'text-gray-500'); });
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            e.target.classList.add('border-blue-600', 'text-blue-600');
-            e.target.classList.remove('border-transparent', 'text-gray-500');
-            const content = document.getElementById(`${tabId}-content`);
-            if (content) content.classList.remove('hidden');
-            renderExamsForTab(tabId);
-        }
-        
-        function renderExamsForTab(tabId) {
-            const areaData = examSchedule.find(a => a.id === tabId);
-            const container = document.getElementById(`${tabId}-content`);
-            if (!container) return;
-            container.innerHTML = '';
-
-            areaData.exams.forEach((exam, cardIndex) => {
-                const now = new Date(); const startDate = new Date(exam.startDate); const endDate = new Date(exam.endDate);
-                let status = (now < startDate) ? 'locked' : (now > endDate) ? 'expired' : 'available';
-                
-                const wrapper = document.createElement('div');
-                // Adiciona a classe .available no wrapper se a prova estiver disponível, para o CSS ativar o efeito de hover
-                wrapper.className = `exam-card-wrapper ${status}`;
-                wrapper.style.animationDelay = `${cardIndex * 100}ms`;
-
-                const card = document.createElement('div');
-                card.dataset.exam = JSON.stringify(exam);
-                card.dataset.status = status;
-                // As classes originais para hover e cursor estão aqui, exatamente como no seu código de referência
-                card.className = `exam-card h-full relative p-8 rounded-2xl shadow-lg border border-slate-200/50 transition-all duration-300 ease-in-out ${status === 'expired' ? 'opacity-50 grayscale cursor-not-allowed' : `cursor-pointer group ${status === 'available' ? 'hover:scale-[1.03] hover:shadow-2xl' : ''}`}`;
-
-                const statusText = status === 'locked' 
-                    ? `<p class="text-xs font-semibold text-amber-600">Disponível em ${new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(startDate)}</p>` 
-                    : status === 'expired' ? `<p class="text-xs font-semibold text-slate-500">Avaliação Encerrada</p>` 
-                    : `<p class="text-xs font-semibold text-green-600">Disponível para Iniciar</p>`;
-                
-                card.innerHTML = `<div class="text-center"><div class="flex items-center justify-center w-20 h-20 mx-auto bg-blue-100 rounded-full mb-5 ring-4 ring-white transition-colors group-hover:bg-blue-200"><span class="text-4xl font-bold text-blue-600">${exam.series.replace('ª Série', '')}</span><span class="text-lg font-bold mt-2 text-blue-600">ª</span></div><h2 class="text-2xl font-bold text-slate-800">Série</h2><p class="text-slate-500 mt-2">${areaData.area}</p><div class="mt-4">${statusText}</div></div>`;
-                
-                wrapper.appendChild(card);
-                container.appendChild(wrapper);
-            });
-
-            // Adiciona o listener de clique após os cards serem criados
-            container.querySelectorAll('.exam-card').forEach(c => c.addEventListener('click', handleExamCardClick));
-        }
-
-        // **FUNÇÃO DE CLIQUE NO CARD RESTAURADA PARA CORRIGIR ACESSO ANTECIPADO**
-        function handleExamCardClick() {
-            const { status, exam } = this.dataset;
-            if (status === 'expired') return;
-            const examData = JSON.parse(exam);
-
-            const action = () => {
-                if (!examData.file || examData.file === '#') { alert("Link da prova ainda não configurado."); return; }
-                document.getElementById('page-loader').classList.remove('hidden');
-                setTimeout(() => window.location.href = examData.file, 1500);
-            };
-
-            // Lógica de Acesso Antecipado CORRIGIDA
-            if (status === 'locked' && examData.password) {
-                openPasswordModal("Acesso Antecipado", "Insira a senha para liberar a prova.", (password) => {
-                    if (password === examData.password) {
-                        closePasswordModal();
-                        action();
-                    } else {
-                        document.getElementById('password-error').textContent = 'Senha incorreta.';
-                    }
-                });
-            } else if (status === 'available') {
-                action();
-            }
-        }
-        
-        function openPasswordModal(title, text, onSuccess) {
-            document.getElementById('password-modal-title').textContent = title;
-            document.getElementById('password-modal-text').textContent = text;
-            document.getElementById('password-modal').classList.remove('hidden');
-            document.getElementById('password-input').focus();
-            onPasswordSuccess = onSuccess;
-        }
-
-        function closePasswordModal() {
-            document.getElementById('password-modal').classList.add('hidden');
-            document.getElementById('password-input').value = '';
-            document.getElementById('password-error').textContent = '';
-            onPasswordSuccess = null;
-        }
-
-        function openAdminPanel(user) {
-            document.getElementById('professor-email').textContent = user.email;
-            document.getElementById('admin-area').classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-            setTimeout(() => document.getElementById('admin-area-content').classList.remove('translate-x-full'), 10);
-            renderAdminExamsList();
-        }
-
-        function closeAdminPanel() {
-            document.getElementById('admin-area-content').classList.add('translate-x-full');
-            setTimeout(() => { document.getElementById('admin-area').classList.add('hidden'); document.body.style.overflow = ''; }, 500);
-        }
-        
-        function renderAdminExamsList() {
-            const list = document.getElementById('exams-admin-list');
-            list.innerHTML = '';
-            const allExams = examSchedule.flat().flatMap(area => area.exams.map(exam => ({...exam, areaName: area.area})))
-                .sort((a, b) => a.areaName.localeCompare(b.areaName) || a.series.localeCompare(b.series));
-
-            allExams.forEach(exam => {
-                const toLocalISOString = date => new Date(new Date(date).getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
-                list.innerHTML += `
-                    <div data-exam-id="${exam.id}" class="bg-slate-50 p-4 rounded-lg border flex flex-col md:flex-row items-start md:items-center gap-4">
-                        <div class="flex-grow"><p class="font-bold text-slate-800">${exam.areaName} - ${exam.series}</p><p class="text-sm text-slate-500">${exam.file}</p></div>
-                        <div class="w-full md:w-auto flex flex-col md:flex-row items-stretch md:items-center gap-4">
-                            <div class="flex items-center gap-2"><label class="text-sm font-medium" for="start-${exam.id}">Início:</label><input type="datetime-local" id="start-${exam.id}" value="${toLocalISOString(exam.startDate)}" class="border-gray-300 rounded-md shadow-sm text-sm p-2 w-full"></div>
-                            <div class="flex items-center gap-2"><label class="text-sm font-medium" for="end-${exam.id}">Fim:</label><input type="datetime-local" id="end-${exam.id}" value="${toLocalISOString(exam.endDate)}" class="border-gray-300 rounded-md shadow-sm text-sm p-2 w-full"></div>
-                            <button class="update-exam-btn w-full md:w-auto bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 rounded transition flex justify-center items-center h-10" title="Salvar Alterações">
-                               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                            </button>
-                        </div>
-                    </div>`;
-            });
-        }
-        
-        async function handleExamUpdate(e) {
-            const btn = e.target.closest('.update-exam-btn'); if (!btn) return;
-            const examItem = btn.closest('[data-exam-id]');
-            const examId = examItem.dataset.examId;
-            const startDateString = examItem.querySelector(`#start-${examId}`).value;
-            const endDateString = examItem.querySelector(`#end-${examId}`).value;
-
-            btn.disabled = true;
-            btn.innerHTML = `<div class="spinner" style="width:20px;height:20px;border-left-color:white;"></div>`;
-
-            const { error } = await supabaseClient.from('provas').update({ data_inicio: startDateString, data_fim: endDateString }).eq('id', examId);
-            
-            if (error) {
-                console.error("Erro ao atualizar prova:", error);
-                alert('Falha ao salvar. Verifique o console.');
-                btn.innerHTML = `<svg class="w-5 h-5 text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>`;
-            } else {
-                await reloadAllExams();
-                btn.innerHTML = `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
-            }
-            setTimeout(() => { btn.disabled = false; }, 1500);
-        }
-
-        async function reloadAllExams() {
-            examSchedule = await fetchExams();
-            renderTabsAndContents();
-            if (!document.getElementById('admin-area').classList.contains('hidden')) { renderAdminExamsList(); }
-        }
-        
-  // ====================================================================
-        // INÍCIO DA LOGICA DOS GABARITOS
-        // ====================================================================
-        
-        async function fetchAllResults() {
-          try {
-            const foundFiles = [];
-            async function listRec(path = '') {
-              const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).list(path, { limit: 2000 });
-              if (error) { console.error("Erro ao listar storage:", error); return; }
-              if (!data || data.length === 0) return;
-              for (const item of data) {
-                if (item.name === '.emptyFolderPlaceholder') continue;
-                const looksLikeFolder = !item.name.includes('.');
-                if (looksLikeFolder) {
-                  const sub = path ? `${path}/${item.name}` : item.name;
-                  await listRec(sub);
-                  continue;
-                }
-                const fullPath = path ? `${path}/${item.name}` : item.name;
-                if (!fullPath.toLowerCase().endsWith('.pdf')) continue;
-                foundFiles.push({ fullPath, fileName: item.name, created_at: item.created_at || null });
-              }
-            }
-            await listRec('');
-            return foundFiles.map(file => {
-              const parts = file.fullPath.split('/');
-              const fileName = parts[parts.length - 1] || '';
-              const studentInfo = fileName.replace(/\.pdf$/i, '');
-              const seriesRaw = parts.length > 0 ? parts[0] : '';
-              const turmaRaw = parts.length > 1 ? parts[1] : '';
-              const turma = turmaRaw ? turmaRaw.replace(/^TURMA[_-]?/i, '').replace(/_/g, ' ') : '';
-              return {
-                fullPath: file.fullPath, series: seriesRaw || '', class: turma || '',
-                studentInfo: studentInfo || '', fileName: fileName, created_at: file.created_at
-              };
-            });
-          } catch (err) { console.error("fetchAllResults catch:", err); return []; }
-        }
-
-        function renderResultsList(files) {
-          const resultsList = document.getElementById('results-list');
-          resultsList.innerHTML = '';
-          document.getElementById('no-results-message').classList.toggle('hidden', files.length > 0);
-          files.forEach(file => {
-            const [matricula, ...nomeParts] = file.studentInfo.split('-');
-            const nome = nomeParts.length ? nomeParts.join(' ').trim() : file.studentInfo;
-            const displaySeries = file.series ? file.series.replace(/_/g, ' ') : '—';
-            const displayTurma = file.class ? `Turma ${file.class}` : '';
-            const subtitle = `${displaySeries}${displayTurma ? ' • ' + displayTurma : ''}`;
-            resultsList.innerHTML += `
-              <div class="bg-slate-50 p-3 rounded-lg flex items-center gap-4 border">
-                <div class="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                  <svg class="w-5 h-5 text-blue-500" viewBox="0 0 20 20" fill="currentColor"><path d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493a1.23 1.23 0 00.41 1.412A9.957 9.957 0 0010 18c2.31 0 4.438-.784 6.131-2.1.43-.333.604-.903.408-1.41a7.002 7.002 0 00-13.074.003z" /></svg>
-                </div>
-                <div class="flex-grow min-w-0">
-                  <p class="font-semibold text-sm text-slate-800 truncate" title="${nome}">${nome}</p>
-                  <p class="text-xs text-slate-500">${subtitle}</p>
-                </div>
-                <button data-path="${file.fullPath}" class="download-single-btn download-btn flex-shrink-0 bg-blue-500 text-white font-semibold py-2 px-3 rounded-lg hover:bg-blue-600 transition text-sm flex items-center justify-center w-9 h-9 relative">
-                  <span class="icon-default"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg></span>
-                </button>
-              </div>`;
-          });
-        }
-        
-        function applyFilters() {
-            const query = document.getElementById('filter-student').value.toLowerCase().trim();
-            if (!allFilesCache) return;
-            const filtered = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
-            renderResultsList(filtered);
-        }
-
-        async function downloadAllFiltered() {
-            const btn = document.getElementById('download-all-filtered-btn');
-            const query = document.getElementById('filter-student').value.toLowerCase().trim();
-            const filesToDownload = allFilesCache.filter(file => { const searchableString = `${file.studentInfo} ${file.series} ${file.class}`.toLowerCase().replace(/_/g, ' '); return searchableString.includes(query); });
-            if (filesToDownload.length === 0) { alert("Nenhum arquivo para baixar."); return; }
-            btn.disabled = true; btn.innerHTML = `<div class="spinner mr-2"></div>Baixando ${filesToDownload.length} arquivos...`;
-            const zip = new JSZip();
-            try {
-                const downloadPromises = filesToDownload.map(async file => { const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(file.fullPath); if (error) throw new Error(`Falha ao baixar ${file.fullPath}`); zip.file(file.fullPath, data); });
-                await Promise.all(downloadPromises); const content = await zip.generateAsync({ type: "blob" }); saveAs(content, "Resultados_Filtrados.zip");
-            } catch (error) { console.error("Erro zip:", error); alert("Ocorreu um erro ao baixar."); } 
-            finally { btn.disabled = false; btn.innerHTML = `Baixar Filtrados (.zip)`; }
-        }
-
-        // ====================================================================
-        // LOGICA DOS GABARITOS FINAL
-        // ====================================================================
-
-        async function init() {
-            setupEventListeners();
-            examSchedule = await fetchExams();
-            renderTabsAndContents();
-        }
-        
-        function setupEventListeners() {
-            document.getElementById('tabs').addEventListener('click', (e) => { if (e.target.classList.contains('tab-btn')) handleTabClick(e); });
-            document.getElementById('password-submit-btn').addEventListener('click', () => { if (onPasswordSuccess) onPasswordSuccess(document.getElementById('password-input').value); });
-            document.getElementById('password-input').addEventListener('keypress', (e) => { document.getElementById('password-error').textContent = ''; if (e.key === 'Enter' && onPasswordSuccess) onPasswordSuccess(e.target.value); });
-            document.getElementById('password-close-btn').addEventListener('click', closePasswordModal);
-            document.getElementById('admin-toggle-btn').addEventListener('click', () => { document.getElementById('admin-login-modal').classList.remove('hidden'); document.getElementById('email-input').focus(); });
-            document.getElementById('admin-login-close-btn').addEventListener('click', () => document.getElementById('admin-login-modal').classList.add('hidden'));
-            
-            document.getElementById('login-submit-btn').addEventListener('click', async () => {
-                const btn = document.getElementById('login-submit-btn'), btnText = document.getElementById('login-btn-text'), spinner = document.getElementById('login-spinner'), errorEl = document.getElementById('login-error');
-                btn.disabled = true; spinner.classList.remove('hidden'); btnText.classList.add('hidden'); errorEl.textContent = '';
-                const { data, error } = await supabaseClient.auth.signInWithPassword({ email: document.getElementById('email-input').value, password: document.getElementById('admin-password-input').value });
-                if (error) { errorEl.textContent = 'Email ou senha inválidos.'; } 
-                else { document.getElementById('admin-login-modal').classList.add('hidden'); openAdminPanel(data.user); }
-                btn.disabled = false; spinner.classList.add('hidden'); btnText.classList.remove('hidden');
-            });
-            
-            document.getElementById('admin-close-btn').addEventListener('click', closeAdminPanel);
-            document.getElementById('admin-area').addEventListener('click', (e) => { if (e.target === document.getElementById('admin-area')) closeAdminPanel(); });
-            document.getElementById('logout-btn').addEventListener('click', async () => { await supabaseClient.auth.signOut(); closeAdminPanel(); });
-            document.getElementById('exams-admin-list').addEventListener('click', handleExamUpdate);
-
-            document.querySelectorAll('.admin-panel-tab').forEach(tab => {
-                tab.addEventListener('click', async () => {
-                    document.querySelectorAll('.admin-panel-tab').forEach(t => t.classList.remove('border-blue-600', 'text-blue-600'));
-                    tab.classList.add('border-blue-600', 'text-blue-600');
-                    document.getElementById('admin-panel-provas').classList.toggle('hidden', tab.dataset.panel !== 'provas');
-                    document.getElementById('admin-panel-gabaritos').classList.toggle('hidden', tab.dataset.panel !== 'gabaritos');
-                    if (tab.dataset.panel === 'gabaritos' && allFilesCache.length === 0) {
-                        const resultsLoader = document.getElementById('results-loader'), resultsContent = document.getElementById('results-content');
-                        resultsContent.classList.add('hidden'); resultsLoader.style.display = 'flex';
-                        allFilesCache = await fetchAllResults(); renderResultsList(allFilesCache);
-                        resultsLoader.style.display = 'none'; resultsContent.classList.remove('hidden');
-                    }
-                });
-            });
-
-            document.getElementById('filter-student').addEventListener('input', applyFilters);
-            document.getElementById('download-all-filtered-btn').addEventListener('click', downloadAllFiltered);
-            document.getElementById('results-list').addEventListener('click', async (e) => {
-                const btn = e.target.closest('.download-single-btn'); if(!btn) return;
-                btn.disabled = true; const originalContent = btn.innerHTML; btn.innerHTML = `<div class="spinner"></div>`;
-                const { data, error } = await supabaseClient.storage.from(SUPABASE_BUCKET_NAME).download(btn.dataset.path);
-                if (error) { alert("Não foi possível baixar."); } else { saveAs(data, btn.dataset.path.split('/').pop()); }
-                btn.disabled = false; btn.innerHTML = originalContent;
-            });
-        }
-        
-        // Inicia a aplicação
-        init();
-    });
-</script>
+<script src="js/index.js"></script>
 </body>
 </html>
