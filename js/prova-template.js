@@ -354,7 +354,7 @@
         qs('#modalExport')?.addEventListener('click', () => triggerExport(record));
     }
     
-// Substitua sua função triggerExport inteiramente por esta versão final e corrigida.
+// Substitua sua função triggerExport inteira por esta versão que usa o identificador correto da prova.
 function triggerExport(record) {
     const btn = qs('#modalExport');
     if (btn) {
@@ -362,7 +362,6 @@ function triggerExport(record) {
         btn.innerHTML = '<div class="spinner"></div> Gerando e enviando PDF...';
     }
 
-    // A CORREÇÃO ESTÁ AQUI: Trocamos .eq('id', SERIES_ID) por .eq('serie', SERIES_ID)
     supabaseClient.from('gabaritos').select('gabarito_completo').eq('serie', SERIES_ID).single()
         .then(({ data, error }) => {
             if (error || !data) {
@@ -386,9 +385,14 @@ function triggerExport(record) {
                     <td style="padding: 8px; text-align: center; color:${isCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold;">${isCorrect ? '✓' : '✗'}</td>
                 </tr>`;
             }).join('');
+            
+            // =========================================================================
+            // A CORREÇÃO ESTÁ AQUI: Usamos SERIES_ID diretamente como a pasta principal.
+            // Ele já é o identificador único e limpo, como "1_SERIE_MATEMATICA".
+            const mainFolder = SERIES_ID; 
+            // =========================================================================
 
             const safeStudentName = normalizeString(studentProfile.nome_completo);
-            const mainFolder = `${normalizeString(examInfo.series)}_${normalizeString(examInfo.areaName)}`;
             const classFolder = `TURMA_${studentProfile.turma}`;
             const fileName = `${studentProfile.matricula}-${safeStudentName}.pdf`;
             const filePath = `${mainFolder}/${classFolder}/${fileName}`;
