@@ -354,53 +354,98 @@
         qs('#modalExport')?.addEventListener('click', () => triggerExport(record));
     }
     
-  function triggerExport(record) {
+// Substitua sua função triggerExport inteiramente por esta versão final e corrigida.
+function triggerExport(record) {
     const btn = qs('#modalExport');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Gerando e enviando PDF...'; }
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner"></div> Gerando e enviando PDF...';
+    }
 
+    // A CORREÇÃO ESTÁ AQUI: Trocamos .eq('id', SERIES_ID) por .eq('serie', SERIES_ID)
     supabaseClient.from('gabaritos').select('gabarito_completo').eq('serie', SERIES_ID).single()
-    .then(({ data, error }) => {
-        if (error || !data) throw new Error(error?.message || 'Gabarito não encontrado.');
+        .then(({ data, error }) => {
+            if (error || !data) {
+                throw new Error(error?.message || 'Gabarito oficial não encontrado para gerar o PDF.');
+            }
 
-        const GABARITO_PDF = data.gabarito_completo || {};
-        // (O resto da sua lógica de gerar a 'tableBody' permanece o mesmo)
-        
-        // ... Lógica da tableBody ...
-        
-        // CORREÇÃO: CRIA O CAMINHO DO ARQUIVO SEGUINDO A NOVA REGRA DE RLS
-        const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-        const safeName = normalizeString(studentProfile.nome_completo);
-        
-        // Novo caminho: {UID_DO_USUARIO}/TURMA_{TURMA}/{MATRICULA}-{NOME}.pdf
-        const filePath = `${studentProfile.id}/TURMA_${studentProfile.turma}/${studentProfile.matricula}-${safeName}.pdf`;
+            const GABARITO_OFICIAL = data.gabarito_completo || {};
+            const respostasDoAluno = record.finalAnswers || {};
+            const totalQuestoes = record.totalQuestions;
 
-        const wrapper = document.createElement('div');
-        // (O resto da sua lógica para preencher o 'wrapper.innerHTML' com o HTML do PDF permanece o mesmo)
-        
-        // ... Lógica de wrapper.innerHTML ...
-        
-        const opt = { margin: 0.5, filename: `${safeName}.pdf`, jsPDF: { unit: 'in', format: 'a4' }, html2canvas: { scale: 2 } };
+            const tableBody = [...Array(totalQuestoes).keys()].map(i => {
+                const qKey = `q${i + 1}`;
+                const respostaCorreta = GABARITO_OFICIAL[qKey];
+                const respostaAluno = respostasDoAluno[qKey];
+                const isCorrect = respostaAluno === respostaCorreta;
 
-        html2pdf().from(wrapper).output('blob').then(pdfBlob => {
-            supabaseClient.storage.from('resultados-provas').upload(filePath, pdfBlob, { upsert: true })
-            .then(({ error: uploadError }) => {
-                if (uploadError) throw uploadError;
-                showToast('Prova enviada com sucesso!', 'success');
-                if (btn) btn.textContent = "Enviado com Sucesso!";
-                setTimeout(() => window.close(), 2000);
-            })
-            .catch(err => {
-                console.error('Erro no envio para Supabase:', err);
-                showToast('Erro ao enviar. Baixando PDF localmente.', 'error');
-                if(btn) { btn.disabled = false; btn.textContent = "Tentar Enviar Novamente"; }
-                saveAs(pdfBlob, `${studentProfile.matricula}-${safeName}.pdf`);
+                return `<tr style="background-color:${isCorrect ? '#f0fff4' : '#fff5f5'};">
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${i + 1}</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${respostaCorreta || '-'}</td>
+                    <td style="padding: 8px; text-align: center; border: 1px solid #dee2e6;">${respostaAluno || 'N/R'}</td>
+                    <td style="padding: 8px; text-align: center; color:${isCorrect ? '#16a34a' : '#dc2626'}; font-weight: bold;">${isCorrect ? '✓' : '✗'}</td>
+                </tr>`;
+            }).join('');
+
+            const safeStudentName = normalizeString(studentProfile.nome_completo);
+            const mainFolder = `${normalizeString(examInfo.series)}_${normalizeString(examInfo.areaName)}`;
+            const classFolder = `TURMA_${studentProfile.turma}`;
+            const fileName = `${studentProfile.matricula}-${safeStudentName}.pdf`;
+            const filePath = `${mainFolder}/${classFolder}/${fileName}`;
+            
+            const dataHora = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+            
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = `<div style="font-family: Arial, sans-serif; padding: 40px; font-size: 12px; color: #333;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="font-size: 24px; margin: 0; color: #111;">Resultado Final da Avaliação</h2>
+                    <p style="font-size: 16px; color: #555;">${examInfo.areaName || ''} - ${examInfo.series || ''}</p>
+                </div>
+                <div style="margin-bottom: 25px; padding: 15px; border: 1px solid #e9ecef; border-radius: 8px; background-color: #f8f9fa;">
+                    <p style="margin: 4px 0;"><strong>Aluno:</strong> ${studentProfile.nome_completo}</p>
+                    <p style="margin: 4px 0;"><strong>Matrícula:</strong> ${studentProfile.matricula}</p>
+                    <p style="margin: 4px 0;"><strong>Turma:</strong> ${studentProfile.turma}</p>
+                    <p style="margin: 4px 0;"><strong>Data de Finalização:</strong> ${dataHora}</p>
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <p style="font-size: 16px;"><strong>Pontuação Final:</strong> ${record.correctCount} de ${totalQuestoes} acertos (${Math.round((record.correctCount / totalQuestoes) * 100)}%)</p>
+                </div>
+                <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                    <thead>
+                        <tr style="background-color:#e9ecef;">
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Questão</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Gabarito</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Sua Resposta</th>
+                            <th style="padding: 10px; border: 1px solid #dee2e6; text-align: center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableBody}</tbody>
+                </table>
+                <p style="margin-top: 30px; font-size: 10px; color: #999; text-align: center;">Documento gerado pelo Portal de Avaliações CEJA</p>
+            </div>`;
+
+            const opt = { margin: 0.5, filename: fileName, jsPDF: { unit: 'in', format: 'a4' }, html2canvas: { scale: 2 } };
+
+            html2pdf().from(wrapper).output('blob').then(pdfBlob => {
+                supabaseClient.storage.from('resultados-provas').upload(filePath, pdfBlob, { upsert: true })
+                .then(({ data, error: uploadError }) => {
+                    if (uploadError) throw uploadError;
+                    showToast('Prova enviada com sucesso!', 'success');
+                    if (btn) btn.textContent = "Enviado com Sucesso!";
+                    setTimeout(() => window.close(), 2000);
+                })
+                .catch(err => {
+                    console.error('Erro no envio para Supabase:', err);
+                    showToast('Erro ao enviar. Baixando PDF localmente para segurança.', 'error');
+                    if(btn) { btn.disabled = false; btn.textContent = "Tentar Enviar Novamente"; }
+                    saveAs(pdfBlob, fileName);
+                });
             });
+        }).catch(err => {
+            console.error("Erro crítico ao buscar gabarito para gerar o PDF:", err.message);
+            showToast('Erro crítico ao preparar o resultado. Tente novamente.', 'error');
+            if(btn) { btn.disabled = false; btn.textContent = "Tentar Gerar Novamente"; }
         });
-    }).catch(err => {
-        console.error("Erro ao buscar gabarito para PDF:", err.message);
-        showToast('Erro crítico ao preparar PDF. Tente novamente.', 'error');
-        if(btn) { btn.disabled = false; btn.textContent = "Tentar Enviar Novamente"; }
-    });
 }
 
     // ==========================================================
