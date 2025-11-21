@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Portal de Avaliações — Colégio Estadual José Abílio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        :root {
+            --color-primary: 60 98 240;
+            --color-primary-light: 239 246 255;
+            --color-background: 248 250 252;
+            --color-surface: 255 255 255;
+            --color-text-primary: 30 41 59;
+            --color-text-secondary: 71 85 105;
+            --color-text-muted: 148 163 184;
+            --color-border: 226 232 240;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        body { 
+            font-family: 'Inter', sans-serif;
+            background-color: rgb(var(--color-background));
+            color: rgb(var(--color-text-primary));
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .modal-backdrop { 
+            backdrop-filter: blur(4px); 
+            -webkit-backdrop-filter: blur(4px); 
+            animation: fadeInOverlay 300ms ease-out; 
+            background-color: rgba(var(--color-text-primary), 0.6);
+        }
+        .modal-content-anim { animation: fadeIn 400ms ease-out forwards; }
+        .spinner { width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-left-color: rgb(var(--color-primary)); border-radius: 50%; animation: spin 1s linear infinite; }
+        
+        #admin-area-content { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+
+        [contenteditable]:empty:before {
+            content: attr(data-placeholder);
+            pointer-events: none;
+            display: block;
+            color: rgb(var(--color-text-muted));
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgb(var(--color-border)); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #d1d8e0; }
+    </style>
+</head>
+<body class="antialiased">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

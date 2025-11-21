@@ -1,0 +1,5 @@
+{
+  "name": "Portal de Avaliações CEJA",
+  "description": "A comprehensive portal for creating, managing, and taking school evaluations, designed for Colégio Estadual José Abílio. Features role-based access for students and teachers, a sophisticated quiz editor with live previews, and real-time student presence management.",
+  "requestFramePermissions": []
+}
