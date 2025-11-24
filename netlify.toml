@@ -1,0 +1,35 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Comprimir todos os assets
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Content-Encoding = "gzip"
+
+# Habilitar HTTP/2 Server Push para CSS e JS críticos
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Link = "</assets/*.css>; rel=preload; as=style, </assets/*.js>; rel=preload; as=script"

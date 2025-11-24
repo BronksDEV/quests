@@ -60,15 +60,13 @@ const ResultsDashboardModal: React.FC<ResultsDashboardModalProps> = ({ quiz, onC
         setLoading(false);
     }, [quiz.id]);
 
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedFilter(filter);
-        }, 250);
+useEffect(() => {
+    const handler = setTimeout(() => {
+        setDebouncedFilter(filter);
+    }, 250); // 250ms é ideal
 
-        return () => {
-            clearTimeout(handler);
-        };
-    }, [filter]);
+    return () => clearTimeout(handler);
+}, [filter]);
 
     useEffect(() => {
         fetchResults();

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../services/supabase';
 import type { Prova, StudentQuestao } from '../types';
-import { useAuth } from '../App';
+import { useAppStore } from '../stores/useAppStore';
 import { Spinner } from './common';
 import ActionConfirmModal from './ActionConfirmModal';
 import SubmissionSuccessAnimation from './SubmissionSuccessAnimation';
@@ -13,13 +13,19 @@ interface QuizTakerProps {
 
 const QUESTIONS_PER_PAGE = 5;
 
-const FullscreenExitWarningModal: React.FC<{ countdown: number }> = ({ countdown }) => (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-        <div className="text-center text-white p-8">
-            <h2 className="text-4xl font-bold text-red-500">Atenção!</h2>
+const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscreen: () => void; }> = ({ countdown, onRequestFullscreen }) => (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-red-950/70 backdrop-blur-md">
+        <div className="text-center text-white p-8 max-w-lg mx-auto bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700">
+            <h2 className="text-4xl font-bold text-red-400">Atenção!</h2>
             <p className="mt-4 text-lg">Você saiu do modo de tela cheia. Sua prova será bloqueada em:</p>
-            <p className="text-6xl font-mono font-bold my-4">{countdown}</p>
-            <p className="text-slate-300">Retorne à tela cheia imediatamente para evitar o bloqueio.</p>
+            <p className="text-7xl font-mono font-bold my-4 text-red-300">{countdown}</p>
+            <button 
+                onClick={onRequestFullscreen}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105 shadow-lg"
+            >
+                Voltar à Tela Cheia
+            </button>
+            <p className="text-slate-400 mt-4 text-sm">Retorne imediatamente para evitar o bloqueio.</p>
         </div>
     </div>
 );
@@ -51,7 +57,7 @@ const TermsModal: React.FC<{ onConfirm: () => void; onCancel: () => void; }> = (
 
 
 const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
-    const { profile } = useAuth();
+    const profile = useAppStore((state) => state.profile);
     const [quiz, setQuiz] = useState<Omit<Prova, 'questoes'> | null>(null);
     const [questions, setQuestions] = useState<StudentQuestao[]>([]);
     const [currentPage, setCurrentPage] = useState(0);
@@ -63,41 +69,57 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const [showTerms, setShowTerms] = useState(true);
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
+    const [showBlockedModal, setShowBlockedModal] = useState(false);
     
-    // Security states
     const [showWarning, setShowWarning] = useState(false);
-    const [countdown, setCountdown] = useState(3);
+    const [countdown, setCountdown] = useState(5);
     const countdownIntervalRef = useRef<number | null>(null);
     const isBlockingRef = useRef(false);
     const isExitingLegitimately = useRef(false);
 
     const blockStudentAndExit = useCallback(async () => {
-        if (profile?.role === 'admin' || isBlockingRef.current) return;
+        if (!profile || profile.role === 'admin' || isBlockingRef.current) return;
         isBlockingRef.current = true;
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
 
         try {
-            await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile!.id);
+            await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile.id);
             if(document.fullscreenElement) {
                 isExitingLegitimately.current = true;
                 await document.exitFullscreen();
             }
-            alert("Você foi bloqueado por violar as regras. Contate um professor para liberar seu acesso.");
-            onFinish();
+            setShowBlockedModal(true);
         } catch (error) {
             console.error("Erro ao bloquear estudante:", error);
             onFinish();
         }
     }, [profile, onFinish]);
+    
+    const requestFullscreen = useCallback(async () => {
+        try {
+            await document.documentElement.requestFullscreen();
+        } catch (err) {
+            console.error("Falha ao tentar entrar em tela cheia:", err);
+        }
+    }, []);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
             if (isExitingLegitimately.current || profile?.role === 'admin') {
                 return;
             }
+
+            if (document.fullscreenElement) {
+                setShowWarning(false);
+                if (countdownIntervalRef.current) {
+                    clearInterval(countdownIntervalRef.current);
+                }
+                return;
+            }
+            
             if (!document.fullscreenElement && isQuizStarted && !isBlockingRef.current) {
                 setShowWarning(true);
-                setCountdown(3);
+                setCountdown(5);
                 countdownIntervalRef.current = window.setInterval(() => {
                     setCountdown(prev => {
                         if (prev <= 1) {
@@ -108,11 +130,6 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                         return prev - 1;
                     });
                 }, 1000);
-            } else {
-                setShowWarning(false);
-                if (countdownIntervalRef.current) {
-                    clearInterval(countdownIntervalRef.current);
-                }
             }
         };
 
@@ -121,12 +138,13 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     }, [isQuizStarted, blockStudentAndExit, profile]);
 
     const handleSubmit = useCallback(async () => {
+        if (!profile) return;
         setSubmitting(true);
         isExitingLegitimately.current = true;
         try {
             const { error } = await supabase.from('resultados').insert({
                 prova_id: examId,
-                student_id: profile?.id,
+                student_id: profile.id,
                 respostas: answers
             });
             if (error) throw error;
@@ -168,89 +186,87 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
 
     const startQuiz = async () => {
         setShowTerms(false);
-        // Admins are immune to fullscreen enforcement
         if (profile?.role === 'admin') {
             setIsQuizStarted(true);
             return;
         }
-        try {
-            await document.documentElement.requestFullscreen();
-            setIsQuizStarted(true);
-        } catch (err) {
-            onFinish();
-        }
+        await requestFullscreen();
+        setIsQuizStarted(true);
     };
     
     if (loading) return <div className="flex justify-center p-12 h-96"><Spinner /></div>;
-    if (error && !showErrorModal) return <div className="text-center text-red-500 bg-red-50 p-12 rounded-lg border border-red-200">{error}</div>;
-    if (!quiz || questions.length === 0) return <div className="text-center bg-white p-12 rounded-lg border">Avaliação não encontrada ou sem questões.</div>;
-    
     if (showTerms && profile?.role !== 'admin') return <TermsModal onConfirm={startQuiz} onCancel={onFinish} />;
     if (showSuccessAnimation) return <SubmissionSuccessAnimation />;
-
+    
     if (showErrorModal) {
-        return <ActionConfirmModal type="warning" title="Erro no Envio" message={error} onCancel={() => setShowErrorModal(false)} />
+        return <ActionConfirmModal type="warning" title="Erro no Envio" message={error} onConfirm={() => setShowErrorModal(false)} confirmText='Tentar Novamente' />
+    }
+    if (showBlockedModal) {
+        return <ActionConfirmModal type="warning" title="Acesso Bloqueado" message="Você violou as regras da avaliação (saída da tela cheia). Contate um professor para liberar seu acesso." onConfirm={onFinish} confirmText="Entendido"/>
+    }
+
+    if (!isQuizStarted && !showTerms) {
+        return <div className="flex justify-center p-12 h-96"><Spinner /><p className="ml-4">Iniciando ambiente seguro...</p></div>;
     }
     
-    if (!isQuizStarted) {
-        if(profile?.role !== 'admin' && !showTerms) {
-            return <div className="flex justify-center p-12 h-96"><Spinner /><p className="ml-4">Iniciando ambiente seguro...</p></div>;
-        }
-        if (profile?.role === 'admin') {
-           startQuiz();
-        }
+    if (!quiz || questions.length === 0) {
+        return (
+             <ActionConfirmModal type="info" title="Avaliação Indisponível" message="Esta avaliação não foi encontrada ou não possui questões." onConfirm={onFinish} confirmText="Voltar"/>
+        );
     }
 
     const totalPages = Math.ceil(questions.length / QUESTIONS_PER_PAGE);
     const startIndex = currentPage * QUESTIONS_PER_PAGE;
-    const endIndex = startIndex + QUESTIONS_PER_PAGE;
-    const questionsOnPage = questions.slice(startIndex, endIndex);
+    const questionsOnPage = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
 
     const firstQuestionNum = startIndex + 1;
-    const lastQuestionNum = Math.min(endIndex, questions.length);
+    const lastQuestionNum = Math.min(startIndex + QUESTIONS_PER_PAGE, questions.length);
     
     return (
-        <div className="w-full max-w-5xl mx-auto animate-fadeIn">
-            {showWarning && <FullscreenExitWarningModal countdown={countdown} />}
-            <header className="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
-                <div><h1 className="text-xl font-bold">{quiz.title}</h1><p className="text-sm text-slate-600">{profile?.nome_completo}</p></div>
-                <div className="text-right"><p className="text-sm font-medium text-slate-600">Questões</p><p className="text-2xl font-bold">{firstQuestionNum}-{lastQuestionNum}<span className="text-slate-400 font-normal text-lg">/{questions.length}</span></p></div>
-            </header>
+        <>
+            {showWarning && <FullscreenExitWarningModal countdown={countdown} onRequestFullscreen={requestFullscreen} />}
 
-            <main className="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
-                {questionsOnPage.map((question) => (
-                    <fieldset key={question.id} className="mb-8 last:mb-0">
-                        <legend className="font-semibold text-lg px-2 -mb-3">{question.title}</legend>
-                        <div className="border rounded-lg p-4 pt-6">
-                            {question.long_text && <div className="prose prose-slate max-w-none mb-4" dangerouslySetInnerHTML={{ __html: question.long_text }} />}
-                            <div className={`grid grid-cols-1 ${question.image_url_1 && question.image_url_2 ? 'sm:grid-cols-2' : ''} gap-4 my-4`}>
-                                {question.image_url_1 && <img src={question.image_url_1} alt="Imagem 1 da questão" className="border rounded-md w-full" />}
-                                {question.image_url_2 && <img src={question.image_url_2} alt="Imagem 2 da questão" className="border rounded-md w-full" />}
-                            </div>
-                            <div className="mt-4 space-y-2">
-                                {(question.alternativas || []).map(alt => (
-                                    <label key={alt.id} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-all ${answers[question.id!] === alt.letter ? 'bg-blue-50 border-blue-400 ring-2' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
-                                        <input type="radio" name={`question-${question.id}`} value={alt.letter} checked={answers[question.id!] === alt.letter} onChange={() => setAnswers(prev => ({ ...prev, [question.id!]: alt.letter }))} className="mr-3 mt-1 h-4 w-4" />
-                                        <div className="flex-1 text-slate-800"><span className="font-semibold">{alt.letter})</span><span className="ml-2">{alt.text}</span></div>
-                                    </label>
-                                ))}
-                            </div>
-                        </div>
-                    </fieldset>
-                ))}
+            <div className="w-full max-w-5xl mx-auto animate-fadeIn">
+                <header className="mb-6 flex items-center justify-between bg-white p-4 rounded-xl shadow-md border border-slate-200/80">
+                    <div><h1 className="text-xl font-bold">{quiz.title}</h1><p className="text-sm text-slate-600">{profile?.nome_completo}</p></div>
+                    <div className="text-right"><p className="text-sm font-medium text-slate-600">Questões</p><p className="text-2xl font-bold">{firstQuestionNum}-{lastQuestionNum}<span className="text-slate-400 font-normal text-lg">/{questions.length}</span></p></div>
+                </header>
 
-                <div className="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center">
-                    <button onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0} className="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg disabled:opacity-50">Anterior</button>
-                    {currentPage === totalPages - 1 ? (
-                        <button onClick={handleSubmit} disabled={submitting} className="bg-green-600 text-white font-semibold py-2 px-5 rounded-lg disabled:bg-green-400 flex items-center gap-2">
-                            {submitting ? <Spinner size="20px" color="#fff" /> : 'Finalizar e Enviar'}
-                        </button>
-                    ) : (
-                        <button onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg">Próxima</button>
-                    )}
-                </div>
-            </main>
-        </div>
+                <main className="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
+                    {questionsOnPage.map((question) => (
+                        <fieldset key={question.id} className="mb-8 last:mb-0">
+                            <legend className="font-semibold text-lg px-2 -mb-3">{question.title}</legend>
+                            <div className="border rounded-lg p-4 pt-6">
+                                {question.long_text && <div className="prose prose-slate max-w-none mb-4" dangerouslySetInnerHTML={{ __html: question.long_text }} />}
+                                <div className={`grid grid-cols-1 ${question.image_url_1 && question.image_url_2 ? 'sm:grid-cols-2' : ''} gap-4 my-4`}>
+                                    {question.image_url_1 && <img src={question.image_url_1} alt="Imagem 1 da questão" className="border rounded-md w-full" />}
+                                    {question.image_url_2 && <img src={question.image_url_2} alt="Imagem 2 da questão" className="border rounded-md w-full" />}
+                                </div>
+                                <div className="mt-4 space-y-2">
+                                    {(question.alternativas || []).map(alt => (
+                                        <label key={alt.id} className={`flex items-start p-3 border rounded-lg cursor-pointer transition-all ${answers[question.id!] === alt.letter ? 'bg-blue-50 border-blue-400 ring-2' : 'bg-white hover:bg-slate-50 border-slate-200'}`}>
+                                            <input type="radio" name={`question-${question.id}`} value={alt.letter} checked={answers[question.id!] === alt.letter} onChange={() => setAnswers(prev => ({ ...prev, [question.id!]: alt.letter }))} className="mr-3 mt-1 h-4 w-4" />
+                                            <div className="flex-1 text-slate-800"><span className="font-semibold">{alt.letter})</span><span className="ml-2">{alt.text}</span></div>
+                                        </label>
+                                    ))}
+                                </div>
+                            </div>
+                        </fieldset>
+                    ))}
+
+                    <div className="mt-8 pt-6 border-t border-slate-200 flex justify-between items-center">
+                        <button onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0} className="bg-slate-200 text-slate-700 font-semibold py-2 px-5 rounded-lg disabled:opacity-50">Anterior</button>
+                        {currentPage === totalPages - 1 ? (
+                            <button onClick={handleSubmit} disabled={submitting} className="bg-green-600 text-white font-semibold py-2 px-5 rounded-lg disabled:bg-green-400 flex items-center gap-2">
+                                {submitting ? <Spinner size="20px" color="#fff" /> : 'Finalizar e Enviar'}
+                            </button>
+                        ) : (
+                            <button onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} className="bg-blue-600 text-white font-semibold py-2 px-5 rounded-lg">Próxima</button>
+                        )}
+                    </div>
+                </main>
+            </div>
+        </>
     );
 };
 

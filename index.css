@@ -1,57 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
-:root {
-    --color-primary: 60 98 240; /* #3c62f0 */
-    --color-primary-light: 239 246 255; /* blue-50 */
-    --color-background: 248 250 252; /* slate-50 */
+@layer base {
+  :root {
+    --color-primary: 60 98 240;
+    --color-primary-light: 239 246 255;
+    --color-background: 248 250 252;
     --color-surface: 255 255 255;
-    --color-text-primary: 30 41 59; /* slate-800 */
-    --color-text-secondary: 71 85 105; /* slate-600 */
-    --color-text-muted: 148 163 184; /* slate-400 */
-    --color-border: 226 232 240; /* slate-200 */
+    --color-text-primary: 30 41 59;
+    --color-text-secondary: 71 85 105;
+    --color-text-muted: 148 163 184;
+    --color-border: 226 232 240;
     --radius-md: 0.5rem;
     --radius-lg: 0.75rem;
     --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-}
+  }
 
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-
-body { 
-    font-family: 'Inter', sans-serif;
+  body { 
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background-color: rgb(var(--color-background));
     color: rgb(var(--color-text-primary));
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar { 
+    width: 8px; 
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track { 
+    background: transparent; 
+  }
+  
+  ::-webkit-scrollbar-thumb { 
+    background: rgb(var(--color-border)); 
+    border-radius: 4px; 
+  }
+  
+  ::-webkit-scrollbar-thumb:hover { 
+    background: #cbd5e1; 
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(var(--color-border)) transparent;
+  }
 }
 
-.modal-backdrop { 
+@layer utilities {
+  .modal-backdrop { 
     backdrop-filter: blur(4px); 
     -webkit-backdrop-filter: blur(4px); 
     animation: fadeInOverlay 300ms ease-out; 
     background-color: rgba(var(--color-text-primary), 0.6);
-}
-.modal-content-anim { animation: fadeIn 400ms ease-out forwards; }
-.spinner { width: 24px; height: 24px; border: 3px solid rgba(0,0,0,0.1); border-left-color: rgb(var(--color-primary)); border-radius: 50%; animation: spin 1s linear infinite; }
+  }
+  
+  .modal-content-anim { 
+    animation: fadeIn 400ms ease-out forwards;
+    will-change: opacity, transform;
+  }
+  
+  .spinner { 
+    width: 24px; 
+    height: 24px; 
+    border: 3px solid rgba(0, 0, 0, 0.1); 
+    border-left-color: rgb(var(--color-primary)); 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite;
+    will-change: transform;
+  }
 
-#admin-area-content { transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1); }
+  #admin-area-content { 
+    transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    will-change: transform;
+  }
 
-[contenteditable]:empty:before {
+  [contenteditable]:empty:before {
     content: attr(data-placeholder);
     pointer-events: none;
     display: block;
     color: rgb(var(--color-text-muted));
+    opacity: 0.6;
+  }
+
+  .animate-fadeIn {
+    animation: fadeIn 400ms ease-out forwards;
+  }
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgb(var(--color-border)); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #d1d8e0; }
+@keyframes fadeIn { 
+  from { 
+    opacity: 0; 
+    transform: translateY(10px); 
+  } 
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  } 
+}
+
+@keyframes fadeInOverlay { 
+  from { 
+    opacity: 0; 
+  } 
+  to { 
+    opacity: 1; 
+  } 
+}
+
+@keyframes spin { 
+  to { 
+    transform: rotate(360deg); 
+  } 
+}
+
+/* Otimizações de performance */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Preload de fontes críticas */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Inter');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Inter');
+}

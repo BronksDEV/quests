@@ -1,14 +1,13 @@
-
 import React, { useState, useEffect, useCallback, useRef, FormEvent, useMemo } from 'react';
 import { supabase, SUPABASE_BUCKET_NAME, SUPABASE_URL, SUPABASE_ANON_KEY } from '../services/supabase';
-import { useAuth } from '../App';
+import { useAppStore } from '../stores/useAppStore';
 import type { Profile, Prova, Questao, Alternativa } from '../types';
 import { Spinner, CloseIcon } from './common';
 import ActionConfirmModal from './ActionConfirmModal';
 import ResultsDashboardModal from './ResultsDashboardModal';
 
 
-// --- Sub-components for Admin Panel ---
+// --- Sub-componentes do Admin Panel ---
 
 const CreateUserPanel: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -41,10 +40,24 @@ const CreateUserPanel: React.FC = () => {
             const responseData = await response.json();
     
             if (!response.ok) {
-                throw new Error(responseData.error || responseData.message || 'Falha ao criar usuário.');
+                throw new Error(responseData.error || responseData.message || 'Falha ao criar usuário na autenticação.');
+            }
+
+            const newUserId = responseData.user?.id;
+            if (!newUserId) {
+                throw new Error("A função de criação não retornou o ID do novo usuário.");
+            }
+
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({ id: newUserId, email: email, role: role });
+
+            if (profileError) {
+                console.error("Usuário Auth criado, mas falha ao criar o perfil no banco:", profileError);
+                throw new Error(`Usuário criado, mas falha ao salvar o perfil: ${profileError.message}`);
             }
     
-            setFeedback({ message: responseData.message || 'Usuário criado com sucesso!', type: 'success' });
+            setFeedback({ message: 'Usuário e perfil criados com sucesso!', type: 'success' });
             setEmail('');
             setPassword('');
         } catch (error: any) {
@@ -96,7 +109,7 @@ const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAcc
     return (
         <div className="p-3 rounded-lg flex items-center gap-4 border bg-slate-50">
             <div className="flex-grow min-w-0">
-                <p className="font-semibold text-sm text-slate-800 truncate">{student.nome_completo}</p>
+                <p className="font-semibold text-sm text-slate-800 truncate">{student.nome_completo || 'Nome não preenchido'}</p>
                 <p className="text-xs text-slate-500">
                     {student.turma || 'Turma N/A'} ・ Matrícula: {student.matricula || 'N/A'}
                 </p>
@@ -117,7 +130,9 @@ const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAcc
 
 
 const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ quiz, onClose }) => {
-    const [students, setStudents] = useState<Profile[]>([]);
+    const allStudents = useAppStore((state) => state.allStudents);
+    const fetchAllStudents = useAppStore((state) => state.fetchAllStudents);
+
     const [accessList, setAccessList] = useState<Set<string>>(new Set());
     const [filter, setFilter] = useState('');
     const [debouncedFilter, setDebouncedFilter] = useState('');
@@ -127,57 +142,58 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
 
     const quizSeriesPrefix = quiz.serie.charAt(0);
 
-    const fetchStudentsAndAccess = useCallback(async () => {
-        setLoading(true);
-        const { data: studentsData, error: studentsError } = await supabase.rpc('get_all_students');
-        if (studentsError) {
-            alert('Erro ao carregar lista de alunos.');
-            console.error(studentsError);
-            setLoading(false);
-            return;
-        }
-
-        const relevantStudents = (studentsData as Profile[]).filter(s => s.turma?.startsWith(quizSeriesPrefix));
-        setStudents(relevantStudents);
-        
-        const { data: accessData, error: accessError } = await supabase.from('provas_acesso_individual').select('student_id').eq('prova_id', quiz.id);
-        
-        if (accessError) {
-            alert('Erro ao carregar permissões de acesso.');
-            console.error(accessError);
+    const fetchAccessList = useCallback(async () => {
+        const { data, error } = await supabase.from('provas_acesso_individual').select('student_id').eq('prova_id', quiz.id);
+        if (error) {
+            console.error('Erro ao buscar lista de acesso:', error);
+            setAccessList(new Set());
         } else {
-            setAccessList(new Set(accessData.map(a => a.student_id)));
+            setAccessList(new Set(data.map(a => a.student_id)));
         }
-        setLoading(false);
-    }, [quiz.id, quizSeriesPrefix]);
-
+    }, [quiz.id]);
+    
     useEffect(() => {
-        fetchStudentsAndAccess();
-    }, [fetchStudentsAndAccess]);
+        setLoading(true);
+        Promise.all([fetchAllStudents(), fetchAccessList()]).finally(() => setLoading(false));
 
-    useEffect(() => {
-        const handler = setTimeout(() => {
-            setDebouncedFilter(filter);
-        }, 250);
+        const channel = supabase
+            .channel(`access-control-modal-realtime-${quiz.id}`)
+            .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'provas_acesso_individual',
+                    filter: `prova_id=eq.${quiz.id}`
+                }, 
+                () => {
+                    fetchAccessList();
+                }
+            )
+            .subscribe();
 
         return () => {
-            clearTimeout(handler);
+            supabase.removeChannel(channel);
         };
+    }, [fetchAllStudents, fetchAccessList, quiz.id]);
+    
+    useEffect(() => {
+        const handler = setTimeout(() => { setDebouncedFilter(filter); }, 250);
+        return () => clearTimeout(handler);
     }, [filter]);
     
     const filteredStudents = useMemo(() => {
-        if (!debouncedFilter) return students;
+        const relevantStudents = allStudents.filter(s => s.turma?.startsWith(quizSeriesPrefix));
+        if (!debouncedFilter) return relevantStudents;
         const lowerFilter = debouncedFilter.toLowerCase();
-        return students.filter(s =>
+        return relevantStudents.filter(s =>
             s.nome_completo?.toLowerCase().includes(lowerFilter) ||
             s.matricula?.includes(lowerFilter)
         );
-    }, [debouncedFilter, students]);
+    }, [debouncedFilter, allStudents, quizSeriesPrefix]);
     
     const toggleGlobalStatus = async () => {
         const newStatus = quizStatus === 'aberta_para_todos' ? 'fechada' : 'aberta_para_todos';
         setSavingStatus(true);
-        const { error } = await supabase.rpc('manage_prova_status', { p_prova_id: quiz.id, p_status: newStatus });
+        const { error } = await supabase.from('provas').update({ status: newStatus }).eq('id', quiz.id);
         if (error) {
             alert("Erro ao atualizar status da prova: " + error.message);
         } else {
@@ -186,35 +202,59 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
         setSavingStatus(false);
     };
 
-    const toggleIndividualAccess = useCallback(async (studentId: string, shouldGrant: boolean) => {
-        const originalAccessList = new Set(accessList);
-        setAccessList(prev => {
-            const newList = new Set(prev);
-            if (shouldGrant) newList.add(studentId);
-            else newList.delete(studentId);
-            return newList;
-        });
+const toggleIndividualAccess = useCallback(async (studentId: string, shouldGrant: boolean) => {
+    // 1. Captura o estado original para poder reverter em caso de erro.
+    const originalAccessList = new Set(accessList);
 
-        const { error } = await supabase.rpc('manage_individual_access', { p_prova_id: quiz.id, p_student_id: studentId, p_grant: shouldGrant });
-        if (error) {
-            alert("Erro ao gerenciar acesso individual: " + error.message);
-            setAccessList(originalAccessList);
+    // 2. ATUALIZAÇÃO OTIMISTA: Muda a UI imediatamente para dar feedback instantâneo.
+    setAccessList(prev => {
+        const next = new Set(prev);
+        if (shouldGrant) {
+            next.add(studentId);
+        } else {
+            next.delete(studentId);
         }
-    }, [accessList, quiz.id]);
+        return next;
+    });
+
+    // 3. Executa a ação no banco de dados com a função RPC segura.
+    const { error } = await supabase.rpc('manage_individual_access', {
+        p_prova_id: quiz.id,
+        p_student_id: studentId,
+        p_grant: shouldGrant
+    });
+
+    // 4. Se a ação no banco falhar, avisa o usuário e reverte a mudança na UI.
+    if (error) {
+        alert("Erro ao gerenciar acesso individual: " + error.message);
+        setAccessList(originalAccessList);
+    }
+}, [quiz.id, accessList]); // Adiciona 'accessList' como dependência para garantir que a reversão funcione.
     
     const unblockStudent = useCallback(async (studentId: string) => {
-        const student = students.find(s => s.id === studentId);
-        if (!student) return;
-        
-        student.is_blocked = false;
-        setStudents([...students]);
-
-        const { error } = await supabase.from('profiles').update({ is_blocked: false }).eq('id', studentId);
+        setLoading(true);
+    
+        const { error } = await supabase
+            .from('profiles')
+            .update({ is_blocked: false })
+            .eq('id', studentId);
+    
         if (error) {
             alert("Erro ao desbloquear aluno: " + error.message);
-            fetchStudentsAndAccess();
+            setLoading(false);
+            return;
         }
-    }, [students, fetchStudentsAndAccess]);
+    
+        await fetchAllStudents();
+    
+        setAccessList(prev => {
+            const next = new Set(prev);
+            next.delete(studentId);
+            return next;
+        });
+    
+        setLoading(false);
+    }, [fetchAllStudents]);
 
     return (
         <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
@@ -250,7 +290,7 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
                                 filteredStudents.length === 0 ? <p className="text-center text-slate-500 py-4">Nenhum aluno encontrado.</p> :
                                 filteredStudents.map(student => (
                                     <StudentAccessRow
-                                        key={student.id}
+                                        key={`${student.id}-${student.is_blocked ? 'b' : 'u'}-${accessList.has(student.id) ? 'a' : 'n'}`}
                                         student={student}
                                         hasIndividualAccess={accessList.has(student.id)}
                                         onToggleAccess={toggleIndividualAccess}
@@ -268,12 +308,13 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
 
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-    const { profile } = useAuth();
+    const profile = useAppStore((state) => state.profile);
+    const exams = useAppStore((state) => state.exams);
+    const fetchExamsAndResults = useAppStore((state) => state.fetchExamsAndResults);
+    
     const [activePanel, setActivePanel] = useState('provas-avancado');
-    const [quizzes, setQuizzes] = useState<Prova[]>([]);
     const [loadingQuizzes, setLoadingQuizzes] = useState(true);
     
-    // Modal states
     const [isQuizEditorOpen, setQuizEditorOpen] = useState(false);
     const [isAccessControlOpen, setAccessControlOpen] = useState(false);
     const [isResultsDashboardOpen, setResultsDashboardOpen] = useState(false);
@@ -286,17 +327,15 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     const TABS_ADMIN = [ { id: 'criar-conta', label: 'Criar Contas' } ];
     const TABS = profile?.role === 'admin' ? [...TABS_BASE, ...TABS_ADMIN] : TABS_BASE;
 
-    const fetchQuizzes = useCallback(async () => {
+    const loadInitialData = useCallback(async () => {
         setLoadingQuizzes(true);
-        const { data, error } = await supabase.from('provas').select('*').order('created_at', { ascending: false });
-        if (error) console.error("Error fetching quizzes:", error);
-        else setQuizzes(data as Prova[] || []);
+        await fetchExamsAndResults();
         setLoadingQuizzes(false);
-    }, []);
+    }, [fetchExamsAndResults]);
 
     useEffect(() => {
-        fetchQuizzes();
-    }, [fetchQuizzes]);
+        loadInitialData();
+    }, [loadInitialData]);
 
     const handleOpenModal = (modal: 'editor' | 'access' | 'results', quiz: Prova | null) => {
         setSelectedQuiz(quiz);
@@ -312,7 +351,6 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         setConfirmModalOpen(false);
         setSelectedQuiz(null);
         setQuizToDelete(null);
-        fetchQuizzes();
     };
 
     const confirmDeleteQuiz = (quizId: number) => {
@@ -332,7 +370,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     return (
         <>
             <div className="fixed inset-0 bg-slate-900/60 z-40 flex justify-end modal-backdrop">
-                <div id="admin-area-content" className="w-full max-w-5xl h-full bg-slate-50 shadow-2xl transform translate-x-full" ref={(node) => node?.classList.remove('translate-x-full')}>
+                <div id="admin-area-content" className="w-full max-w-5xl h-full bg-slate-50 shadow-2xl transform translate-x-full" ref={(node) => {if(node) node.classList.remove('translate-x-full')}}>
                     <div className="flex flex-col h-full">
                         <header className="p-4 sm:p-6 border-b border-slate-200 flex items-center justify-between bg-white">
                             <div>
@@ -361,8 +399,8 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                     </div>
                                     {loadingQuizzes ? <div className="flex justify-center p-8"><Spinner /></div> : (
                                         <div className="space-y-3">
-                                            {quizzes.length === 0 ? <p className="text-center text-slate-500 py-8">Nenhuma avaliação cadastrada.</p> :
-                                                quizzes.map(quiz => (
+                                            {exams.length === 0 ? <p className="text-center text-slate-500 py-8">Nenhuma avaliação cadastrada.</p> :
+                                                [...exams].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(quiz => (
                                                     <div key={quiz.id} className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-4">
                                                         <div>
                                                             <p className="font-bold text-slate-800">{quiz.title}</p>
@@ -624,7 +662,6 @@ const RichTextToolbar: React.FC = () => {
         </div>
     );
 };
-
 
 const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; onClose: () => void }> = ({ quizId, question, onClose }) => {
     const [title, setTitle] = useState(question?.title || '');

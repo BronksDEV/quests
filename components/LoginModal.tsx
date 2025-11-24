@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
-import { useAuth } from '../App';
+import { useAppStore } from '../stores/useAppStore';
 import { Spinner, CloseIcon } from './common';
 
 interface LoginModalProps {
@@ -13,7 +12,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const { refreshProfile } = useAuth();
+    const fetchProfile = useAppStore((state) => state.fetchProfile);
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -25,7 +24,7 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose }) => {
         if (signInError) {
             setError('Email ou senha inválidos.');
         } else {
-            await refreshProfile();
+            await fetchProfile();
             onClose();
         }
         setLoading(false);

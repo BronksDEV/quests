@@ -1,51 +1,25 @@
+import type { AuthSession } from '@supabase/supabase-js';
 
 export interface Profile {
   id: string;
-  role: 'aluno' | 'professor' | 'admin';
-  email: string;
+  email?: string;
   nome_completo?: string;
   matricula?: string;
   turma?: string;
-  presenca_liberada_ate?: string; // Legacy, can be removed later
-  permitido_individual?: boolean; // Legacy, can be removed later
+  role: 'aluno' | 'professor' | 'admin';
   is_blocked?: boolean;
 }
 
-export interface Exam {
-  id: number;
-  area: string;
-  id_area: string;
-  serie: string;
-  arquivo_url: string;
-  data_inicio: string;
-  data_fim: string;
-  title: string;
-  status: 'fechada' | 'aberta_para_todos';
-}
-
-export interface ExamForCard extends Omit<Exam, 'serie_id_string' | 'arquivo_url' | 'data_inicio' | 'data_fim' | 'id_area'> {
-  series: string;
-  startDate: string;
-  endDate: string;
-  areaName: string;
-}
-
-export interface ExamArea {
-    area: string;
-    id: string;
-    exams: ExamForCard[];
-}
-
 export interface Alternativa {
-  id?: number;
-  question_id?: number;
+  id: number;
+  question_id: number;
   text: string;
   is_correct: boolean;
   letter: string;
 }
 
 export interface Questao {
-  id?: number;
+  id: number;
   prova_id: number;
   title: string;
   disciplina?: string;
@@ -56,42 +30,64 @@ export interface Questao {
   alternativas?: Alternativa[];
 }
 
-// Tipos seguros para a visão do aluno (sem a resposta correta)
-export interface StudentAlternativa {
-    id: number;
-    text: string;
-    letter: string;
-}
-
-export interface StudentQuestao extends Omit<Questao, 'alternativas'> {
-    alternativas?: StudentAlternativa[];
-}
-
 export interface Prova {
-    id: number;
-    title: string;
-    serie_id_string: string;
-    serie: string;
-    area: string;
-    questoes?: Questao[];
-    created_at: string;
-    status: 'fechada' | 'aberta_para_todos';
-    data_inicio: string;
-    data_fim: string;
+  id: number;
+  title: string;
+  serie_id_string: string;
+  serie: string;
+  area: string;
+  data_inicio: string;
+  data_fim: string;
+  created_at: string;
+  status: 'fechada' | 'aberta_para_todos';
+  questoes?: Questao[];
+  provas_acesso_individual?: { student_id: string }[];
 }
 
-// Tipos para o Dashboard de Resultados
-export type DisciplineScore = {
-    correct: number;
-    total: number;
+export interface Resultado {
+  id: number;
+  prova_id: number;
+  student_id: string;
+  respostas: { [key: number]: string };
+  created_at: string;
+}
+
+// AQUI ESTÁ A CORREÇÃO PRINCIPAL
+// A interface ExamArea agora espera o tipo Prova, que é mais completo e correto.
+export interface ExamArea {
+    id: string;
+    area: string;
+    exams: Prova[]; // Alterado de ExamForCard[] para Prova[]
+}
+  
+// Este tipo se tornou redundante, mas podemos mantê-lo caso seja usado em outro lugar.
+export interface ExamForCard {
+    id: number;
+    area: string;
+    serie: string;
+    series: string;
+    startDate: string;
+    endDate: string;
+    areaName: string;
+    title: string;
+    status: 'fechada' | 'aberta_para_todos';
+}
+
+export type StudentQuestao = Omit<Questao, 'alternativas'> & {
+    alternativas: Omit<Alternativa, 'is_correct'>[];
 };
 
+export interface DisciplineScore {
+    correct: number;
+    total: number;
+}
+  
 export interface StudentResultDetail {
     student_id: string;
     nome_completo: string;
     matricula: string;
     turma: string;
-    total_questions: number;
     total_correct: number;
+    total_questions: number;
     score_by_discipline: Record<string, DisciplineScore>;
 }

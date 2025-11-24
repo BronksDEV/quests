@@ -1,16 +1,12 @@
 import React, { useState } from 'react';
 import { supabase } from '../services/supabase';
-import { useAppStore } from '../stores/useAppStore';
-import { Spinner, CloseIcon } from './common';
+import { Spinner } from './common';
+import { useAppStore, AppState } from '../stores/useAppStore';
 
-interface ProfileModalProps {
-    onClose: () => void;
-}
-
-const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
+const CompleteProfileView: React.FC = () => {
     const profile = useAppStore((state) => state.profile);
-    const fetchProfile = useAppStore((state) => state.fetchProfile);
-
+    const fetchProfile = useAppStore((state: AppState) => state.fetchProfile);
+    
     const [nome, setNome] = useState(profile?.nome_completo || '');
     const [matricula, setMatricula] = useState(profile?.matricula || '');
     const [turma, setTurma] = useState(profile?.turma || '');
@@ -23,36 +19,38 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
             setError("Todos os campos são obrigatórios.");
             return;
         }
-        
-        if (!profile) {
-            setError("Usuário não encontrado. Por favor, recarregue a página.");
-            return;
-        }
-
         setLoading(true);
         setError('');
 
+        if (!profile?.id) {
+            setError("ID do usuário não encontrado. Por favor, faça login novamente.");
+            setLoading(false);
+            return;
+        }
+
         const { error: updateError } = await supabase
             .from('profiles')
-            .update({ nome_completo: nome.toUpperCase().trim(), matricula: matricula.trim(), turma })
+            .update({ 
+                nome_completo: nome.trim().toUpperCase(), 
+                matricula: matricula.trim(), 
+                turma 
+            })
             .eq('id', profile.id);
         
         if (updateError) {
             setError("Erro ao salvar perfil: " + updateError.message);
         } else {
             await fetchProfile();
-            onClose();
         }
         setLoading(false);
     };
     
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop">
-            <div className="bg-white relative rounded-xl shadow-2xl p-8 w-full max-w-md modal-content-anim border border-slate-200">
-                <button onClick={onClose} className="absolute top-3 right-3 p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon /></button>
+        <div className="w-full h-screen flex items-center justify-center bg-slate-50">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md modal-content-anim border border-slate-200">
                 <div className="text-center">
-                    <h3 className="text-xl font-bold text-slate-800">Complete seu Cadastro</h3>
-                    <p className="text-sm text-slate-500 mt-2">Preencha suas informações para realizar as avaliações. Você só precisará fazer isso uma vez.</p>
+                    <h3 className="text-xl font-bold text-slate-800">Finalize seu Cadastro</h3>
+                    <p className="text-sm text-slate-500 mt-2">Preencha suas informações para poder realizar as avaliações. Você só precisará fazer isso uma vez.</p>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-4 mt-8">
                     <input type="text" value={nome} onChange={e => setNome(e.target.value)} className="w-full rounded-lg border-slate-300 py-3 px-4 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="Nome Completo (em caixa alta)" required />
@@ -66,7 +64,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
                         <option value="3B">3ª Série - Turma B</option>
                     </select>
                     <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2 disabled:bg-blue-400 shadow-md hover:shadow-lg">
-                        {loading ? <Spinner size="20px" color="#fff" /> : <span>Salvar Informações</span>}
+                        {loading ? <Spinner size="20px" color="#fff" /> : <span>Salvar e Acessar Portal</span>}
                     </button>
                 </form>
                 <p className="text-xs text-red-500 mt-3 h-4 text-center">{error}</p>
@@ -75,4 +73,4 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ onClose }) => {
     );
 };
 
-export default ProfileModal;
+export default CompleteProfileView;
