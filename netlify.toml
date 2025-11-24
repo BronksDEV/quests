@@ -3,7 +3,9 @@
   publish = "dist"
 
 [build.environment]
-  NODE_VERSION = "18"
+  # CORRIGIDO: A versão do Node.js foi atualizada de "18" para "20"
+  # para atender aos requisitos do Vite e seus plugins.
+  NODE_VERSION = "20"
 
 [[redirects]]
   from = "/*"
