@@ -38,7 +38,6 @@ const StudentView: React.FC<{ onStartExam: (examId: number) => void }> = ({ onSt
 
         const groupedByArea = examsForUser.reduce<{ [key: string]: ExamArea }>((acc, exam: Prova) => {
             if (!acc[exam.area]) {
-                // Agora esta linha está correta, pois a interface ExamArea espera um array de Prova.
                 acc[exam.area] = { area: exam.area, id: exam.area, exams: [] };
             }
             acc[exam.area].exams.push(exam); 
@@ -91,7 +90,6 @@ const StudentView: React.FC<{ onStartExam: (examId: number) => void }> = ({ onSt
                                     <h3 className="text-xl font-bold text-slate-800 pb-3 mb-6 border-b border-slate-200">{areaGroup.area}</h3>
                                 )}
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-                                    {/* Com a correção do tipo ExamArea, o .map agora funciona perfeitamente */}
                                     {areaGroup.exams.map((exam: Prova, examIndex: number) => {
                                         const status = getExamStatus(exam, profile as Profile, submittedExamIds);
                                         return (

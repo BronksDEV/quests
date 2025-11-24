@@ -3,7 +3,7 @@ import type { Prova } from '../types';
 import { ExamStatus } from '../utils/examStatus';
 
 interface ExamCardProps {
-    exam: Prova; // CORREÇÃO: Agora espera o tipo Prova completo
+    exam: Prova; 
     status: ExamStatus;
     onClick: (exam: Prova) => void;
 }
@@ -63,17 +63,14 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, status, onClick }) => {
             <div className="flex flex-col items-center">
                 <div className="w-20 h-20 rounded-full bg-white/80 border-2 border-white flex items-center justify-center mb-3 shadow-inner">
                     <span className="text-3xl font-bold text-blue-600">
-                        {/* CORREÇÃO: Usa a propriedade 'serie' do tipo Prova */}
                         {exam.serie.charAt(0)}ª
                     </span>
                 </div>
-                {/* CORREÇÃO: Usa as propriedades 'title' e 'area' do tipo Prova */}
                 <h2 className="text-xl font-bold text-slate-800">{exam.title}</h2>
                 <p className="text-sm text-slate-600 mt-1">{exam.area}</p>
             </div>
             
             <div className="z-10">
-                {/* CORREÇÃO: Passa 'data_inicio' em vez de 'startDate' */}
                 <StatusDisplay status={status} startDate={exam.data_inicio} />
             </div>
         </div>

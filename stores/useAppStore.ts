@@ -87,7 +87,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     initializeRealtime: () => {
-        //console.log("Inicializando listener Realtime para TODAS as mudanças...");
+        //console.log("Inicializando lts Realtime para mudanças");
         const channel = supabase
             .channel('app-global-changes')
             .on('postgres_changes', { event: '*', schema: 'public' },
@@ -100,7 +100,7 @@ export const useAppStore = create<AppState>((set, get) => ({
             )
             .subscribe((status) => {
                  if (status === 'SUBSCRIBED') {
-                    //console.log('Conectado ao canal de realtime global!');
+                    //console.log('Conectado ao canal de realtime!');
                  }
             });
 

@@ -7,7 +7,7 @@ import ActionConfirmModal from './ActionConfirmModal';
 import ResultsDashboardModal from './ResultsDashboardModal';
 
 
-// --- Sub-componentes do Admin Panel ---
+//  Sub componentes do Painel de Admin 
 
 const CreateUserPanel: React.FC = () => {
     const [email, setEmail] = useState('');
@@ -203,10 +203,10 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
     };
 
 const toggleIndividualAccess = useCallback(async (studentId: string, shouldGrant: boolean) => {
-    // 1. Captura o estado original para poder reverter em caso de erro.
+    // 1. Pega o estado original para rollback em caso de erro.
     const originalAccessList = new Set(accessList);
 
-    // 2. ATUALIZAÇÃO OTIMISTA: Muda a UI imediatamente para dar feedback instantâneo.
+    // 2. Muda a UI imediatamente no frontend.
     setAccessList(prev => {
         const next = new Set(prev);
         if (shouldGrant) {
@@ -217,7 +217,7 @@ const toggleIndividualAccess = useCallback(async (studentId: string, shouldGrant
         return next;
     });
 
-    // 3. Executa a ação no banco de dados com a função RPC segura.
+    // 3. Executa a ação no banco de dados com a função RPC (refatorar isso depois).
     const { error } = await supabase.rpc('manage_individual_access', {
         p_prova_id: quiz.id,
         p_student_id: studentId,
@@ -677,7 +677,7 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
     const image2InputRef = useRef<HTMLInputElement>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-    // Helper to generate a cross-browser compatible UUID.
+    // Helper compatible UUID do aluno.
     const generateUUID = () => {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
             const r = (Math.random() * 16) | 0;

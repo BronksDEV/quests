@@ -52,15 +52,14 @@ export interface Resultado {
   created_at: string;
 }
 
-// AQUI ESTÁ A CORREÇÃO PRINCIPAL
-// A interface ExamArea agora espera o tipo Prova, que é mais completo e correto.
+
 export interface ExamArea {
     id: string;
     area: string;
-    exams: Prova[]; // Alterado de ExamForCard[] para Prova[]
+    exams: Prova[]; 
 }
   
-// Este tipo se tornou redundante, mas podemos mantê-lo caso seja usado em outro lugar.
+
 export interface ExamForCard {
     id: number;
     area: string;

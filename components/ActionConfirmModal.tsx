@@ -47,7 +47,7 @@ const ActionConfirmModal: React.FC<ActionConfirmModalProps> = ({
     
     const handleConfirm = () => {
         onConfirm?.();
-        onCancel?.(); // Close modal after confirm
+        onCancel?.(); 
     };
 
     return (

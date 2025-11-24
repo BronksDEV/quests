@@ -10,7 +10,6 @@
       "DOM.Iterable"
     ],
     "skipLibCheck": true,
-    // CORREÇÃO AQUI: Adicione "vite/client" à lista
     "types": [
       "node",
       "vite/client" 
@@ -35,7 +34,6 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    // Adicione esta linha para garantir que o arquivo de tipos seja lido
     "vite-env.d.ts"
   ],
   "exclude": [
