@@ -12,10 +12,10 @@ dist
 dist-ssr
 *.local
 
-services/supabase.ts
-.env
+# supabase
 .env.local
-.env.*
+.env.
+.env
 
 # Editor directories and files
 .vscode/*
