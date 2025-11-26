@@ -11,8 +11,32 @@ import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
 // ============================================================================
-// 1. UTILITÁRIOS E COMPONENTES VISUAIS (Base)
+// 1. CONFIGURAÇÕES E UTILITÁRIOS
 // ============================================================================
+
+// CORREÇÃO: Sistema de prioridade de disciplinas. Menor número = maior prioridade (aparece primeiro).
+const DISCIPLINE_PRIORITY: Record<string, number> = {
+    'Matemática': 1,
+    'Física': 2,
+    'Química': 3,
+    'Biologia': 4,
+    'História': 5,
+    'Geografia': 6,
+    'Português': 7,
+    'Literatura': 8,
+    'Inglês': 9,
+    'Filosofia': 10,
+    'Sociologia': 11,
+    'Geral': 999
+};
+
+const formatToLocalDatetime = (isoString: string | undefined) => {
+    if (!isoString) return '';
+    const date = new Date(isoString);
+    const offset = date.getTimezoneOffset();
+    const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+    return adjustedDate.toISOString().slice(0, 16);
+};
 
 const ToolbarButton: React.FC<{ onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; children: React.ReactNode; title: string; }> = ({ onClick, children, title }) => (
     <button
@@ -159,9 +183,6 @@ const MathPaletteModal: React.FC<{ onClose: () => void; onInsert: (latex: string
                         </button>
                     ))}
                 </div>
-                <div className="p-3 bg-slate-100 border-t text-xs text-slate-500 text-center">
-                    Dica: Clique para inserir. Substitua x, y, a, b pelos valores desejados.
-                </div>
             </div>
         </div>
     );
@@ -211,6 +232,8 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
                         <option value="Inter, sans-serif">Padrão</option>
                         <option value="Arial, sans-serif">Arial</option>
                         <option value="Georgia, serif">Georgia</option>
+                        <option value="Times New Roman, serif">Times New Roman</option>
+                        <option value="Verdana, sans-serif">Verdana</option>
                     </select>
                 </div>
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
@@ -220,8 +243,8 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
                 <ToolbarButton onClick={() => applyCommand('insertUnorderedList')} title="Lista (•)">•</ToolbarButton>
                 <ToolbarButton onClick={() => applyCommand('insertOrderedList')} title="Lista (1.)">1.</ToolbarButton>
-<div className="w-px h-5 bg-slate-300 mx-1"></div>
                 
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
                 <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Alinhar à Esquerda">
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </ToolbarButton>
@@ -233,9 +256,13 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
                 </ToolbarButton>
                 
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                
                 <ToolbarButton onClick={handleLink} title="Link">🔗</ToolbarButton>
                 <ToolbarButton onClick={handleImage} title="Imagem">🖼️</ToolbarButton>
                 <ToolbarButton onClick={() => setShowMathModal(true)} title="Fórmula Matemática"><span className="font-serif font-bold text-lg leading-none">∑</span></ToolbarButton>
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <ToolbarButton onClick={() => applyCommand('undo')} title="Desfazer"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h4m5 4-5-4 5 4zm-5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                <ToolbarButton onClick={() => applyCommand('redo')} title="Refazer"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18h4a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4h-4m-5 4 5-4-5 4zm5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
             </div>
             {showMathModal && <MathPaletteModal onClose={() => setShowMathModal(false)} onInsert={handleInsertMath} />}
         </>
@@ -243,7 +270,7 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
 };
 
 // ============================================================================
-// 3. MODAIS E PAINÉIS AUXILIARES (Definidos ANTES do AdminPanel)
+// 3. MODAIS E PAINÉIS AUXILIARES
 // ============================================================================
 
 const CreateUserPanel: React.FC = () => {
@@ -280,20 +307,7 @@ const CreateUserPanel: React.FC = () => {
                 throw new Error(responseData.error || responseData.message || 'Falha ao criar usuário na autenticação.');
             }
 
-            const newUserId = responseData.user?.id;
-            if (!newUserId) {
-                throw new Error("A função de criação não retornou o ID do novo usuário.");
-            }
-
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert({ id: newUserId, email: email, role: role });
-
-            if (profileError) {
-                console.error("Usuário Auth criado, mas falha ao criar o perfil no banco:", profileError);
-                throw new Error(`Usuário criado, mas falha ao salvar o perfil: ${profileError.message}`);
-            }
-    
+            // Edge Function e Trigger cuidam do resto
             setFeedback({ message: 'Usuário e perfil criados com sucesso!', type: 'success' });
             setEmail('');
             setPassword('');
@@ -337,7 +351,6 @@ const CreateUserPanel: React.FC = () => {
 
 const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAccess, onUnblock }: { student: Profile; hasIndividualAccess: boolean; onToggleAccess: (studentId: string, grant: boolean) => void; onUnblock: (studentId: string) => void; }) => {
     const isBlocked = student.is_blocked;
-                                    
     let statusText = 'Acesso Padrão';
     let statusColor = 'text-slate-500';
     if(isBlocked) { statusText = 'Bloqueado'; statusColor = 'text-red-600 font-bold'; }
@@ -368,13 +381,18 @@ const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAcc
 const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ quiz, onClose }) => {
     const allStudents = useAppStore((state) => state.allStudents);
     const fetchAllStudents = useAppStore((state) => state.fetchAllStudents);
-
     const [accessList, setAccessList] = useState<Set<string>>(new Set());
     const [filter, setFilter] = useState('');
     const [debouncedFilter, setDebouncedFilter] = useState('');
     const [loading, setLoading] = useState(true);
     const [quizStatus, setQuizStatus] = useState(quiz.status);
     const [savingStatus, setSavingStatus] = useState(false);
+
+    // Scroll Lock
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
 
     const quizSeriesPrefix = quiz.serie.charAt(0);
 
@@ -394,21 +412,10 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
 
         const channel = supabase
             .channel(`access-control-modal-realtime-${quiz.id}`)
-            .on('postgres_changes', { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'provas_acesso_individual',
-                    filter: `prova_id=eq.${quiz.id}`
-                }, 
-                () => {
-                    fetchAccessList();
-                }
-            )
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'provas_acesso_individual', filter: `prova_id=eq.${quiz.id}` }, () => { fetchAccessList(); })
             .subscribe();
 
-        return () => {
-            supabase.removeChannel(channel);
-        };
+        return () => { supabase.removeChannel(channel); };
     }, [fetchAllStudents, fetchAccessList, quiz.id]);
     
     useEffect(() => {
@@ -420,21 +427,15 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
         const relevantStudents = allStudents.filter(s => s.turma?.startsWith(quizSeriesPrefix));
         if (!debouncedFilter) return relevantStudents;
         const lowerFilter = debouncedFilter.toLowerCase();
-        return relevantStudents.filter(s =>
-            s.nome_completo?.toLowerCase().includes(lowerFilter) ||
-            s.matricula?.includes(lowerFilter)
-        );
+        return relevantStudents.filter(s => s.nome_completo?.toLowerCase().includes(lowerFilter) || s.matricula?.includes(lowerFilter));
     }, [debouncedFilter, allStudents, quizSeriesPrefix]);
     
     const toggleGlobalStatus = async () => {
         const newStatus = quizStatus === 'aberta_para_todos' ? 'fechada' : 'aberta_para_todos';
         setSavingStatus(true);
         const { error } = await supabase.from('provas').update({ status: newStatus }).eq('id', quiz.id);
-        if (error) {
-            alert("Erro ao atualizar status da prova: " + error.message);
-        } else {
-            setQuizStatus(newStatus);
-        }
+        if (error) alert("Erro: " + error.message);
+        else setQuizStatus(newStatus);
         setSavingStatus(false);
     };
 
@@ -442,36 +443,21 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
         const originalAccessList = new Set(accessList);
         setAccessList(prev => {
             const next = new Set(prev);
-            if (shouldGrant) next.add(studentId);
-            else next.delete(studentId);
+            if (shouldGrant) next.add(studentId); else next.delete(studentId);
             return next;
         });
-
-        const { error } = await supabase.rpc('manage_individual_access', {
-            p_prova_id: quiz.id,
-            p_student_id: studentId,
-            p_grant: shouldGrant
-        });
-
+        const { error } = await supabase.rpc('manage_individual_access', { p_prova_id: quiz.id, p_student_id: studentId, p_grant: shouldGrant });
         if (error) {
-            alert("Erro ao gerenciar acesso individual: " + error.message);
+            alert("Erro: " + error.message);
             setAccessList(originalAccessList);
         }
     }, [quiz.id, accessList]);
     
     const unblockStudent = useCallback(async (studentId: string) => {
         setLoading(true);
-        const { error } = await supabase
-            .from('profiles')
-            .update({ is_blocked: false })
-            .eq('id', studentId);
-    
-        if (error) {
-            alert("Erro ao desbloquear aluno: " + error.message);
-            setLoading(false);
-            return;
-        }
-        await fetchAllStudents();
+        const { error } = await supabase.from('profiles').update({ is_blocked: false }).eq('id', studentId);
+        if (error) alert("Erro: " + error.message);
+        else await fetchAllStudents();
         setAccessList(prev => {
             const next = new Set(prev);
             next.delete(studentId);
@@ -488,12 +474,9 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
                         <h2 className="text-xl font-bold">Controle de Acesso: {quiz.title}</h2>
                         <p className="text-sm text-slate-500">{quiz.serie} - {quiz.area}</p>
                     </div>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon /></button>
+                    <button onClick={onClose}><CloseIcon /></button>
                 </header>
                 <div className="p-6 flex-grow overflow-y-auto bg-slate-50 space-y-6">
-                    <p className="text-sm text-slate-600 bg-slate-100 p-3 rounded-md border border-slate-200">
-                        Use esta tela para controlar quem pode acessar esta avaliação. Você pode abrir ou fechar a prova para todos, ou conceder permissões individuais para casos especiais como segunda chamada.
-                    </p>
                     <div className="bg-white p-4 rounded-lg border shadow-sm">
                         <h3 className="font-semibold mb-2">Status Global da Avaliação</h3>
                         <div className="flex items-center justify-between">
@@ -508,7 +491,6 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
                     <div className="bg-white p-4 rounded-lg border shadow-sm">
                         <h3 className="font-semibold mb-2">Acesso Individual dos Alunos</h3>
                         <input type="text" value={filter} onChange={e => setFilter(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="🔎︎ Buscar aluno..." />
-                        
                         <div className="mt-4 space-y-2 max-h-80 overflow-y-auto pr-2">
                              {loading ? <div className="flex justify-center p-8"><Spinner /></div> : 
                                 filteredStudents.length === 0 ? <p className="text-center text-slate-500 py-4">Nenhum aluno encontrado.</p> :
@@ -530,10 +512,117 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
     );
 };
 
+const DisciplineReorderModal: React.FC<{
+    disciplines: string[];
+    onClose: () => void;
+    onConfirm: (newOrder: string[]) => void;
+}> = ({ disciplines, onClose, onConfirm }) => {
+    const initialOrder = useMemo(() => 
+        [...disciplines].sort((a, b) => {
+            const priorityA = DISCIPLINE_PRIORITY[a] || 999;
+            const priorityB = DISCIPLINE_PRIORITY[b] || 999;
+            return priorityA - priorityB;
+        }),
+    [disciplines]);
+
+    const [orderedDisciplines, setOrderedDisciplines] = useState<string[]>(initialOrder);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        if (draggedIndex === null || draggedIndex === index) return;
+
+        const newOrder = [...orderedDisciplines];
+        const draggedItem = newOrder[draggedIndex];
+        newOrder.splice(draggedIndex, 1);
+        newOrder.splice(index, 0, draggedItem);
+
+        setOrderedDisciplines(newOrder);
+        setDraggedIndex(index);
+    };
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 modal-backdrop">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 modal-content-anim">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold">Reorganizar Disciplinas</h3>
+                    <button onClick={onClose}><CloseIcon /></button>
+                </div>
+                <p className="text-sm text-slate-600 mb-4">Arraste as disciplinas para definir a ordem das questões na prova:</p>
+                <div className="space-y-2 mb-6">
+                    {orderedDisciplines.map((disc, index) => (
+                        <div
+                            key={disc}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragOver={(e) => handleDragOver(e, index)}
+                            className={`p-4 bg-slate-50 border-2 rounded-lg cursor-move transition-all ${
+                                draggedIndex === index ? 'border-blue-500 shadow-lg scale-105' : 'border-slate-200 hover:border-blue-300'
+                            }`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <span className="text-slate-400 text-xl">☰</span>
+                                <div className="flex-grow"><span className="font-semibold text-slate-800">{disc}</span><p className="text-xs text-slate-500">Posição {index + 1}</p></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+                <div className="flex gap-3">
+                    <button onClick={onClose} className="flex-1 bg-slate-200 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-300">Cancelar</button>
+                    <button onClick={() => onConfirm(orderedDisciplines)} className="flex-1 bg-blue-600 text-white font-semibold py-2 rounded-lg hover:bg-blue-700">Aplicar Ordem</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+const DuplicateQuizModal: React.FC<{
+    quiz: Prova;
+    onClose: () => void;
+    onConfirm: (newSerie: string) => void;
+}> = ({ quiz, onClose, onConfirm }) => {
+    const [newSerie, setNewSerie] = useState(quiz.serie);
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 modal-backdrop">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 modal-content-anim">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-xl font-bold text-slate-800">Duplicar Avaliação</h3>
+                    <button onClick={onClose}><CloseIcon/></button>
+                </div>
+                <div className="space-y-4">
+                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                        <p className="text-sm text-slate-600 mb-1">Prova original:</p>
+                        <p className="font-semibold text-slate-800">{quiz.title}</p>
+                        <div className="flex gap-3 mt-2 text-xs text-slate-500"><span>Origem: <strong>{quiz.serie}</strong></span><span>Questões: <strong>{quiz.questoes?.length || 0}</strong></span></div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium mb-1 text-slate-700">Para qual turma você deseja copiar?</label>
+                        <select value={newSerie} onChange={e => setNewSerie(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm focus:border-purple-500 focus:ring-purple-200">
+                            <option value="1A">1ª Série - A</option><option value="2A">2ª Série - A</option><option value="2B">2ª Série - B</option><option value="3A">3ª Série - A</option><option value="3B">3ª Série - B</option>
+                        </select>
+                    </div>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2"><span className="text-amber-500 mt-0.5">⚠️</span><p className="text-xs text-amber-800">A nova prova será criada com status <strong>Fechada</strong> para você revisar antes de liberar.</p></div>
+                </div>
+                <div className="flex gap-3 mt-6 pt-4 border-t">
+                    <button onClick={onClose} className="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-50 transition">Cancelar</button>
+                    <button onClick={() => onConfirm(newSerie)} className="flex-1 bg-purple-600 text-white font-semibold py-2 rounded-lg hover:bg-purple-700 shadow-md transition">Duplicar Prova</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; questionNumber: number; onClose: () => void }> = ({ quizId, question, questionNumber, onClose }) => {
     const [title, setTitle] = useState(question?.title || `Item ${questionNumber}`);
     const [disciplina, setDisciplina] = useState(question?.disciplina || '');
     const [longText, setLongText] = useState(question?.long_text || '');
+    const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const lastSavedContentRef = useRef<string>(question?.long_text || '');
+
     const [imageUrl1, setImageUrl1] = useState<string | null>(question?.image_url_1 || null);
     const [imageUrl2, setImageUrl2] = useState<string | null>(question?.image_url_2 || null);
     const [alternatives, setAlternatives] = useState<Omit<Alternativa, 'id' | 'question_id'>[]>([]);
@@ -543,6 +632,23 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
     const image1InputRef = useRef<HTMLInputElement>(null);
     const image2InputRef = useRef<HTMLInputElement>(null);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
+
+    const handleContentChange = useCallback((html: string) => {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        if (html !== lastSavedContentRef.current) {
+            saveTimerRef.current = setTimeout(() => {
+                setLongText(html);
+                lastSavedContentRef.current = html;
+            }, 300);
+        }
+    }, []);
+
+    useEffect(() => { return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); }; }, []);
 
     const generateUUID = () => {
         return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -560,11 +666,16 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                 const fetchedAlts = question.alternativas?.sort((a, b) => a.letter.localeCompare(b.letter)) || [];
                 setAlternatives(fetchedAlts.map(alt => ({ text: alt.text, is_correct: alt.is_correct, letter: alt.letter })));
             }
-            
             const initialLongText = question?.long_text || '';
             setLongText(initialLongText);
+            
             if (longTextRef.current) {
-                longTextRef.current.innerHTML = initialLongText;
+                setTimeout(() => {
+                    if (longTextRef.current) {
+                        longTextRef.current.innerHTML = initialLongText;
+                        lastSavedContentRef.current = initialLongText;
+                    }
+                }, 0);
             }
             
             setLoading(false);
@@ -587,38 +698,74 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
     };
 
     const handleSave = async () => {
-        const finalTitle = `Item ${questionNumber}`;
+        if (saving) return;
+
         const validAlternatives = alternatives.filter(alt => alt.text.trim() !== '');
-        if (validAlternatives.length < 2) { alert("A questão deve ter pelo menos duas alternativas preenchidas."); return; }
-        if (!validAlternatives.some(alt => alt.is_correct)) { alert("Uma alternativa deve ser marcada como correta."); return; }
+        if (validAlternatives.length < 2) { alert("Mínimo 2 alternativas."); return; }
+        if (!validAlternatives.some(alt => alt.is_correct)) { alert("Selecione a correta."); return; }
         
         setSaving(true);
-        const questionData: Omit<Questao, 'id' | 'alternativas'> = {
-            prova_id: quizId,
-            title: finalTitle,
-            disciplina: disciplina || undefined,
-            long_text: longTextRef.current?.innerHTML || '',
-            image_url_1: imageUrl1 || undefined,
-            image_url_2: imageUrl2 || undefined,
-            question_order: questionNumber
-        };
+        const currentLongText = longTextRef.current?.innerHTML || '';
 
         try {
             let savedQuestionId = question?.id;
+            
             if (question?.id) {
+                // ATUALIZAÇÃO DA QUESTÃO
+                const questionData: Omit<Questao, 'id' | 'alternativas'> = {
+                    prova_id: quizId,
+                    title: `Item ${questionNumber}`,
+                    disciplina: disciplina || undefined,
+                    long_text: currentLongText,
+                    image_url_1: imageUrl1 || undefined,
+                    image_url_2: imageUrl2 || undefined,
+                    question_order: questionNumber
+                };
+
                 const { error } = await supabase.from('questoes').update(questionData).eq('id', question.id);
                 if (error) throw error;
             } else {
+                // CRIAÇÃO: Buscar último question_order para evitar colisões
+                const { data: maxOrderData } = await supabase
+                    .from('questoes')
+                    .select('question_order')
+                    .eq('prova_id', quizId)
+                    .order('question_order', { ascending: false })
+                    .limit(1)
+                    .maybeSingle();
+
+                const nextOrder = maxOrderData?.question_order 
+                    ? maxOrderData.question_order + 1 
+                    : 1;
+
+                const questionData = {
+                    prova_id: quizId,
+                    title: `Item ${nextOrder}`,
+                    disciplina: disciplina || undefined,
+                    long_text: currentLongText,
+                    image_url_1: imageUrl1 || undefined,
+                    image_url_2: imageUrl2 || undefined,
+                    question_order: nextOrder
+                };
+
                 const { data, error } = await supabase.from('questoes').insert(questionData).select('id').single();
-                if (error) throw error;
+                if (error) {
+                    // Tratamento específico para colisão de unique constraint (erro 23505)
+                    if(error.code === '23505') {
+                        throw new Error("Conflito de edição. Outro professor acabou de criar uma questão. Tente salvar novamente.");
+                    }
+                    throw error;
+                }
                 savedQuestionId = data.id;
             }
 
-            if(!savedQuestionId) throw new Error("Não foi possível obter o ID da questão salva.");
+            if(!savedQuestionId) throw new Error("ID da questão não retornado.");
             await supabase.from('alternativas').delete().eq('question_id', savedQuestionId);
             const alternativesToSave = validAlternatives.map(alt => ({ question_id: savedQuestionId, text: alt.text, is_correct: alt.is_correct, letter: alt.letter }));
             const { error: altError } = await supabase.from('alternativas').insert(alternativesToSave);
             if (altError) throw altError;
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
             onClose();
         } catch (error: any) {
             alert("Erro ao salvar: " + error.message);
@@ -639,7 +786,7 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
             <div className="fixed inset-0 bg-slate-900/60 z-[80] flex items-center justify-center p-4 modal-backdrop">
                 <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col modal-content-anim">
                     <header className="p-4 border-b flex items-center justify-between shrink-0">
-                        <h2 className="text-xl font-bold">{question ? `Editar ${title}` : `Novo ${title}`}</h2>
+                        <h2 className="text-xl font-bold">{question ? `Editar ${title}` : `Novo Item`}</h2>
                         <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon /></button>
                     </header>
                     {loading ? <div className="flex-grow flex items-center justify-center"><Spinner /></div> : (
@@ -652,14 +799,24 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                     </div>
                                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Disciplina</label><input type="text" value={disciplina} onChange={e => setDisciplina(e.target.value)} placeholder="Ex: Física" className="w-full rounded-lg border-slate-300 shadow-sm" /></div>
                                 </div>
-                                <div><label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label><RichTextToolbar editorRef={longTextRef} /><div ref={longTextRef} onInput={(e: FormEvent<HTMLDivElement>) => setLongText(e.currentTarget.innerHTML)} contentEditable="true" data-placeholder="Digite o enunciado aqui..." className="border rounded-b-md p-2 h-32 overflow-y-auto border-slate-300 shadow-sm" /></div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label>
+                                    <RichTextToolbar editorRef={longTextRef} />
+                                    <div 
+                                        ref={longTextRef} 
+                                        onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
+                                        contentEditable="true" 
+                                        data-placeholder="Digite o enunciado aqui..." 
+                                        className="border rounded-b-md p-4 min-h-[300px] max-h-[500px] overflow-y-auto border-slate-300 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    />
+                                </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Imagem 1</label>
                                         <input type="file" ref={image1InputRef} onChange={e => handleImageUpload(e, 1)} accept="image/*" className="hidden" />
                                         <div className="flex items-center gap-2">
                                             <button type="button" onClick={() => image1InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
-                                            <span className="text-sm text-slate-500 truncate">{imageUrl1 ? 'Imagem carregada' : 'Nenhuma imagem'}</span>
+                                            <span className="text-sm text-slate-500 truncate">{imageUrl1 ? 'Carregada' : 'Nenhuma'}</span>
                                         </div>
                                         {imageUrl1 && <button onClick={() => setImageUrl1(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
                                     </div>
@@ -668,7 +825,7 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                         <input type="file" ref={image2InputRef} onChange={e => handleImageUpload(e, 2)} accept="image/*" className="hidden" />
                                         <div className="flex items-center gap-2">
                                             <button type="button" onClick={() => image2InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
-                                            <span className="text-sm text-slate-500 truncate">{imageUrl2 ? 'Imagem carregada' : 'Nenhuma imagem'}</span>
+                                            <span className="text-sm text-slate-500 truncate">{imageUrl2 ? 'Carregada' : 'Nenhuma'}</span>
                                         </div>
                                         {imageUrl2 && <button onClick={() => setImageUrl2(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
                                     </div>
@@ -678,10 +835,10 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                     <div className="space-y-2">{alternatives.map((alt, index) => (<div key={index} className="flex items-center gap-2"><input type="radio" name="correct-option" checked={alt.is_correct} onChange={() => setCorrectOption(index)} className="shrink-0 h-4 w-4 text-blue-600" /><span className="font-semibold text-slate-600">{alt.letter})</span><input type="text" value={alt.text} onChange={e => updateOptionText(index, e.target.value)} placeholder="Texto da alternativa" className="w-full rounded-md border-slate-300 shadow-sm text-sm" /></div>))}</div>
                                 </div>
                             </div>
-                            <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 h-full flex flex-col">
+                            <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 h-full flex flex-col overflow-hidden">
                                 <h3 className="font-bold mb-4 text-center text-slate-600 shrink-0">Pré-visualização</h3>
                                 <div className="flex-grow bg-white rounded-lg shadow-inner overflow-y-auto border border-slate-200 p-4">
-                                    <fieldset className="border rounded p-4 h-full">
+                                    <fieldset className="border rounded p-4 min-h-full">
                                         <legend className="font-semibold px-2">{title || "Título"}</legend>
                                         <RenderHtmlWithMath html={longText} />
                                         { (imageUrl1 || imageUrl2) && 
@@ -723,24 +880,24 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
     const [serieId, setSerieId] = useState(initialQuiz?.serie_id_string || '');
     const [serie, setSerie] = useState(initialQuiz?.serie || '1A');
     const [area, setArea] = useState(initialQuiz?.area || 'Linguagens, Códigos e suas Tecnologias');
-    const [dataInicio, setDataInicio] = useState(initialQuiz?.data_inicio ? initialQuiz.data_inicio.slice(0, 16) : '');
-    const [dataFim, setDataFim] = useState(initialQuiz?.data_fim ? initialQuiz.data_fim.slice(0, 16) : '');
+    const [dataInicio, setDataInicio] = useState(initialQuiz?.data_inicio ? formatToLocalDatetime(initialQuiz.data_inicio) : '');
+    const [dataFim, setDataFim] = useState(initialQuiz?.data_fim ? formatToLocalDatetime(initialQuiz.data_fim) : '');
     
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [isQuestionEditorOpen, setQuestionEditorOpen] = useState(false);
     const [editingQuestion, setEditingQuestion] = useState<Questao | null>(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+    
+    const [isDuplicateModalOpen, setDuplicateModalOpen] = useState(false);
+    const [quizToDuplicate, setQuizToDuplicate] = useState<Prova | null>(null);
+    const [isReorderModalOpen, setReorderModalOpen] = useState(false);
+    const [isReordering, setIsReordering] = useState(false);
 
-    const sortedQuestions = useMemo(() => {
-        if (!quiz?.questoes) return [];
-        return [...quiz.questoes].sort((a, b) => {
-            const orderA = a.question_order ?? 999999;
-            const orderB = b.question_order ?? 999999;
-            if (orderA !== orderB) return orderA - orderB;
-            return a.id - b.id;
-        });
-    }, [quiz?.questoes]);
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, []);
 
     const fetchQuizData = useCallback(async (id: number | null) => {
         if (!id) {
@@ -759,12 +916,145 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
         setLoading(false);
     }, [onClose]);
     
+    // Adicionado Listener em Tempo Real
     useEffect(() => {
+        if (!currentQuizId) return;
+        
         fetchQuizData(currentQuizId);
+
+        const channel = supabase.channel(`quiz-editor-${currentQuizId}`)
+            .on(
+                'postgres_changes', 
+                { event: '*', schema: 'public', table: 'questoes', filter: `prova_id=eq.${currentQuizId}` }, 
+                () => { 
+                    console.log("Detectada alteração nas questões por outro usuário, recarregando...");
+                    fetchQuizData(currentQuizId); 
+                }
+            )
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
     }, [fetchQuizData, currentQuizId]);
 
+    const sortedQuestions = useMemo(() => {
+        if (!quiz?.questoes) return [];
+        return [...quiz.questoes].sort((a, b) => {
+            const orderA = a.question_order ?? 999999;
+            const orderB = b.question_order ?? 999999;
+            if (orderA !== orderB) return orderA - orderB;
+            return a.id - b.id;
+        });
+    }, [quiz?.questoes]);
+
+const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
+        if (!quiz?.questoes || isReordering || !quiz?.id) return;
+        
+        const questions = [...sortedQuestions];
+        const targetIndex = direction === 'up' ? index - 1 : index + 1;
+        
+        if (targetIndex < 0 || targetIndex >= questions.length) return;
+        
+        const currentDisciplina = questions[index].disciplina || 'Geral';
+        const targetDisciplina = questions[targetIndex].disciplina || 'Geral';
+        
+        if (currentDisciplina !== targetDisciplina) return;
+
+        setIsReordering(true);
+        // Troca posições no array local
+        [questions[index], questions[targetIndex]] = [questions[targetIndex], questions[index]];
+
+        // Prepara payload apenas para os itens afetados ou todos para garantir integridade sequencial
+        const updates = questions.map((q, idx) => ({
+            id: q.id,
+            prova_id: quiz.id, 
+            question_order: idx + 1,
+            title: `Item ${idx + 1}`,
+            disciplina: q.disciplina // Adicionado para garantir persistência
+        }));
+        
+        // Optimistic UI update
+        setQuiz(prev => prev ? { ...prev, questoes: questions } : null);
+
+        try {
+            // CORREÇÃO: Usa RPC ao invés de Upsert direto
+            const { error } = await supabase.rpc('reorder_questions', { payload: updates });
+            
+            if (error) throw error;
+            await fetchQuizData(currentQuizId);
+        } catch (error: any) {
+            console.error("Erro ao mover:", error);
+            alert("Erro ao reordenar: " + error.message);
+            fetchQuizData(currentQuizId); 
+        } finally {
+            setIsReordering(false);
+        }
+    };
+
+    const openReorderModal = () => {
+        setReorderModalOpen(true);
+    };
+
+ const handleReorderByDiscipline = async (newDisciplineOrder: string[]) => {
+        if (!quiz?.questoes || !quiz.id) return;
+        setLoading(true);
+        setReorderModalOpen(false);
+
+        try {
+            const grouped = sortedQuestions.reduce((acc, q) => {
+                const disc = q.disciplina || 'Geral';
+                if (!acc[disc]) acc[disc] = [];
+                acc[disc].push(q);
+                return acc;
+            }, {} as Record<string, Questao[]>);
+
+            const reordered: Questao[] = [];
+            newDisciplineOrder.forEach(disc => {
+                if (grouped[disc]) {
+                    reordered.push(...grouped[disc]);
+                }
+            });
+            
+            Object.keys(grouped).forEach(disc => {
+               if(!newDisciplineOrder.includes(disc)) {
+                   reordered.push(...grouped[disc]);
+               }
+            });
+
+            // Recalcula a sequência
+            const updates = reordered.map((q, idx) => ({
+                id: q.id,
+                prova_id: quiz.id,
+                title: `Item ${idx + 1}`,
+                question_order: idx + 1,
+                disciplina: q.disciplina,
+            }));
+
+            setQuiz(prev => prev ? { ...prev, questoes: reordered.map((q, idx) => ({ ...q, title: `Item ${idx + 1}`, question_order: idx + 1 })) } : null);
+
+
+            const { error } = await supabase.rpc('reorder_questions', { payload: updates });
+            
+            if (error) throw error;
+            
+            await fetchQuizData(currentQuizId);
+            
+        } catch (error: any) {
+            alert("Erro: " + error.message);
+            fetchQuizData(currentQuizId);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSaveQuiz = async () => {
-        const quizData = { title, serie_id_string: serieId, serie, area, data_inicio: dataInicio, data_fim: dataFim };
+        const quizData = { 
+            title, 
+            serie_id_string: serieId, 
+            serie, 
+            area, 
+            data_inicio: new Date(dataInicio).toISOString(), 
+            data_fim: new Date(dataFim).toISOString() 
+        };
         setIsSaving(true);
         if (currentQuizId) {
              const { error } = await supabase.from('provas').update(quizData).eq('id', currentQuizId);
@@ -790,6 +1080,86 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
         setQuestionEditorOpen(true);
     };
 
+    const openDuplicateModal = (quiz: Prova) => {
+        setQuizToDuplicate(quiz);
+        setDuplicateModalOpen(true);
+    };
+
+    const handleDuplicateConfirm = async (newSerie: string) => {
+        if (!quizToDuplicate) return;
+        setLoading(true);
+        setDuplicateModalOpen(false);
+
+        try {
+            const { data: fullQuiz, error: fetchError } = await supabase
+                .from('provas')
+                .select('*, questoes(*, alternativas(*))')
+                .eq('id', quizToDuplicate.id)
+                .single();
+            
+            if (fetchError) throw fetchError;
+
+            const newQuizData = {
+                title: fullQuiz.title + ' (Cópia)',
+                serie_id_string: `${fullQuiz.serie_id_string}_COPY_${Date.now()}`,
+                serie: newSerie,
+                area: fullQuiz.area,
+                data_inicio: fullQuiz.data_inicio,
+                data_fim: fullQuiz.data_fim,
+                status: 'fechada'
+            };
+
+            const { data: newQuiz, error: createError } = await supabase
+                .from('provas')
+                .insert(newQuizData)
+                .select()
+                .single();
+
+            if (createError) throw createError;
+
+            if (fullQuiz.questoes && fullQuiz.questoes.length > 0) {
+                for (const q of fullQuiz.questoes) {
+                    const { data: newQ, error: qError } = await supabase
+                        .from('questoes')
+                        .insert({
+                            prova_id: newQuiz.id,
+                            title: q.title,
+                            disciplina: q.disciplina,
+                            long_text: q.long_text,
+                            image_url_1: q.image_url_1,
+                            image_url_2: q.image_url_2,
+                            question_order: q.question_order
+                        })
+                        .select()
+                        .single();
+                    
+                    if (qError) throw qError;
+
+                    if (q.alternativas && q.alternativas.length > 0) {
+                        const newAlts = q.alternativas.map((alt: Alternativa) => ({
+                            question_id: newQ.id,
+                            text: alt.text,
+                            is_correct: alt.is_correct,
+                            letter: alt.letter
+                        }));
+                        
+                        const { error: altError } = await supabase.from('alternativas').insert(newAlts);
+                        if (altError) throw altError;
+                    }
+                }
+            }
+
+            alert("Prova duplicada com sucesso!");
+
+        } catch (error: any) {
+            console.error("Erro ao duplicar:", error);
+            alert("Erro ao duplicar prova: " + error.message);
+        } finally {
+            setLoading(false);
+            setQuizToDuplicate(null);
+        }
+    };
+
     return (
         <>
             <div className="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 modal-backdrop">
@@ -799,13 +1169,19 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
                         <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon/></button>
                     </header>
                     <div className="p-6 flex-grow overflow-y-auto bg-slate-50">
-                        {loading && !initialQuiz ? <div className="flex justify-center p-8"><Spinner/></div> : (
+                        {loading && !quiz ? <div className="flex justify-center p-8"><Spinner/></div> : (
                             <>
                                 <div className="bg-white p-6 rounded-lg border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 shadow-sm">
                                     <div className="md:col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">Título da Avaliação</label><input type="text" value={title} onChange={e => setTitle(e.target.value)} placeholder="Ex: Avaliação de Matemática - 1º Bimestre" className="w-full rounded-lg border-slate-300 shadow-sm"/></div>
                                     <div className="md:col-span-2"><label className="block text-sm font-medium text-gray-700 mb-1">ID Único da Série/Prova</label><input type="text" value={serieId} onChange={e => setSerieId(e.target.value)} placeholder="Ex: 1A_MATEMATICA (sem espaços ou acentos)" className="w-full rounded-lg border-slate-300 shadow-sm"/></div>
                                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Turma</label><select value={serie} onChange={e => setSerie(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm"><option value="1A">1ª Série - A</option><option value="2A">2ª Série - A</option><option value="2B">2ª Série - B</option><option value="3A">3ª Série - A</option><option value="3B">3ª Série - B</option></select></div>
-                                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Área de Conhecimento</label><select value={area} onChange={e => setArea(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm"><option value="Linguagens, Códigos e suas Tecnologias">Linguagens</option><option value="Ciências Humanas e suas Tecnologias">Humanas</option><option value="Ciências da Natureza e suas Tecnologias">Natureza</option><option value="Matemática e suas Tecnologias">Matemática</option></select></div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Área de Conhecimento</label>
+                                        <select value={area} onChange={e => setArea(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm">
+                                            <option value="Linguagens, Códigos e suas Tecnologias">Linguagens</option><option value="Ciências Humanas e suas Tecnologias">Humanas</option><option value="Ciências da Natureza e suas Tecnologias">Natureza</option><option value="Matemática e suas Tecnologias">Matemática</option>
+                                            <option value="Provão">Provão</option>
+                                        </select>
+                                    </div>
                                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Data de Início</label><input type="datetime-local" value={dataInicio} onChange={e => setDataInicio(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm"/></div>
                                     <div><label className="block text-sm font-medium text-gray-700 mb-1">Data de Fim</label><input type="datetime-local" value={dataFim} onChange={e => setDataFim(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm"/></div>
                                     <div className="md:col-span-2 flex justify-end">
@@ -818,20 +1194,79 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
                                 <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
                                     <div className="flex items-center justify-between mb-4">
                                         <h3 className="text-lg font-semibold">Questões</h3>
-                                        <button onClick={() => openQuestionEditor(null)} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg" disabled={!currentQuizId}>+ Nova Questão</button>
+                                        <div className="flex gap-2">
+                                            <button 
+                                                onClick={openReorderModal}
+                                                disabled={!currentQuizId || sortedQuestions.length === 0}
+                                                className="bg-purple-100 text-purple-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            >
+                                                <span>⇅</span> Reorganizar Disciplinas
+                                            </button>
+                                            <button onClick={() => openQuestionEditor(null)} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed shadow-md hover:shadow-lg" disabled={!currentQuizId}>+ Nova Questão</button>
+                                        </div>
                                     </div>
                                     <div className="space-y-3">
                                         {loading ? <div className="flex justify-center p-4"><Spinner/></div> :
-                                        sortedQuestions.map((q, index) => (
-                                            <div key={q.id} className="border p-3 rounded-md flex justify-between items-center bg-slate-50">
-                                                <div>
-                                                    <span className="font-semibold">Item {index + 1}</span>
-                                                    {q.disciplina && <span className="ml-2 text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">{q.disciplina}</span>}
+                                        (() => {
+                                            const grouped = sortedQuestions.reduce((acc, q) => {
+                                                const disc = q.disciplina || 'Geral';
+                                                if (!acc[disc]) acc[disc] = [];
+                                                acc[disc].push(q);
+                                                return acc;
+                                            }, {} as Record<string, Questao[]>);
+                                            
+                                                const sortedDisciplinesList = [
+                                                     ...new Set(sortedQuestions.map(q => q.disciplina || 'Geral'))
+                                                ];
+
+                                            return sortedDisciplinesList.map(discipline => (
+                                                <div key={discipline} className="space-y-2 mb-4">
+                                                    <div className="bg-slate-100 border border-slate-200 rounded-md px-3 py-2 flex items-center justify-between">
+                                                        <span className="font-bold text-slate-700 text-sm uppercase tracking-wide">
+                                                            {discipline}
+                                                        </span>
+                                                        <span className="text-xs text-slate-500 font-medium bg-white px-2 py-0.5 rounded-full border border-slate-200">
+                                                            {grouped[discipline].length} itens
+                                                        </span>
+                                                    </div>
+                                                    {grouped[discipline].map((q, groupIndex) => {
+                                                        const globalIndex = sortedQuestions.findIndex(sq => sq.id === q.id);
+                                                        const isFirstInGroup = groupIndex === 0;
+                                                        const isLastInGroup = groupIndex === grouped[discipline].length - 1;
+
+                                                        return (
+                                                            <div key={q.id} className="border p-3 rounded-md flex justify-between items-center bg-slate-50 transition-all hover:bg-slate-100 ml-2 border-l-4 border-l-blue-500">
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className="flex flex-col gap-1">
+                                                                        <button 
+                                                                            onClick={() => handleMoveQuestion(globalIndex, 'up')} 
+                                                                            disabled={isFirstInGroup || isReordering}
+                                                                            className="p-1 text-slate-400 hover:text-blue-600 disabled:text-slate-200 disabled:cursor-not-allowed transition-colors"
+                                                                            title="Mover para cima"
+                                                                        >
+                                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" /></svg>
+                                                                        </button>
+                                                                        <button 
+                                                                            onClick={() => handleMoveQuestion(globalIndex, 'down')} 
+                                                                            disabled={isLastInGroup || isReordering}
+                                                                            className="p-1 text-slate-400 hover:text-blue-600 disabled:text-slate-200 disabled:cursor-not-allowed transition-colors"
+                                                                            title="Mover para baixo"
+                                                                        >
+                                                                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div>
+                                                                        <span className="font-semibold text-slate-800 block">Item {groupIndex + 1} (Global: {globalIndex + 1})</span>
+                                                                    </div>
+                                                                </div>
+                                                                <button onClick={() => openQuestionEditor(q)} className="text-sm text-blue-600 font-semibold hover:underline px-3 py-1 rounded hover:bg-blue-50 transition-colors">Editar</button>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                                <button onClick={() => openQuestionEditor(q)} className="text-sm text-blue-600 font-semibold hover:underline">Editar</button>
-                                            </div>
-                                        ))}
-                                        {(!sortedQuestions.length) && !loading && <p className="text-sm text-center text-slate-400 py-4">Nenhuma questão adicionada.</p>}
+                                            ));
+                                        })()
+                                        }
                                     </div>
                                 </div>
                             </>
@@ -843,12 +1278,20 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
                 <QuestionEditorModal
                     quizId={currentQuizId}
                     question={editingQuestion}
+                    // Quando for editar, usa o índice atual. Quando novo, apenas um placeholder, pois o cálculo real é feito no handleSave.
                     questionNumber={editingQuestion ? sortedQuestions.findIndex(q => q.id === editingQuestion.id) + 1 : sortedQuestions.length + 1}
                     onClose={() => {
                         setQuestionEditorOpen(false);
                         setEditingQuestion(null);
                         fetchQuizData(currentQuizId);
                     }}
+                />
+            )}
+            {isReorderModalOpen && (
+                <DisciplineReorderModal
+                    disciplines={[...new Set(sortedQuestions.map(q => q.disciplina || 'Geral'))]}
+                    onClose={() => setReorderModalOpen(false)}
+                    onConfirm={handleReorderByDiscipline}
                 />
             )}
             {showSuccessModal && (
@@ -859,12 +1302,19 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
                     onCancel={() => setShowSuccessModal(false)}
                 />
             )}
+            {isDuplicateModalOpen && quizToDuplicate && (
+                <DuplicateQuizModal 
+                    quiz={quizToDuplicate} 
+                    onClose={() => setDuplicateModalOpen(false)} 
+                    onConfirm={handleDuplicateConfirm} 
+                />
+            )}
         </>
     );
 };
 
 // ============================================================================
-// 4. COMPONENTE PRINCIPAL (PAI)
+// 4. COMPONENTE PRINCIPAL DO PAINEL (PAI - Último a ser definido)
 // ============================================================================
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -882,6 +1332,10 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     
     const [selectedQuiz, setSelectedQuiz] = useState<Prova | null>(null);
     const [quizToDelete, setQuizToDelete] = useState<number | null>(null);
+    
+    // Estado para o modal de duplicação
+    const [isDuplicateModalOpen, setDuplicateModalOpen] = useState(false);
+    const [quizToDuplicate, setQuizToDuplicate] = useState<Prova | null>(null);
 
     const TABS_BASE = [ { id: 'provas-avancado', label: 'Gerenciar Avaliações' } ];
     const TABS_ADMIN = [ { id: 'criar-conta', label: 'Criar Contas' } ];
@@ -904,13 +1358,97 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         if (modal === 'results' && quiz) setResultsDashboardOpen(true);
     };
     
+    const openDuplicateModal = (quiz: Prova) => {
+        setQuizToDuplicate(quiz);
+        setDuplicateModalOpen(true);
+    };
+
+    const handleDuplicateConfirm = async (newSerie: string) => {
+        if (!quizToDuplicate) return;
+        setLoadingQuizzes(true);
+        setDuplicateModalOpen(false);
+
+        try {
+            const { data: fullQuiz, error: fetchError } = await supabase
+                .from('provas')
+                .select('*, questoes(*, alternativas(*))')
+                .eq('id', quizToDuplicate.id)
+                .single();
+            
+            if (fetchError) throw fetchError;
+
+            const newQuizData = {
+                title: fullQuiz.title + ' (Cópia)',
+                serie_id_string: `${fullQuiz.serie_id_string}_COPY_${Date.now()}`,
+                serie: newSerie,
+                area: fullQuiz.area,
+                data_inicio: fullQuiz.data_inicio,
+                data_fim: fullQuiz.data_fim,
+                status: 'fechada'
+            };
+
+            const { data: newQuiz, error: createError } = await supabase
+                .from('provas')
+                .insert(newQuizData)
+                .select()
+                .single();
+
+            if (createError) throw createError;
+
+            if (fullQuiz.questoes && fullQuiz.questoes.length > 0) {
+                for (const q of fullQuiz.questoes) {
+                    const { data: newQ, error: qError } = await supabase
+                        .from('questoes')
+                        .insert({
+                            prova_id: newQuiz.id,
+                            title: q.title,
+                            disciplina: q.disciplina,
+                            long_text: q.long_text,
+                            image_url_1: q.image_url_1,
+                            image_url_2: q.image_url_2,
+                            question_order: q.question_order
+                        })
+                        .select()
+                        .single();
+                    
+                    if (qError) throw qError;
+
+                    if (q.alternativas && q.alternativas.length > 0) {
+                        const newAlts = q.alternativas.map((alt: Alternativa) => ({
+                            question_id: newQ.id,
+                            text: alt.text,
+                            is_correct: alt.is_correct,
+                            letter: alt.letter
+                        }));
+                        
+                        const { error: altError } = await supabase.from('alternativas').insert(newAlts);
+                        if (altError) throw altError;
+                    }
+                }
+            }
+
+            alert("Prova duplicada com sucesso!");
+            await fetchExamsAndResults();
+            onClose();
+
+        } catch (error: any) {
+            console.error("Erro ao duplicar:", error);
+            alert("Erro ao duplicar prova: " + error.message);
+        } finally {
+            setLoadingQuizzes(false);
+            setQuizToDuplicate(null);
+        }
+    };
+    
     const handleCloseAllModals = () => {
         setQuizEditorOpen(false);
         setAccessControlOpen(false);
         setResultsDashboardOpen(false);
         setConfirmModalOpen(false);
+        setDuplicateModalOpen(false);
         setSelectedQuiz(null);
         setQuizToDelete(null);
+        setQuizToDuplicate(null);
     };
 
     const confirmDeleteQuiz = (quizId: number) => {
@@ -975,6 +1513,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                                                             <button onClick={() => handleOpenModal('results', quiz)} className="bg-green-100 text-green-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-green-200">Resultados</button>
                                                             <button onClick={() => handleOpenModal('access', quiz)} className="bg-indigo-100 text-indigo-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-indigo-200">Acesso</button>
                                                             <button onClick={() => handleOpenModal('editor', quiz)} className="bg-blue-100 text-blue-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-blue-200">Editar</button>
+                                                            <button onClick={() => openDuplicateModal(quiz)} className="bg-purple-100 text-purple-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-purple-200">Duplicar</button>
                                                             <button onClick={() => confirmDeleteQuiz(quiz.id)} className="bg-red-100 text-red-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-red-200">Excluir</button>
                                                         </div>
                                                     </div>
@@ -1000,6 +1539,13 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     onConfirm={executeDeleteQuiz}
                     onCancel={handleCloseAllModals}
                     confirmText="Sim, Excluir"
+                />
+            )}
+            {isDuplicateModalOpen && quizToDuplicate && (
+                <DuplicateQuizModal 
+                    quiz={quizToDuplicate} 
+                    onClose={() => setDuplicateModalOpen(false)} 
+                    onConfirm={handleDuplicateConfirm} 
                 />
             )}
         </>
