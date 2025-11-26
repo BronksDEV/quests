@@ -14,7 +14,19 @@ import 'katex/dist/katex.min.css';
 // 1. CONFIGURAÇÕES E UTILITÁRIOS
 // ============================================================================
 
-// CORREÇÃO: Sistema de prioridade de disciplinas. Menor número = maior prioridade (aparece primeiro).
+
+
+const standardizeTitle = (str: string) => {
+    if (!str) return '';
+    return str
+        .toLowerCase()
+        .trim()
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+};
+
+
 const DISCIPLINE_PRIORITY: Record<string, number> = {
     'Matemática': 1,
     'Física': 2,
@@ -697,7 +709,7 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
         e.target.value = ''; 
     };
 
-    const handleSave = async () => {
+ const handleSave = async () => {
         if (saving) return;
 
         const validAlternatives = alternatives.filter(alt => alt.text.trim() !== '');
@@ -706,16 +718,18 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
         
         setSaving(true);
         const currentLongText = longTextRef.current?.innerHTML || '';
+        
+        // 1. Padroniza a disciplina antes de salvar
+        const finalDisciplina = standardizeTitle(disciplina);
 
         try {
             let savedQuestionId = question?.id;
             
             if (question?.id) {
-                // ATUALIZAÇÃO DA QUESTÃO
-                const questionData: Omit<Questao, 'id' | 'alternativas'> = {
-                    prova_id: quizId,
+                // === ATUALIZAÇÃO (UPDATE) ===
+                const questionData = {
                     title: `Item ${questionNumber}`,
-                    disciplina: disciplina || undefined,
+                    disciplina: finalDisciplina || undefined, // Usa a disciplina padronizada
                     long_text: currentLongText,
                     image_url_1: imageUrl1 || undefined,
                     image_url_2: imageUrl2 || undefined,
@@ -724,8 +738,10 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
 
                 const { error } = await supabase.from('questoes').update(questionData).eq('id', question.id);
                 if (error) throw error;
+                
             } else {
-                // CRIAÇÃO: Buscar último question_order para evitar colisões
+                // === CRIAÇÃO (INSERT) ===
+                // 1. Busca qual é o último número usado
                 const { data: maxOrderData } = await supabase
                     .from('questoes')
                     .select('question_order')
@@ -734,25 +750,27 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                     .limit(1)
                     .maybeSingle();
 
+                // 2. Define nextOrder AGORA, antes de usar no objeto
                 const nextOrder = maxOrderData?.question_order 
                     ? maxOrderData.question_order + 1 
                     : 1;
 
+                // 3. Cria o objeto usando o nextOrder calculado
                 const questionData = {
                     prova_id: quizId,
                     title: `Item ${nextOrder}`,
-                    disciplina: disciplina || undefined,
+                    disciplina: finalDisciplina || undefined, // Usa a disciplina padronizada
                     long_text: currentLongText,
                     image_url_1: imageUrl1 || undefined,
                     image_url_2: imageUrl2 || undefined,
-                    question_order: nextOrder
+                    question_order: nextOrder // ✅ Agora nextOrder existe neste escopo!
                 };
 
                 const { data, error } = await supabase.from('questoes').insert(questionData).select('id').single();
+                
                 if (error) {
-                    // Tratamento específico para colisão de unique constraint (erro 23505)
                     if(error.code === '23505') {
-                        throw new Error("Conflito de edição. Outro professor acabou de criar uma questão. Tente salvar novamente.");
+                        throw new Error("Conflito de edição. Outro professor criou uma questão nesse momento. Tente salvar novamente.");
                     }
                     throw error;
                 }
@@ -760,8 +778,16 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
             }
 
             if(!savedQuestionId) throw new Error("ID da questão não retornado.");
+            
+            // Salva as alternativas
             await supabase.from('alternativas').delete().eq('question_id', savedQuestionId);
-            const alternativesToSave = validAlternatives.map(alt => ({ question_id: savedQuestionId, text: alt.text, is_correct: alt.is_correct, letter: alt.letter }));
+            const alternativesToSave = validAlternatives.map(alt => ({ 
+                question_id: savedQuestionId, 
+                text: alt.text, 
+                is_correct: alt.is_correct, 
+                letter: alt.letter 
+            }));
+            
             const { error: altError } = await supabase.from('alternativas').insert(alternativesToSave);
             if (altError) throw altError;
             
@@ -882,6 +908,7 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
     const [area, setArea] = useState(initialQuiz?.area || 'Linguagens, Códigos e suas Tecnologias');
     const [dataInicio, setDataInicio] = useState(initialQuiz?.data_inicio ? formatToLocalDatetime(initialQuiz.data_inicio) : '');
     const [dataFim, setDataFim] = useState(initialQuiz?.data_fim ? formatToLocalDatetime(initialQuiz.data_fim) : '');
+    const standardizeTitle = (str: string) => {if (!str) return '';return str.toLowerCase() .trim() .split(' ') .map(word => word.charAt(0).toUpperCase() + word.slice(1)) .join(' '); };
     
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
