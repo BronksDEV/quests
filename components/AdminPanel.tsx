@@ -10,6 +10,8 @@ import ResultsDashboardModal from './ResultsDashboardModal';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
+
+
 // ============================================================================
 // 1. CONFIGURAÇÕES E UTILITÁRIOS
 // ============================================================================
@@ -670,30 +672,35 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
         });
     };
     
+// 1. CARREGA DADOS DO BANCO PARA O ESTADO (Sem mexer no editor visual ainda)
     useEffect(() => {
         const loadQuestion = () => {
             if (!question) {
                 setAlternatives(Array.from({ length: 5 }, (_, i) => ({ text: '', is_correct: false, letter: String.fromCharCode(65 + i) })));
+                setLongText('');
             } else {
                 const fetchedAlts = question.alternativas?.sort((a, b) => a.letter.localeCompare(b.letter)) || [];
                 setAlternatives(fetchedAlts.map(alt => ({ text: alt.text, is_correct: alt.is_correct, letter: alt.letter })));
-            }
-            const initialLongText = question?.long_text || '';
-            setLongText(initialLongText);
-            
-            if (longTextRef.current) {
-                setTimeout(() => {
-                    if (longTextRef.current) {
-                        longTextRef.current.innerHTML = initialLongText;
-                        lastSavedContentRef.current = initialLongText;
-                    }
-                }, 0);
+                
+                // Define apenas o estado, não o innerHTML diretamente
+                setLongText(question.long_text || '');
             }
             
             setLoading(false);
         };
         loadQuestion();
     }, [question]);
+
+    // 2. SINCRONIZA O DOM (Roda após o carregamento para injetar o texto no editor)
+    useEffect(() => {
+        if (!loading && longTextRef.current) {
+            // Se houver texto no estado e o editor visual estiver diferente/vazio, injeta o texto
+            if (longText && longTextRef.current.innerHTML.trim() !== longText.trim()) {
+                longTextRef.current.innerHTML = longText;
+                lastSavedContentRef.current = longText;
+            }
+        }
+    }, [loading, longText]);
     
     const updateOptionText = (index: number, text: string) => setAlternatives(prev => prev.map((alt, i) => i === index ? { ...alt, text } : alt));
     const setCorrectOption = (index: number) => setAlternatives(prev => prev.map((alt, i) => ({ ...alt, is_correct: i === index })));
@@ -717,20 +724,23 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
         if (!validAlternatives.some(alt => alt.is_correct)) { alert("Selecione a correta."); return; }
         
         setSaving(true);
-        const currentLongText = longTextRef.current?.innerHTML || '';
         
-        // 1. Padroniza a disciplina antes de salvar
+        const currentRefHTML = longTextRef.current?.innerHTML || '';
+        const currentLongText = currentRefHTML.trim() !== '' 
+            ? currentRefHTML 
+            : longText; 
+        
+        // Padronização do título
         const finalDisciplina = standardizeTitle(disciplina);
 
         try {
             let savedQuestionId = question?.id;
             
             if (question?.id) {
-                // === ATUALIZAÇÃO (UPDATE) ===
                 const questionData = {
                     title: `Item ${questionNumber}`,
-                    disciplina: finalDisciplina || undefined, // Usa a disciplina padronizada
-                    long_text: currentLongText,
+                    disciplina: finalDisciplina || undefined,
+                    long_text: currentLongText, 
                     image_url_1: imageUrl1 || undefined,
                     image_url_2: imageUrl2 || undefined,
                     question_order: questionNumber
@@ -741,7 +751,6 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                 
             } else {
                 // === CRIAÇÃO (INSERT) ===
-                // 1. Busca qual é o último número usado
                 const { data: maxOrderData } = await supabase
                     .from('questoes')
                     .select('question_order')
@@ -750,20 +759,18 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                     .limit(1)
                     .maybeSingle();
 
-                // 2. Define nextOrder AGORA, antes de usar no objeto
                 const nextOrder = maxOrderData?.question_order 
                     ? maxOrderData.question_order + 1 
                     : 1;
 
-                // 3. Cria o objeto usando o nextOrder calculado
                 const questionData = {
                     prova_id: quizId,
                     title: `Item ${nextOrder}`,
-                    disciplina: finalDisciplina || undefined, // Usa a disciplina padronizada
-                    long_text: currentLongText,
+                    disciplina: finalDisciplina || undefined,
+                    long_text: currentLongText, 
                     image_url_1: imageUrl1 || undefined,
                     image_url_2: imageUrl2 || undefined,
-                    question_order: nextOrder // ✅ Agora nextOrder existe neste escopo!
+                    question_order: nextOrder
                 };
 
                 const { data, error } = await supabase.from('questoes').insert(questionData).select('id').single();
@@ -779,7 +786,6 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
 
             if(!savedQuestionId) throw new Error("ID da questão não retornado.");
             
-            // Salva as alternativas
             await supabase.from('alternativas').delete().eq('question_id', savedQuestionId);
             const alternativesToSave = validAlternatives.map(alt => ({ 
                 question_id: savedQuestionId, 
@@ -830,6 +836,12 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                     <RichTextToolbar editorRef={longTextRef} />
                                     <div 
                                         ref={longTextRef} 
+
+                                        key={question?.id || 'new-question'}
+                                        
+
+                                        suppressContentEditableWarning={true}
+
                                         onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
                                         contentEditable="true" 
                                         data-placeholder="Digite o enunciado aqui..." 
@@ -926,7 +938,7 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
         return () => { document.body.style.overflow = ''; };
     }, []);
 
-    const fetchQuizData = useCallback(async (id: number | null) => {
+const fetchQuizData = useCallback(async (id: number | null) => {
         if (!id) {
             setLoading(false);
             return;
@@ -943,9 +955,12 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
         setLoading(false);
     }, [onClose]);
     
-    // Adicionado Listener em Tempo Real
+    // Listener em Tempo Real (CORRIGIDO PARA NOVA AVALIAÇÃO)
     useEffect(() => {
-        if (!currentQuizId) return;
+        if (!currentQuizId) {
+            setLoading(false); 
+            return;
+        }
         
         fetchQuizData(currentQuizId);
 
