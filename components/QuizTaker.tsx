@@ -17,7 +17,6 @@ const QUESTIONS_PER_PAGE = 5;
 
 // --- Subcomponente: Indicador Dinâmico de Salvamento (REFEITO) ---
 const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; lastSavedTime: string | null }> = ({ status, lastSavedTime }) => {
-    // Estado: Salvando (Feedback Imediato)
     if (status === 'saving') {
         return (
             <div className="flex items-center gap-2 text-blue-600 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200 shadow-sm transition-all duration-200">
@@ -37,7 +36,7 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
         );
     }
 
-    // Estado: Salvo (Feedback de Confirmação com Hora)
+    // Estado: Salvo 
     return (
         <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200 shadow-sm transition-all duration-500">
             <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -90,6 +89,17 @@ const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'di
                 }
             };
             renderMathInNode(containerRef.current);
+            
+            // PROTEÇÃO CONTRA LINKS ESPECÍFICA DO COMPONENTE RENDERIZADO
+            const links = containerRef.current.querySelectorAll('a');
+            links.forEach(link => {
+                link.style.pointerEvents = 'none'; // Desabilita clique via CSS
+                link.style.cursor = 'default';     // Remove cursor 
+                link.style.textDecoration = 'none';// Remove sublinhado 
+                link.style.color = 'inherit';      // Remove cor azul 
+                link.setAttribute('href', '#');    // Remove destino
+                link.onclick = (e) => e.preventDefault(); // Trava JS
+            });
         }
     }, [html]);
 
@@ -184,6 +194,26 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
 
     const STORAGE_KEY = profile ? `quiz_progress_${profile.id}_${examId}` : null;
 
+    // --- PROTEÇÃO DE LINKS GLOBAIS 
+    useEffect(() => {
+        const preventLinks = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            const link = target.closest('a');
+            
+            if (link) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Navegação externa bloqueada por segurança.');
+            }
+        };
+
+        document.addEventListener('click', preventLinks, true);
+
+        return () => {
+            document.removeEventListener('click', preventLinks, true);
+        };
+    }, []);
+
     // --- MONITORAMENTO DE CONEXÃO ---
     useEffect(() => {
         const handleOnline = () => setIsOffline(false);
@@ -198,7 +228,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         };
     }, []);
 
-    // --- PERSISTÊNCIA DE DADOS (Carregar) ---
+    // --- PERSISTÊNCIA DE DADOS 
     useEffect(() => {
         if (STORAGE_KEY) {
             const savedAnswers = localStorage.getItem(STORAGE_KEY);
@@ -214,7 +244,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [STORAGE_KEY]);
 
-    // --- PERSISTÊNCIA DE DADOS (Salvar com Feedback Visual) ---
+    // --- PERSISTÊNCIA DE DADOS 
     useEffect(() => {
         if (STORAGE_KEY && Object.keys(answers).length > 0) {
             setSaveStatus('saving');
@@ -229,7 +259,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                     setSaveStatus('error');
                     console.error("Erro ao salvar no localStorage", e);
                 }
-            }, 600); // Delay proposital para UX (mostrar "Salvando...")
+            }, 600); // Delay proposital (Talvez eu remova isso)
 
             return () => clearTimeout(timer);
         }

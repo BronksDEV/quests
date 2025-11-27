@@ -217,10 +217,48 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
         if (url) applyCommand('createLink', url);
     };
     
-    const handleImage = () => {
-        const url = prompt('Insira a URL da imagem:');
-        if (url) applyCommand('insertImage', url);
-    };
+const handleImage = () => {
+    const url = prompt('Insira a URL da imagem:');
+    if (!url || !editorRef.current) return;
+    
+
+    try {
+        new URL(url);
+    } catch {
+        alert('URL inválida. Por favor, insira uma URL completa começando com http:// ou https://');
+        return;
+    }
+    
+
+    editorRef.current.focus();
+    
+
+    const img = document.createElement('img');
+    img.src = url;
+    img.style.maxWidth = '100%';
+    img.style.height = 'auto';
+    img.style.display = 'block';
+    img.style.margin = '10px 0';
+    img.alt = 'Imagem inserida';
+    
+  
+    const selection = window.getSelection();
+    if (selection && selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(img);
+        
+        range.setStartAfter(img);
+        range.setEndAfter(img);
+        selection.removeAllRanges();
+        selection.addRange(range);
+    } else {
+        editorRef.current.appendChild(img);
+    }
+    
+    const event = new Event('input', { bubbles: true });
+    editorRef.current.dispatchEvent(event);
+};
     
     const handleInsertMath = (latex: string) => {
         if (editorRef.current) editorRef.current.focus();
@@ -836,10 +874,7 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                     <RichTextToolbar editorRef={longTextRef} />
                                     <div 
                                         ref={longTextRef} 
-
-                                        key={question?.id || 'new-question'}
-                                        
-
+                                        key={question?.id || 'new-question'}  
                                         suppressContentEditableWarning={true}
 
                                         onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
@@ -1002,23 +1037,21 @@ const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
         if (currentDisciplina !== targetDisciplina) return;
 
         setIsReordering(true);
-        // Troca posições no array local
         [questions[index], questions[targetIndex]] = [questions[targetIndex], questions[index]];
 
-        // Prepara payload apenas para os itens afetados ou todos para garantir integridade sequencial
         const updates = questions.map((q, idx) => ({
             id: q.id,
             prova_id: quiz.id, 
             question_order: idx + 1,
             title: `Item ${idx + 1}`,
-            disciplina: q.disciplina // Adicionado para garantir persistência
+            disciplina: q.disciplina 
         }));
         
-        // Optimistic UI update
+   
         setQuiz(prev => prev ? { ...prev, questoes: questions } : null);
 
         try {
-            // CORREÇÃO: Usa RPC ao invés de Upsert direto
+
             const { error } = await supabase.rpc('reorder_questions', { payload: updates });
             
             if (error) throw error;
