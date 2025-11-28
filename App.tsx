@@ -154,8 +154,13 @@ function App() {
         return <Suspense fallback={<Spinner />}><StudentView onStartExam={startExam} /></Suspense>;
     };
 
+    // IMPORTANTE: Verifica se precisa completar perfil APENAS quando session existe e loading acabou
     if (session && !loading && !isProfileComplete(profile)) {
-        return <Suspense fallback={<Spinner />}><CompleteProfileView /></Suspense>;
+        return (
+            <Suspense fallback={<div className="flex justify-center p-12"><Spinner /></div>}>
+                <CompleteProfileView />
+            </Suspense>
+        );
     }
     
     return (
