@@ -16,6 +16,7 @@ export interface AppState {
     fetchAllStudents: () => Promise<void>;
     initializeRealtime: () => () => void;
     signOut: () => Promise<void>;
+    logout: () => Promise<void>;
 }
 
 export const isProfileComplete = (profile: Profile | null): boolean => {
@@ -40,17 +41,52 @@ export const useAppStore = create<AppState>((set, get) => ({
             set({ profile: null, loading: false });
             return;
         }
+        
         try {
+            set({ loading: true });
+            
+            // Tenta buscar o perfil existente
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', session.user.id)
                 .single();
             
-            if (error && error.code !== 'PGRST116') throw error;
-            set({ profile: data });
+            if (error) {
+                console.error('Erro ao buscar perfil:', error);
+                
+                // Se não existe perfil, cria um vazio
+                if (error.code === 'PGRST116') {
+                    console.log('Perfil não encontrado, criando novo...');
+                    const { error: insertError } = await supabase
+                        .from('profiles')
+                        .insert([{ 
+                            id: session.user.id,
+                            email: session.user.email,
+                            role: (session.user.user_metadata?.role as 'aluno' | 'professor' | 'admin') || 'aluno'
+                        }]);
+                    
+                    if (insertError) {
+                        console.error('Erro ao criar perfil:', insertError);
+                    } else {
+                        // Busca novamente após criar
+                        const { data: newProfile } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
+                        
+                        set({ profile: newProfile || null });
+                    }
+                } else {
+                    set({ profile: null });
+                }
+            } else {
+                set({ profile: data });
+            }
         } catch (error) {
-            console.error('Error fetching profile:', error);
+            console.error('Erro crítico ao buscar perfil:', error);
+            set({ profile: null });
         } finally {
             set({ loading: false });
         }
@@ -86,6 +122,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         await supabase.auth.signOut();
         set({ session: null, profile: null, exams: [], results: [], allStudents: [] });
         window.location.reload();
+    },
+
+    logout: async () => {
+        await supabase.auth.signOut();
+        set({ session: null, profile: null, exams: [], results: [], allStudents: [] });
     },
 
     initializeRealtime: () => {
