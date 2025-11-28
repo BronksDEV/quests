@@ -15,7 +15,6 @@ interface QuizTakerProps {
 
 const QUESTIONS_PER_PAGE = 5;
 
-// --- Subcomponente: Indicador Dinâmico de Salvamento (REFEITO) ---
 const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; lastSavedTime: string | null }> = ({ status, lastSavedTime }) => {
     if (status === 'saving') {
         return (
@@ -25,8 +24,6 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
             </div>
         );
     }
-
-    // Estado: Erro
     if (status === 'error') {
         return (
             <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg border border-red-200 shadow-sm animate-pulse">
@@ -35,8 +32,6 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
             </div>
         );
     }
-
-    // Estado: Salvo 
     return (
         <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-4 py-2 rounded-lg border border-emerald-200 shadow-sm transition-all duration-500">
             <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -52,7 +47,6 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
     );
 };
 
-// Componente de renderização matemática
 const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'div' | 'span' }> = ({ html, className, tag = 'div' }) => {
     const containerRef = useRef<HTMLElement>(null);
 
@@ -89,16 +83,14 @@ const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'di
                 }
             };
             renderMathInNode(containerRef.current);
-            
-            // PROTEÇÃO CONTRA LINKS ESPECÍFICA DO COMPONENTE RENDERIZADO
             const links = containerRef.current.querySelectorAll('a');
             links.forEach(link => {
-                link.style.pointerEvents = 'none'; // Desabilita clique via CSS
-                link.style.cursor = 'default';     // Remove cursor 
-                link.style.textDecoration = 'none';// Remove sublinhado 
-                link.style.color = 'inherit';      // Remove cor azul 
-                link.setAttribute('href', '#');    // Remove destino
-                link.onclick = (e) => e.preventDefault(); // Trava JS
+                link.style.pointerEvents = 'none';
+                link.style.cursor = 'default';
+                link.style.textDecoration = 'none';
+                link.style.color = 'inherit';
+                link.setAttribute('href', '#');
+                link.onclick = (e) => e.preventDefault();
             });
         }
     }, [html]);
@@ -107,7 +99,6 @@ const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'di
     return <Tag ref={containerRef as any} className={className} />;
 };
 
-// Aviso de Saída de Tela Cheia
 const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscreen: () => void; }> = ({ countdown, onRequestFullscreen }) => (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-red-950/70 backdrop-blur-md select-none">
         <div className="text-center text-white p-8 max-w-lg mx-auto bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700">
@@ -120,8 +111,8 @@ const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscr
     </div>
 );
 
-// Aviso de Sem Internet
-const OfflineWarningModal: React.FC = () => (
+// ✅ CORRIGIDO: Modal com botão de retry
+const OfflineWarningModal: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
     <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm select-none">
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-l-8 border-yellow-500 animate-bounce-short">
             <div className="flex flex-col items-center text-center">
@@ -138,13 +129,22 @@ const OfflineWarningModal: React.FC = () => (
                     <Spinner size="16px" color="currentColor" thickness="2px" />
                     Aguardando reconexão...
                 </div>
+                <button
+                    onClick={onRetry}
+                    className="mt-4 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700 transition flex items-center justify-center gap-2"
+                >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Tentar Enviar Novamente
+                </button>
             </div>
         </div>
     </div>
 );
 
 const TermsModal: React.FC<{ onConfirm: () => void; onCancel: () => void; }> = ({ onConfirm, onCancel }) => (
-     <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4 select-none" style={{backdropFilter: 'blur(8px)'}}>
+    <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4 select-none" style={{ backdropFilter: 'blur(8px)' }}>
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg modal-content-anim border border-slate-200">
             <h2 className="text-2xl font-bold text-slate-800 text-center">Termos da Avaliação</h2>
             <div className="prose prose-sm max-w-none mt-4 text-slate-600 max-h-60 overflow-y-auto pr-3">
@@ -179,13 +179,15 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [showBlockedModal, setShowBlockedModal] = useState(false);
-    const [missingQuestionModal, setMissingQuestionModal] = useState<{show: boolean, questionIndex: number}>({ show: false, questionIndex: -1 });
-    
-    // Estados de Salvamento e Rede
+    const [missingQuestionModal, setMissingQuestionModal] = useState<{ show: boolean, questionIndex: number }>({ show: false, questionIndex: -1 });
+
     const [isOffline, setIsOffline] = useState(!navigator.onLine);
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
     const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
-    
+
+    // ✅ NOVO: Estado específico para erro de rede (não bloqueia aluno)
+    const [isNetworkError, setIsNetworkError] = useState(false);
+
     const [showWarning, setShowWarning] = useState(false);
     const [countdown, setCountdown] = useState(5);
     const countdownIntervalRef = useRef<number | null>(null);
@@ -194,31 +196,27 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
 
     const STORAGE_KEY = profile ? `quiz_progress_${profile.id}_${examId}` : null;
 
-    // --- PROTEÇÃO DE LINKS GLOBAIS 
     useEffect(() => {
         const preventLinks = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
             const link = target.closest('a');
-            
             if (link) {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('Navegação externa bloqueada por segurança.');
             }
         };
-
         document.addEventListener('click', preventLinks, true);
-
-        return () => {
-            document.removeEventListener('click', preventLinks, true);
-        };
+        return () => document.removeEventListener('click', preventLinks, true);
     }, []);
 
-    // --- MONITORAMENTO DE CONEXÃO ---
+    // ✅ CORRIGIDO: Limpa erro de rede ao reconectar
     useEffect(() => {
-        const handleOnline = () => setIsOffline(false);
+        const handleOnline = () => {
+            setIsOffline(false);
+            setIsNetworkError(false); // ✅ ADICIONA
+        };
         const handleOffline = () => setIsOffline(true);
-        
+
         window.addEventListener('online', handleOnline);
         window.addEventListener('offline', handleOffline);
 
@@ -228,7 +226,6 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         };
     }, []);
 
-    // --- PERSISTÊNCIA DE DADOS 
     useEffect(() => {
         if (STORAGE_KEY) {
             const savedAnswers = localStorage.getItem(STORAGE_KEY);
@@ -236,7 +233,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                 try {
                     const parsed = JSON.parse(savedAnswers);
                     setAnswers(parsed);
-                    setLastSavedTime(new Date().toLocaleTimeString()); 
+                    setLastSavedTime(new Date().toLocaleTimeString());
                 } catch (e) {
                     console.error("Erro ao carregar progresso salvo:", e);
                 }
@@ -244,60 +241,46 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [STORAGE_KEY]);
 
-    // --- PERSISTÊNCIA DE DADOS 
     useEffect(() => {
         if (STORAGE_KEY && Object.keys(answers).length > 0) {
             setSaveStatus('saving');
-            
             const timer = setTimeout(() => {
                 try {
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
                     setSaveStatus('saved');
-                    // Atualiza a hora para o momento exato do salvamento
                     setLastSavedTime(new Date().toLocaleTimeString());
                 } catch (e) {
                     setSaveStatus('error');
                     console.error("Erro ao salvar no localStorage", e);
                 }
-            }, 600); // Delay proposital (Talvez eu remova isso)
-
+            }, 600);
             return () => clearTimeout(timer);
         }
     }, [answers, STORAGE_KEY]);
 
-    // Scroll to top when page changes
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
 
-    // --- PROTEÇÃO ANTI-COLA ---
     useEffect(() => {
         const preventActions = (e: Event) => {
             e.preventDefault();
             e.stopPropagation();
             return false;
         };
-
         const preventKeys = (e: KeyboardEvent) => {
-            if (
-                e.key === 'F12' || 
-                (e.ctrlKey && e.shiftKey && e.key === 'I') ||
-                (e.ctrlKey && e.key === 'p') ||
-                (e.ctrlKey && e.key === 'u')
-            ) {
+            if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 'u')) {
                 e.preventDefault();
                 e.stopPropagation();
             }
         };
-
-        document.addEventListener('contextmenu', preventActions); 
-        document.addEventListener('copy', preventActions);        
-        document.addEventListener('cut', preventActions);         
-        document.addEventListener('paste', preventActions);       
-        document.addEventListener('selectstart', preventActions); 
-        document.addEventListener('dragstart', preventActions);   
-        document.addEventListener('keydown', preventKeys);        
-
+        document.addEventListener('contextmenu', preventActions);
+        document.addEventListener('copy', preventActions);
+        document.addEventListener('cut', preventActions);
+        document.addEventListener('paste', preventActions);
+        document.addEventListener('selectstart', preventActions);
+        document.addEventListener('dragstart', preventActions);
+        document.addEventListener('keydown', preventKeys);
         return () => {
             document.removeEventListener('contextmenu', preventActions);
             document.removeEventListener('copy', preventActions);
@@ -313,12 +296,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         if (!profile || profile.role === 'admin' || isBlockingRef.current) return;
         isBlockingRef.current = true;
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-
         try {
-            if (navigator.onLine) {
-                await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile.id);
-            }
-            if(document.fullscreenElement) {
+            if (navigator.onLine) await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile.id);
+            if (document.fullscreenElement) {
                 isExitingLegitimately.current = true;
                 await document.exitFullscreen();
             }
@@ -328,25 +308,19 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
             onFinish();
         }
     }, [profile, onFinish]);
-    
+
     const requestFullscreen = useCallback(async () => {
-        try {
-            await document.documentElement.requestFullscreen();
-        } catch (err) {
-            console.error("Falha ao tentar entrar em tela cheia:", err);
-        }
+        try { await document.documentElement.requestFullscreen(); } catch (err) { console.error(err); }
     }, []);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
             if (isExitingLegitimately.current || profile?.role === 'admin') return;
-
             if (document.fullscreenElement) {
                 setShowWarning(false);
                 if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
                 return;
             }
-            
             if (!document.fullscreenElement && isQuizStarted && !isBlockingRef.current) {
                 setShowWarning(true);
                 setCountdown(5);
@@ -362,16 +336,19 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                 }, 1000);
             }
         };
-
         document.addEventListener('fullscreenchange', handleFullscreenChange);
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, [isQuizStarted, blockStudentAndExit, profile]);
 
+    // ✅ CORRIGIDO: handleSubmit com detecção de erro de rede
     const handleSubmit = useCallback(async () => {
         if (!profile) return;
-        
+
+        // ✅ Reset do erro de rede antes de tentar
+        setIsNetworkError(false);
+
         if (!navigator.onLine) {
-            setIsOffline(true); 
+            setIsNetworkError(true);
             return;
         }
 
@@ -385,6 +362,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
 
         setSubmitting(true);
         isExitingLegitimately.current = true;
+
         try {
             const { error } = await supabase.from('resultados').insert({
                 prova_id: examId,
@@ -392,24 +370,31 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                 respostas: answers
             });
             if (error) throw error;
-            
+
             if (STORAGE_KEY) localStorage.removeItem(STORAGE_KEY);
 
-            if(document.fullscreenElement) await document.exitFullscreen();
-            
+            // ✅ Limpa erro de rede em caso de sucesso
+            setIsNetworkError(false);
+
+            if (document.fullscreenElement) await document.exitFullscreen();
+
             setShowSuccessAnimation(true);
             setTimeout(() => onFinish(), 3000);
 
         } catch (err: any) {
-            console.error(err);
-            if (!navigator.onLine) {
-                setIsOffline(true);
+            console.error("Erro ao enviar:", err);
+
+            // ✅ DETECÇÃO DE ERRO DE REDE (não bloqueia aluno)
+            if (!navigator.onLine || err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed to fetch')) {
+                setIsNetworkError(true);
+                isExitingLegitimately.current = false; // Reseta flag
             } else {
+                // Outros erros (não relacionados à rede)
                 setError("Erro ao enviar avaliação: " + err.message);
                 setShowErrorModal(true);
+                isExitingLegitimately.current = false;
             }
             setSubmitting(false);
-            isExitingLegitimately.current = false;
         }
     }, [examId, profile, answers, onFinish, questions, STORAGE_KEY]);
 
@@ -421,17 +406,14 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                 const { data: quizData, error: quizError } = await supabase.from('provas').select('*').eq('id', examId).single();
                 if (quizError) throw quizError;
                 setQuiz(quizData as Prova);
-                
                 const { data: questionsData, error: questionsError } = await supabase.from('student_questions_view').select('*').eq('prova_id', examId);
                 if (questionsError) throw questionsError;
-                
                 const sortedQuestions = (questionsData || []).sort((a, b) => {
                     const orderA = a.question_order ?? 999999;
                     const orderB = b.question_order ?? 999999;
                     if (orderA !== orderB) return orderA - orderB;
                     return a.id - b.id;
                 });
-                
                 setQuestions(sortedQuestions as StudentQuestao[]);
             } catch (err: any) {
                 setError('Falha ao carregar a avaliação. Tente novamente.');
@@ -451,16 +433,16 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         await requestFullscreen();
         setIsQuizStarted(true);
     };
-    
+
     if (loading) return <div className="flex justify-center p-12 h-96"><Spinner /></div>;
     if (showTerms && profile?.role !== 'admin') return <TermsModal onConfirm={startQuiz} onCancel={onFinish} />;
     if (showSuccessAnimation) return <SubmissionSuccessAnimation />;
-    
+
     if (showErrorModal) {
-        return <ActionConfirmModal type="warning" title="Erro no Envio" message={error} onConfirm={() => setShowErrorModal(false)} confirmText='Tentar Novamente' />
+        return <ActionConfirmModal type="warning" title="Erro no Envio" message={error} onConfirm={() => setShowErrorModal(false)} confirmText='Entendido' />
     }
     if (showBlockedModal) {
-        return <ActionConfirmModal type="warning" title="Acesso Bloqueado" message="Você violou as regras da avaliação (saída da tela cheia). Contate um professor para liberar seu acesso." onConfirm={onFinish} confirmText="Entendido"/>
+        return <ActionConfirmModal type="warning" title="Acesso Bloqueado" message="Você violou as regras da avaliação (saída da tela cheia). Contate um professor para liberar seu acesso." onConfirm={onFinish} confirmText="Entendido" />
     }
     if (missingQuestionModal.show) {
         return <ActionConfirmModal type="info" title="Questão em Branco" message={`Você não respondeu a questão ${missingQuestionModal.questionIndex}. Por favor, marque uma alternativa antes de enviar.`} onConfirm={() => setMissingQuestionModal({ show: false, questionIndex: -1 })} confirmText="Entendido" />
@@ -469,10 +451,10 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     if (!isQuizStarted && !showTerms) {
         return <div className="flex justify-center p-12 h-96"><Spinner /><p className="ml-4">Iniciando ambiente seguro...</p></div>;
     }
-    
+
     if (!quiz || questions.length === 0) {
         return (
-             <ActionConfirmModal type="info" title="Avaliação Indisponível" message="Esta avaliação não foi encontrada ou não possui questões." onConfirm={onFinish} confirmText="Voltar"/>
+            <ActionConfirmModal type="info" title="Avaliação Indisponível" message="Esta avaliação não foi encontrada ou não possui questões." onConfirm={onFinish} confirmText="Voltar" />
         );
     }
 
@@ -481,18 +463,18 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const questionsOnPage = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
     const firstQuestionNum = startIndex + 1;
     const lastQuestionNum = Math.min(startIndex + QUESTIONS_PER_PAGE, questions.length);
-    
+
     return (
         <>
             {showWarning && <FullscreenExitWarningModal countdown={countdown} onRequestFullscreen={requestFullscreen} />}
-            {isOffline && <OfflineWarningModal />}
+            {/* ✅ CORRIGIDO: Modal aparece SOBRE a prova quando há erro de rede */}
+            {isNetworkError && <OfflineWarningModal onRetry={handleSubmit} />}
 
             <div className="w-full max-w-5xl mx-auto animate-fadeIn select-none">
                 <header className="mb-6 bg-white p-5 rounded-xl shadow-md border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h1 className="text-2xl font-bold text-slate-900">{quiz.title}</h1>
                         <p className="text-sm font-semibold text-blue-600 mt-1">{quiz.area}</p>
-                        
                         <div className="mt-2 flex flex-col text-sm text-slate-500">
                             <span className="font-bold uppercase text-slate-700">{profile?.nome_completo}</span>
                             <span>Matrícula: {profile?.matricula} • Turma: {profile?.turma}</span>
@@ -501,8 +483,6 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                     <div className="text-right self-end sm:self-center flex flex-col items-end">
                         <p className="text-xs font-bold uppercase text-slate-400 tracking-wider mb-1">Progresso</p>
                         <p className="text-3xl font-bold text-slate-800">{firstQuestionNum}-{lastQuestionNum}<span className="text-slate-400 font-normal text-xl">/{questions.length}</span></p>
-                        
-                        {/* NOVO INDICADOR DINÂMICO COM TIMESTAMP */}
                         <SaveStatusIndicator status={saveStatus} lastSavedTime={lastSavedTime} />
                     </div>
                 </header>
@@ -538,10 +518,16 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                         <button onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0} className="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-sm">
                             Anterior
                         </button>
-                        
                         {currentPage === totalPages - 1 ? (
-                            <button onClick={handleSubmit} disabled={submitting || isOffline} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-8 rounded-lg disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center gap-2 shadow-md transition-all transform hover:scale-105">
-                                {submitting ? <Spinner size="20px" color="#fff" /> : (isOffline ? 'Aguardando Rede...' : 'Finalizar e Enviar')}
+                            <button onClick={handleSubmit} disabled={submitting} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-8 rounded-lg disabled:bg-slate-400 disabled:cursor-not-allowed flex items-center gap-2 shadow-md transition-all transform hover:scale-105">
+                                {submitting ? (
+                                    <>
+                                        <Spinner size="20px" color="#fff" />
+                                        <span>Enviando...</span>
+                                    </>
+                                ) : (
+                                    'Finalizar e Enviar'
+                                )}
                             </button>
                         ) : (
                             <button onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-colors">
