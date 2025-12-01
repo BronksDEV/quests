@@ -17,6 +17,21 @@ import 'katex/dist/katex.min.css';
 // ============================================================================
 
 
+const AVAILABLE_DISCIPLINES = [
+    'Matemática',
+    'Física',
+    'Química',
+    'Biologia',
+    'História',
+    'Geografia',
+    'Português',
+    'Inglês',
+    'Filosofia',
+    'Sociologia',
+    'Educação Física',
+    'Arte',
+    'Geral'
+].sort();
 
 const standardizeTitle = (str: string) => {
     if (!str) return '';
@@ -756,7 +771,10 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
 
  const handleSave = async () => {
         if (saving) return;
-
+            if (!disciplina || disciplina.trim() === '') {
+                alert("Por favor, selecione uma disciplina antes de salvar.");
+                return;
+            }
         const validAlternatives = alternatives.filter(alt => alt.text.trim() !== '');
         if (validAlternatives.length < 2) { alert("Mínimo 2 alternativas."); return; }
         if (!validAlternatives.some(alt => alt.is_correct)) { alert("Selecione a correta."); return; }
@@ -867,9 +885,22 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                                         <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
                                         <input type="text" value={title} disabled className="w-full rounded-lg border-slate-300 shadow-sm bg-slate-100 text-slate-500 cursor-not-allowed" />
                                     </div>
-                                    <div><label className="block text-sm font-medium text-gray-700 mb-1">Disciplina</label><input type="text" value={disciplina} onChange={e => setDisciplina(e.target.value)} placeholder="Ex: Física" className="w-full rounded-lg border-slate-300 shadow-sm" /></div>
-                                </div>
-                                <div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Disciplina <span className="text-red-500">*</span>
+                                            </label>
+                                            <select 
+                                                value={disciplina} 
+                                                onChange={e => setDisciplina(e.target.value)} 
+                                                className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                                                required
+                                            >
+                                                <option value="">Selecione uma disciplina</option>
+                                                {AVAILABLE_DISCIPLINES.map(disc => (
+                                                    <option key={disc} value={disc}>{disc}</option>
+                                                ))}
+                                            </select>
+                                        </div>
                                     <label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label>
                                     <RichTextToolbar editorRef={longTextRef} />
                                     <div 
@@ -1353,7 +1384,6 @@ const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
                 <QuestionEditorModal
                     quizId={currentQuizId}
                     question={editingQuestion}
-                    // Quando for editar, usa o índice atual. Quando novo, apenas um placeholder, pois o cálculo real é feito no handleSave.
                     questionNumber={editingQuestion ? sortedQuestions.findIndex(q => q.id === editingQuestion.id) + 1 : sortedQuestions.length + 1}
                     onClose={() => {
                         setQuestionEditorOpen(false);

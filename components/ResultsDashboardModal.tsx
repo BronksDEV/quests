@@ -85,14 +85,23 @@ useEffect(() => {
         };
     }, [fetchResults, quiz.id]);
 
-    const filteredResults = useMemo(() => {
-        if (!debouncedFilter) return results;
+// update, agora atualiza por ordem alfabetica
+const filteredResults = useMemo(() => {
+    let filtered = results;
+    
+    if (debouncedFilter) {
         const lowerFilter = debouncedFilter.toLowerCase();
-        return results.filter(r =>
+        filtered = results.filter(r =>
             r.nome_completo.toLowerCase().includes(lowerFilter) ||
             r.matricula.includes(lowerFilter)
         );
-    }, [debouncedFilter, results]);
+    }
+    
+    // filtro alfabetico
+    return [...filtered].sort((a, b) => 
+        a.nome_completo.localeCompare(b.nome_completo, 'pt-BR')
+    );
+}, [debouncedFilter, results]);
 
     const overallStats = useMemo(() => {
         const totalSubmissions = results.length;

@@ -90,3 +90,4 @@ export interface StudentResultDetail {
     total_questions: number;
     score_by_discipline: Record<string, DisciplineScore>;
 }
+

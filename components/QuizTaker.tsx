@@ -194,7 +194,55 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const isBlockingRef = useRef(false);
     const isExitingLegitimately = useRef(false);
 
+    // keys para persistência
+    const TERMS_KEY_REF = useRef<string | null>(null);
+    const PAGE_KEY_REF = useRef<string | null>(null);
+
     const STORAGE_KEY = profile ? `quiz_progress_${profile.id}_${examId}` : null;
+
+    // --- Inicialização de persistência de termos e página (evita pedir termos de novo)
+    useEffect(() => {
+        if (!profile) return;
+        TERMS_KEY_REF.current = `quiz_terms_accepted_${profile.id}_${examId}`;
+        PAGE_KEY_REF.current = `quiz_page_${profile.id}_${examId}`;
+
+        // restaurar aceite dos termos
+        const accepted = sessionStorage.getItem(TERMS_KEY_REF.current);
+        if (accepted === 'true') {
+            setShowTerms(false);
+        } else {
+            setShowTerms(true);
+        }
+
+        // restaurar página
+        const storedPage = sessionStorage.getItem(PAGE_KEY_REF.current);
+        if (storedPage) {
+            const p = Number(storedPage);
+            if (!Number.isNaN(p)) setCurrentPage(p);
+        }
+    }, [profile, examId]);
+
+    // centraliza navegação e persiste página
+    const goToPage = useCallback((page: number) => {
+        setCurrentPage(page);
+        if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(page));
+    }, []);
+
+    const goNext = useCallback(() => {
+        setCurrentPage(prev => {
+            const next = Math.min(Math.ceil(questions.length / QUESTIONS_PER_PAGE) - 1, prev + 1);
+            if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(next));
+            return next;
+        });
+    }, [questions.length]);
+
+    const goPrev = useCallback(() => {
+        setCurrentPage(prev => {
+            const next = Math.max(0, prev - 1);
+            if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(next));
+            return next;
+        });
+    }, []);
 
     useEffect(() => {
         const preventLinks = (e: MouseEvent) => {
@@ -340,11 +388,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, [isQuizStarted, blockStudentAndExit, profile]);
 
-    // ✅ CORRIGIDO: handleSubmit com detecção de erro de rede
     const handleSubmit = useCallback(async () => {
         if (!profile) return;
 
-        // ✅ Reset do erro de rede antes de tentar
         setIsNetworkError(false);
 
         if (!navigator.onLine) {
@@ -355,7 +401,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         const missingQuestionIndex = questions.findIndex(q => !answers[q.id]);
         if (missingQuestionIndex !== -1) {
             const targetPage = Math.floor(missingQuestionIndex / QUESTIONS_PER_PAGE);
-            setCurrentPage(targetPage);
+            goToPage(targetPage);
             setMissingQuestionModal({ show: true, questionIndex: missingQuestionIndex + 1 });
             return;
         }
@@ -396,7 +442,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
             }
             setSubmitting(false);
         }
-    }, [examId, profile, answers, onFinish, questions, STORAGE_KEY]);
+    }, [examId, profile, answers, onFinish, questions, STORAGE_KEY, goToPage]);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -425,13 +471,24 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     }, [examId]);
 
     const startQuiz = async () => {
-        setShowTerms(false);
+        // Persistir aceite dos termos para evitar que o modal apareça de novo
         if (profile?.role === 'admin') {
+            if (TERMS_KEY_REF.current) sessionStorage.setItem(TERMS_KEY_REF.current, 'true');
+            setShowTerms(false);
             setIsQuizStarted(true);
             return;
         }
-        await requestFullscreen();
-        setIsQuizStarted(true);
+
+        try {
+            await requestFullscreen();
+        } catch (err) {
+            // se o fullscreen falhar, proseguir mesmo assim, mas gravar aceite
+            console.error('Erro ao entrar em fullscreen:', err);
+        } finally {
+            if (TERMS_KEY_REF.current) sessionStorage.setItem(TERMS_KEY_REF.current, 'true');
+            setShowTerms(false);
+            setIsQuizStarted(true);
+        }
     };
 
     if (loading) return <div className="flex justify-center p-12 h-96"><Spinner /></div>;
@@ -515,7 +572,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                     ))}
 
                     <div className="mt-10 pt-6 border-t border-slate-200 flex justify-between items-center">
-                        <button onClick={() => setCurrentPage(prev => Math.max(0, prev - 1))} disabled={currentPage === 0} className="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-sm">
+                        <button onClick={goPrev} disabled={currentPage === 0} className="bg-white border border-slate-300 text-slate-700 font-semibold py-2.5 px-6 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 transition-colors shadow-sm">
                             Anterior
                         </button>
                         {currentPage === totalPages - 1 ? (
@@ -530,7 +587,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                                 )}
                             </button>
                         ) : (
-                            <button onClick={() => setCurrentPage(prev => Math.min(totalPages - 1, prev + 1))} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-colors">
+                            <button onClick={goNext} className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-6 rounded-lg shadow-sm transition-colors">
                                 Próxima
                             </button>
                         )}
