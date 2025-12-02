@@ -14,10 +14,12 @@ const CompleteProfileView: React.FC = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
-    const [success, setSuccess] = useState(false);
+    
+    // ✅ NOVO: Bloqueia múltiplas inicializações
     const hasInitialized = useRef(false);
+    const isSaving = useRef(false);
 
-    // Busca o userId uma única vez ao montar
+    // ✅ CORRIGIDO: Busca o userId UMA ÚNICA VEZ
     useEffect(() => {
         if (hasInitialized.current) return;
         hasInitialized.current = true;
@@ -33,7 +35,7 @@ const CompleteProfileView: React.FC = () => {
 
                 setUserId(user.id);
 
-                // Se já tem perfil carregado, preenche os campos
+                // ✅ Preenche campos APENAS se o perfil já existe
                 if (profile) {
                     setNome(profile.nome_completo || '');
                     setMatricula(profile.matricula || '');
@@ -46,10 +48,16 @@ const CompleteProfileView: React.FC = () => {
         };
 
         initializeUser();
-    }, [profile]);
+    }, []); // ✅ Roda apenas UMA VEZ (sem dependências)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        
+        // ✅ Bloqueia múltiplas submissões
+        if (isSaving.current) {
+            console.log('⚠️ Salvamento já em andamento, ignorando...');
+            return;
+        }
         
         if (!nome.trim() || !matricula.trim() || !turma) {
             setError("Todos os campos são obrigatórios.");
@@ -61,13 +69,16 @@ const CompleteProfileView: React.FC = () => {
             return;
         }
 
+        isSaving.current = true;
         setLoading(true);
         setError('');
 
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
-            // Tenta fazer UPSERT (cria se não existir, atualiza se existir)
+            console.log('💾 Salvando perfil...');
+            
+            // ✅ UPSERT (cria se não existir, atualiza se existir)
             const { error: upsertError } = await supabase
                 .from('profiles')
                 .upsert({
@@ -82,40 +93,28 @@ const CompleteProfileView: React.FC = () => {
                 });
 
             if (upsertError) {
-                console.error('Erro ao salvar perfil:', upsertError);
+                console.error('❌ Erro ao salvar perfil:', upsertError);
                 throw new Error(`Erro ao salvar: ${upsertError.message}`);
             }
 
             console.log('✅ Perfil salvo com sucesso!');
             
-            // Marca como sucesso e aguarda o fetchProfile no useEffect
-            setSuccess(true);
+            // ✅ Aguarda um pouco antes de recarregar o perfil
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // ✅ Recarrega o perfil
+            await fetchProfile();
+            
+            console.log('✅ Perfil recarregado, redirecionando...');
 
         } catch (err: any) {
-            console.error('Erro no handleSubmit:', err);
+            console.error('❌ Erro no handleSubmit:', err);
             setError(err.message || 'Erro ao salvar perfil.');
+            isSaving.current = false; // ✅ Libera se houver erro
+        } finally {
             setLoading(false);
         }
     };
-
-    // Quando sucesso = true, recarrega o perfil e redireciona
-    useEffect(() => {
-        if (!success) return;
-
-        const reloadProfile = async () => {
-            console.log('🔄 Recarregando perfil após salvar...');
-            await fetchProfile();
-            
-            // Aguarda um pouco para garantir que o estado global foi atualizado
-            setTimeout(() => {
-                console.log('✅ Perfil recarregado, redirecionando...');
-                setLoading(false);
-                // NÃO FAZ RELOAD, deixa o App.tsx detectar que o perfil está completo
-            }, 500);
-        };
-
-        reloadProfile();
-    }, [success, fetchProfile]);
     
     return (
         <div className="w-full h-screen flex items-center justify-center bg-slate-50">
