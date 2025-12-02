@@ -54,7 +54,6 @@ export const useAppStore = create<AppState>((set, get) => ({
             if (error) {
                 console.error('Erro ao buscar perfil:', error);
                 
-                // Se não existe perfil, cria um vazio
                 if (error.code === 'PGRST116') {
                     console.log('Perfil não encontrado, criando novo...');
                     const { error: insertError } = await supabase
@@ -127,22 +126,71 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ session: null, profile: null, exams: [], results: [], allStudents: [] });
     },
 
+    // ✅ CORRIGIDO: Realtime agora escuta apenas tabelas específicas
     initializeRealtime: () => {
+        const currentUserId = get().session?.user?.id;
+        if (!currentUserId) return () => {};
+
         const channel = supabase
-            .channel('app-global-changes')
-            .on('postgres_changes', { event: '*', schema: 'public' },
-                () => {
+            .channel('app-changes')
+            // ✅ Escuta mudanças no próprio perfil do usuário
+            .on(
+                'postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'profiles',
+                    filter: `id=eq.${currentUserId}`
+                },
+                (payload) => {
+                    console.log('✅ Perfil atualizado:', payload);
                     get().fetchProfile();
+                }
+            )
+            // ✅ Escuta mudanças em provas
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'provas'
+                },
+                (payload) => {
+                    console.log('✅ Prova atualizada:', payload);
                     get().fetchExamsAndResults();
-                    const profile = get().profile;
-                    if (profile?.role === 'admin' || profile?.role === 'professor') {
-                        get().fetchAllStudents();
-                    }
+                }
+            )
+            // ✅ Escuta mudanças em acesso individual
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'provas_acesso_individual'
+                },
+                (payload) => {
+                    console.log('✅ Acesso individual atualizado:', payload);
+                    get().fetchExamsAndResults();
+                }
+            )
+            // ✅ Escuta mudanças nos próprios resultados
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'resultados',
+                    filter: `student_id=eq.${currentUserId}`
+                },
+                (payload) => {
+                    console.log('✅ Resultado atualizado:', payload);
+                    get().fetchExamsAndResults();
                 }
             )
             .subscribe();
 
         return () => {
+            console.log('🔌 Desconectando realtime...');
             supabase.removeChannel(channel);
         };
     }
