@@ -45,7 +45,6 @@ export const useAppStore = create<AppState>((set, get) => ({
         try {
             set({ loading: true });
             
-            // Tenta buscar o perfil existente
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
@@ -69,7 +68,6 @@ export const useAppStore = create<AppState>((set, get) => ({
                     if (insertError) {
                         console.error('Erro ao criar perfil:', insertError);
                     } else {
-                        // Busca novamente após criar
                         const { data: newProfile } = await supabase
                             .from('profiles')
                             .select('*')
