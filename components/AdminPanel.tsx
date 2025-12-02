@@ -869,113 +869,138 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
         else onClose();
     }
     
-    return (
-        <>
-            <div className="fixed inset-0 bg-slate-900/60 z-[80] flex items-center justify-center p-4 modal-backdrop">
-                <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col modal-content-anim">
-                    <header className="p-4 border-b flex items-center justify-between shrink-0">
-                        <h2 className="text-xl font-bold">{question ? `Editar ${title}` : `Novo Item`}</h2>
-                        <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon /></button>
-                    </header>
-                    {loading ? <div className="flex-grow flex items-center justify-center"><Spinner /></div> : (
-                        <div className="flex-grow p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
-                            <div className="flex flex-col space-y-4 overflow-y-auto pr-3 -mr-3 pb-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
-                                        <input type="text" value={title} disabled className="w-full rounded-lg border-slate-300 shadow-sm bg-slate-100 text-slate-500 cursor-not-allowed" />
-                                    </div>
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                                Disciplina <span className="text-red-500">*</span>
-                                            </label>
-                                            <select 
-                                                value={disciplina} 
-                                                onChange={e => setDisciplina(e.target.value)} 
-                                                className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
-                                                required
-                                            >
-                                                <option value="">Selecione uma disciplina</option>
-                                                {AVAILABLE_DISCIPLINES.map(disc => (
-                                                    <option key={disc} value={disc}>{disc}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label>
-                                    <RichTextToolbar editorRef={longTextRef} />
-                                    <div 
-                                        ref={longTextRef} 
-                                        key={question?.id || 'new-question'}  
-                                        suppressContentEditableWarning={true}
+  return (
+    <>
+      <div className="fixed inset-0 bg-slate-900/60 z-[80] flex items-center justify-center p-4 modal-backdrop">
+        <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col modal-content-anim">
+          <header className="p-4 border-b flex items-center justify-between shrink-0">
+            <h2 className="text-xl font-bold">{question ? `Editar ${title}` : `Novo Item`}</h2>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 transition rounded-full hover:bg-slate-100"><CloseIcon /></button>
+          </header>
 
-                                        onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
-                                        contentEditable="true" 
-                                        data-placeholder="Digite o enunciado aqui..." 
-                                        className="border rounded-b-md p-4 min-h-[300px] max-h-[500px] overflow-y-auto border-slate-300 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    />
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Imagem 1</label>
-                                        <input type="file" ref={image1InputRef} onChange={e => handleImageUpload(e, 1)} accept="image/*" className="hidden" />
-                                        <div className="flex items-center gap-2">
-                                            <button type="button" onClick={() => image1InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
-                                            <span className="text-sm text-slate-500 truncate">{imageUrl1 ? 'Carregada' : 'Nenhuma'}</span>
-                                        </div>
-                                        {imageUrl1 && <button onClick={() => setImageUrl1(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Imagem 2</label>
-                                        <input type="file" ref={image2InputRef} onChange={e => handleImageUpload(e, 2)} accept="image/*" className="hidden" />
-                                        <div className="flex items-center gap-2">
-                                            <button type="button" onClick={() => image2InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
-                                            <span className="text-sm text-slate-500 truncate">{imageUrl2 ? 'Carregada' : 'Nenhuma'}</span>
-                                        </div>
-                                        {imageUrl2 && <button onClick={() => setImageUrl2(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className="font-semibold block text-sm text-gray-700 mb-2">Alternativas</label>
-                                    <div className="space-y-2">{alternatives.map((alt, index) => (<div key={index} className="flex items-center gap-2"><input type="radio" name="correct-option" checked={alt.is_correct} onChange={() => setCorrectOption(index)} className="shrink-0 h-4 w-4 text-blue-600" /><span className="font-semibold text-slate-600">{alt.letter})</span><input type="text" value={alt.text} onChange={e => updateOptionText(index, e.target.value)} placeholder="Texto da alternativa" className="w-full rounded-md border-slate-300 shadow-sm text-sm" /></div>))}</div>
-                                </div>
-                            </div>
-                            <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 h-full flex flex-col overflow-hidden">
-                                <h3 className="font-bold mb-4 text-center text-slate-600 shrink-0">Pré-visualização</h3>
-                                <div className="flex-grow bg-white rounded-lg shadow-inner overflow-y-auto border border-slate-200 p-4">
-                                    <fieldset className="border rounded p-4 min-h-full">
-                                        <legend className="font-semibold px-2">{title || "Título"}</legend>
-                                        <RenderHtmlWithMath html={longText} />
-                                        { (imageUrl1 || imageUrl2) && 
-                                            <div className={`grid grid-cols-1 ${imageUrl1 && imageUrl2 ? 'sm:grid-cols-2' : ''} gap-4 my-4`}>
-                                                {imageUrl1 && <img src={imageUrl1} alt="Preview 1" className="border rounded-md w-full" />}
-                                                {imageUrl2 && <img src={imageUrl2} alt="Preview 2" className="border rounded-md w-full" />}
-                                            </div>
-                                        }
-                                        <div className="mt-2 space-y-1">
-                                            {alternatives.map(alt => (
-                                                alt.text && 
-                                                <div key={alt.letter} className="flex items-start gap-2 text-sm">
-                                                    <input type="radio" name="preview_radio" className="mt-1" disabled/>
-                                                    <span className="font-semibold mr-1">{alt.letter})</span>
-                                                    <RenderHtmlWithMath html={alt.text} tag="span" />
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </fieldset>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    <footer className="p-4 border-t flex justify-between items-center gap-3 shrink-0">
-                        <div>{question?.id && <button onClick={() => setShowConfirmModal(true)} className="bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200">Excluir Questão</button>}</div>
-                        <button onClick={handleSave} disabled={saving} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 min-w-[150px] text-center shadow-md">{saving ? <Spinner size="20px" color="#fff" /> : 'Salvar Questão'}</button>
-                    </footer>
+          {loading ? (
+            <div className="flex-grow flex items-center justify-center"><Spinner /></div>
+          ) : (
+            <div className="flex-grow p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-hidden">
+              {/* LEFT COLUMN (form inputs) */}
+              <div className="flex flex-col space-y-4 overflow-y-auto pr-3 -mr-3 pb-4">
+                {/* first row: identification + disciplina (2 columns) */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Identificação</label>
+                    <input type="text" value={title} disabled className="w-full rounded-lg border-slate-300 shadow-sm bg-slate-100 text-slate-500 cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Disciplina <span className="text-red-500">*</span>
+                    </label>
+                    <select 
+                      value={disciplina} 
+                      onChange={e => setDisciplina(e.target.value)} 
+                      className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+                      required
+                    >
+                      <option value="">Selecione uma disciplina</option>
+                      {AVAILABLE_DISCIPLINES.map(disc => (
+                        <option key={disc} value={disc}>{disc}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+
+                {/* FULL WIDTH: Enunciado / Texto de Apoio (toolbar + editor) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label>
+                  <RichTextToolbar editorRef={longTextRef} />
+                  <div 
+                    ref={longTextRef} 
+                    key={question?.id || 'new-question'}  
+                    suppressContentEditableWarning={true}
+                    onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
+                    contentEditable="true" 
+                    data-placeholder="Digite o enunciado aqui..." 
+                    className="border rounded-md p-4 min-h-[300px] max-h-[500px] overflow-y-auto border-slate-300 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+                  />
+                </div>
+
+                {/* Imagens */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Imagem 1</label>
+                    <input type="file" ref={image1InputRef} onChange={e => handleImageUpload(e as any, 1)} accept="image/*" className="hidden" />
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => image1InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
+                      <span className="text-sm text-slate-500 truncate">{imageUrl1 ? 'Carregada' : 'Nenhuma'}</span>
+                    </div>
+                    {imageUrl1 && <button onClick={() => setImageUrl1(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Imagem 2</label>
+                    <input type="file" ref={image2InputRef} onChange={e => handleImageUpload(e as any, 2)} accept="image/*" className="hidden" />
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => image2InputRef.current?.click()} className="text-sm font-semibold bg-white border border-slate-300 rounded-md px-3 py-2 hover:bg-slate-50 transition">Escolher Imagem</button>
+                      <span className="text-sm text-slate-500 truncate">{imageUrl2 ? 'Carregada' : 'Nenhuma'}</span>
+                    </div>
+                    {imageUrl2 && <button onClick={() => setImageUrl2(null)} className="text-xs text-red-500 mt-1 hover:underline">Remover</button>}
+                  </div>
+                </div>
+
+                {/* Alternativas */}
+                <div>
+                  <label className="font-semibold block text-sm text-gray-700 mb-2">Alternativas</label>
+                  <div className="space-y-2">
+                    {alternatives.map((alt, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input type="radio" name="correct-option" checked={alt.is_correct} onChange={() => setCorrectOption(index)} className="shrink-0 h-4 w-4 text-blue-600" />
+                        <span className="font-semibold text-slate-600">{alt.letter})</span>
+                        <input type="text" value={alt.text} onChange={e => updateOptionText(index, e.target.value)} placeholder="Texto da alternativa" className="w-full rounded-md border-slate-300 shadow-sm text-sm" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN (preview) */}
+              <div className="bg-slate-100 p-4 rounded-lg border border-slate-200 h-full flex flex-col overflow-hidden">
+                <h3 className="font-bold mb-4 text-center text-slate-600 shrink-0">Pré-visualização</h3>
+                <div className="flex-grow bg-white rounded-lg shadow-inner overflow-y-auto border border-slate-200 p-4">
+                  <fieldset className="border rounded p-4 min-h-full">
+                    <legend className="font-semibold px-2">{title || "Título"}</legend>
+                    <RenderHtmlWithMath html={longText} />
+                    { (imageUrl1 || imageUrl2) && 
+                      <div className={`grid grid-cols-1 ${imageUrl1 && imageUrl2 ? 'sm:grid-cols-2' : ''} gap-4 my-4`}>
+                        {imageUrl1 && <img src={imageUrl1} alt="Preview 1" className="border rounded-md w-full" />}
+                        {imageUrl2 && <img src={imageUrl2} alt="Preview 2" className="border rounded-md w-full" />}
+                      </div>
+                    }
+                    <div className="mt-2 space-y-1">
+                      {alternatives.map(alt => (
+                        alt.text && 
+                        <div key={alt.letter} className="flex items-start gap-2 text-sm">
+                          <input type="radio" name="preview_radio" className="mt-1" disabled/>
+                          <span className="font-semibold mr-1">{alt.letter})</span>
+                          <RenderHtmlWithMath html={alt.text} tag="span" />
+                        </div>
+                      ))}
+                    </div>
+                  </fieldset>
+                </div>
+              </div>
             </div>
-            {showConfirmModal && <ActionConfirmModal type="confirm" title="Excluir Questão" message="Tem certeza? Esta ação não pode ser desfeita." onConfirm={executeDelete} onCancel={() => setShowConfirmModal(false)} />}
-        </>
-    );
-};
+          )}
+
+          <footer className="p-4 border-t flex justify-between items-center gap-3 shrink-0">
+            <div>{question?.id && <button onClick={() => setShowConfirmModal(true)} className="bg-red-100 text-red-700 font-semibold py-2 px-4 rounded-lg hover:bg-red-200">Excluir Questão</button>}</div>
+            <button onClick={handleSave} disabled={saving} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 disabled:bg-blue-400 min-w-[150px] text-center shadow-md">{saving ? <Spinner size="20px" color="#fff" /> : 'Salvar Questão'}</button>
+          </footer>
+        </div>
+      </div>
+
+      {showConfirmModal && <ActionConfirmModal type="confirm" title="Excluir Questão" message="Tem certeza? Esta ação não pode ser desfeita." onConfirm={executeDelete} onCancel={() => setShowConfirmModal(false)} />}
+    </>
+  );
+}
 
 const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void }> = ({ initialQuiz, onClose }) => {
     const [quiz, setQuiz] = useState<Prova | null>(null);
