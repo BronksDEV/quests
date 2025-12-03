@@ -10,12 +10,9 @@ import ResultsDashboardModal from './ResultsDashboardModal';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
 
-
-
 // ============================================================================
 // 1. CONFIGURAÇÕES E UTILITÁRIOS
 // ============================================================================
-
 
 const AVAILABLE_DISCIPLINES = [
     'Matemática',
@@ -43,7 +40,6 @@ const standardizeTitle = (str: string) => {
         .join(' ');
 };
 
-
 const DISCIPLINE_PRIORITY: Record<string, number> = {
     'Matemática': 1,
     'Física': 2,
@@ -66,6 +62,13 @@ const formatToLocalDatetime = (isoString: string | undefined) => {
     const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
     return adjustedDate.toISOString().slice(0, 16);
 };
+
+// Ícone Auxiliar para o Dropdown
+const ChevronDown: React.FC<{ className?: string }> = ({ className }) => (
+    <svg className={className} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+);
 
 const ToolbarButton: React.FC<{ onClick: (e: React.MouseEvent<HTMLButtonElement>) => void; children: React.ReactNode; title: string; }> = ({ onClick, children, title }) => (
     <button
@@ -448,14 +451,23 @@ const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAcc
 const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ quiz, onClose }) => {
     const allStudents = useAppStore((state) => state.allStudents);
     const fetchAllStudents = useAppStore((state) => state.fetchAllStudents);
+    const fetchExamsAndResults = useAppStore((state) => state.fetchExamsAndResults); 
+    
     const [accessList, setAccessList] = useState<Set<string>>(new Set());
     const [filter, setFilter] = useState('');
     const [debouncedFilter, setDebouncedFilter] = useState('');
     const [loading, setLoading] = useState(true);
+    
     const [quizStatus, setQuizStatus] = useState(quiz.status);
     const [savingStatus, setSavingStatus] = useState(false);
 
-    // Scroll Lock
+    useEffect(() => {
+        if (quiz.status !== quizStatus) {
+            setQuizStatus(quiz.status);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [quiz.status]);
+
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => { document.body.style.overflow = ''; };
@@ -498,11 +510,23 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
     }, [debouncedFilter, allStudents, quizSeriesPrefix]);
     
     const toggleGlobalStatus = async () => {
+        if (savingStatus) return; 
+        
+        const oldStatus = quizStatus;
         const newStatus = quizStatus === 'aberta_para_todos' ? 'fechada' : 'aberta_para_todos';
+        
+        setQuizStatus(newStatus);
         setSavingStatus(true);
+        
         const { error } = await supabase.from('provas').update({ status: newStatus }).eq('id', quiz.id);
-        if (error) alert("Erro: " + error.message);
-        else setQuizStatus(newStatus);
+        
+        if (error) {
+            alert("Erro: " + error.message);
+            setQuizStatus(oldStatus);
+        } else {
+            fetchExamsAndResults();
+        }
+        
         setSavingStatus(false);
     };
 
@@ -550,8 +574,9 @@ const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ qu
                             <span className={`font-bold ${quizStatus === 'aberta_para_todos' ? 'text-green-600' : 'text-red-600'}`}>
                                 {quizStatus === 'aberta_para_todos' ? 'Aberta para Todos' : 'Fechada'}
                             </span>
-                             <button onClick={toggleGlobalStatus} disabled={savingStatus} className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition ${quizStatus === 'aberta_para_todos' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
-                                {savingStatus ? <Spinner size="20px" color="#fff"/> : (quizStatus === 'aberta_para_todos' ? 'Fechar Prova' : 'Abrir para Todos')}
+                             <button onClick={toggleGlobalStatus} disabled={savingStatus} className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition flex items-center gap-2 ${quizStatus === 'aberta_para_todos' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
+                                {savingStatus && <Spinner size="16px" color="#fff"/>}
+                                {quizStatus === 'aberta_para_todos' ? 'Fechar Prova' : 'Abrir para Todos'}
                              </button>
                         </div>
                     </div>
@@ -1011,7 +1036,6 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
     const [area, setArea] = useState(initialQuiz?.area || 'Linguagens, Códigos e suas Tecnologias');
     const [dataInicio, setDataInicio] = useState(initialQuiz?.data_inicio ? formatToLocalDatetime(initialQuiz.data_inicio) : '');
     const [dataFim, setDataFim] = useState(initialQuiz?.data_fim ? formatToLocalDatetime(initialQuiz.data_fim) : '');
-    const standardizeTitle = (str: string) => {if (!str) return '';return str.toLowerCase() .trim() .split(' ') .map(word => word.charAt(0).toUpperCase() + word.slice(1)) .join(' '); };
     
     const [loading, setLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
@@ -1029,7 +1053,7 @@ const QuizEditorModal: React.FC<{ initialQuiz: Prova | null, onClose: () => void
         return () => { document.body.style.overflow = ''; };
     }, []);
 
-const fetchQuizData = useCallback(async (id: number | null) => {
+    const fetchQuizData = useCallback(async (id: number | null) => {
         if (!id) {
             setLoading(false);
             return;
@@ -1079,7 +1103,7 @@ const fetchQuizData = useCallback(async (id: number | null) => {
         });
     }, [quiz?.questoes]);
 
-const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
+    const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
         if (!quiz?.questoes || isReordering || !quiz?.id) return;
         
         const questions = [...sortedQuestions];
@@ -1444,7 +1468,7 @@ const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
 };
 
 // ============================================================================
-// 4. COMPONENTE PRINCIPAL DO PAINEL (PAI - Último a ser definido)
+// 4. COMPONENTE PRINCIPAL DO PAINEL (PAI)
 // ============================================================================
 
 const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
@@ -1454,16 +1478,22 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     
     const [activePanel, setActivePanel] = useState('provas-avancado');
     const [loadingQuizzes, setLoadingQuizzes] = useState(true);
+
+    // Controle dos Accordions/Dropdowns (estado inicial vazio = tudo fechado)
+    const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+
+    const [selectedQuizId, setSelectedQuizId] = useState<number | null>(null);
+    
+    const selectedQuiz = useMemo(() => 
+        exams.find(e => e.id === selectedQuizId) || null
+    , [exams, selectedQuizId]);
     
     const [isQuizEditorOpen, setQuizEditorOpen] = useState(false);
     const [isAccessControlOpen, setAccessControlOpen] = useState(false);
     const [isResultsDashboardOpen, setResultsDashboardOpen] = useState(false);
     const [isConfirmModalOpen, setConfirmModalOpen] = useState(false);
-    
-    const [selectedQuiz, setSelectedQuiz] = useState<Prova | null>(null);
     const [quizToDelete, setQuizToDelete] = useState<number | null>(null);
     
-    // Estado para o modal de duplicação
     const [isDuplicateModalOpen, setDuplicateModalOpen] = useState(false);
     const [quizToDuplicate, setQuizToDuplicate] = useState<Prova | null>(null);
 
@@ -1481,11 +1511,30 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         loadInitialData();
     }, [loadInitialData]);
 
+    const handleCloseAllModals = async () => {
+        setQuizEditorOpen(false);
+        setAccessControlOpen(false);
+        setResultsDashboardOpen(false);
+        setConfirmModalOpen(false);
+        setDuplicateModalOpen(false);
+        setSelectedQuizId(null);
+        setQuizToDelete(null);
+        setQuizToDuplicate(null);
+        
+        // Reload data to reflect changes
+        await fetchExamsAndResults();
+    };
+
     const handleOpenModal = (modal: 'editor' | 'access' | 'results', quiz: Prova | null) => {
-        setSelectedQuiz(quiz);
+        if (quiz) {
+            setSelectedQuizId(quiz.id); 
+        } else {
+            setSelectedQuizId(null);
+        }
+        
         if (modal === 'editor') setQuizEditorOpen(true);
-        if (modal === 'access' && quiz) setAccessControlOpen(true);
-        if (modal === 'results' && quiz) setResultsDashboardOpen(true);
+        if (modal === 'access') setAccessControlOpen(true);
+        if (modal === 'results') setResultsDashboardOpen(true);
     };
     
     const openDuplicateModal = (quiz: Prova) => {
@@ -1558,8 +1607,7 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             }
 
             alert("Prova duplicada com sucesso!");
-            await fetchExamsAndResults();
-            onClose();
+            await fetchExamsAndResults(); 
 
         } catch (error: any) {
             console.error("Erro ao duplicar:", error);
@@ -1568,17 +1616,6 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             setLoadingQuizzes(false);
             setQuizToDuplicate(null);
         }
-    };
-    
-    const handleCloseAllModals = () => {
-        setQuizEditorOpen(false);
-        setAccessControlOpen(false);
-        setResultsDashboardOpen(false);
-        setConfirmModalOpen(false);
-        setDuplicateModalOpen(false);
-        setSelectedQuiz(null);
-        setQuizToDelete(null);
-        setQuizToDuplicate(null);
     };
 
     const confirmDeleteQuiz = (quizId: number) => {
@@ -1591,9 +1628,67 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         const { error } = await supabase.from('provas').delete().eq('id', quizToDelete);
         if (error) {
             alert("Erro ao excluir avaliação: " + error.message);
+        } else {
+             await fetchExamsAndResults(); 
         }
         handleCloseAllModals();
     }
+
+    // --- Lógica de Organização 
+    const toggleSection = (sectionName: string) => {
+        setExpandedSections(prev => ({
+            ...prev,
+            [sectionName]: !prev[sectionName]
+        }));
+    };
+
+    const groupedAndSortedExams = useMemo(() => {
+        const groups: Record<string, Prova[]> = {};
+        
+        exams.forEach(exam => {
+            const area = exam.area || 'Outros';
+            if (!groups[area]) groups[area] = [];
+            groups[area].push(exam);
+        });
+
+        const ORDERED_AREAS = [
+            'Linguagens, Códigos e suas Tecnologias',
+            'Matemática e suas Tecnologias',
+            'Ciências da Natureza e suas Tecnologias',
+            'Ciências Humanas e suas Tecnologias',
+            'Provão',
+            'Outros'
+        ];
+
+        const sortedKeys = Object.keys(groups).sort((a, b) => {
+            const indexA = ORDERED_AREAS.indexOf(a);
+            const indexB = ORDERED_AREAS.indexOf(b);
+            
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            
+            return a.localeCompare(b);
+        });
+
+        return sortedKeys.map(areaKey => {
+            const sortedExams = groups[areaKey].sort((a, b) => {
+                const serieA = a.serie || '';
+                const serieB = b.serie || '';
+                const compareSerie = serieA.localeCompare(serieB, undefined, { numeric: true });
+                
+                if (compareSerie !== 0) return compareSerie;
+
+                return (a.title || '').localeCompare(b.title || '');
+            });
+
+            return {
+                area: areaKey,
+                exams: sortedExams
+            };
+        });
+
+    }, [exams]);
 
     return (
         <>
@@ -1618,39 +1713,82 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                             </nav>
 
                             {activePanel === 'provas-avancado' && (
-                                <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm">
-                                    <div className="flex items-center justify-between mb-6">
-                                        <h2 className="text-xl font-bold">Gerenciador de Avaliações</h2>
-                                        <button onClick={() => handleOpenModal('editor', null)} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg">
-                                            + Nova Avaliação
-                                        </button>
-                                    </div>
-                                    {loadingQuizzes ? <div className="flex justify-center p-8"><Spinner /></div> : (
-                                        <div className="space-y-3">
-                                            {exams.length === 0 ? <p className="text-center text-slate-500 py-8">Nenhuma avaliação cadastrada.</p> :
-                                                [...exams].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).map(quiz => (
-                                                    <div key={quiz.id} className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-                                                        <div>
-                                                            <p className="font-bold text-slate-800">{quiz.title}</p>
-                                                            <div className="flex items-center gap-2 text-sm text-slate-500">
-                                                                <span>{quiz.serie} - {quiz.area}</span>
-                                                                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${quiz.status === 'aberta_para_todos' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                                                                    {quiz.status === 'aberta_para_todos' ? 'Aberta' : 'Fechada'}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            <button onClick={() => handleOpenModal('results', quiz)} className="bg-green-100 text-green-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-green-200">Resultados</button>
-                                                            <button onClick={() => handleOpenModal('access', quiz)} className="bg-indigo-100 text-indigo-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-indigo-200">Acesso</button>
-                                                            <button onClick={() => handleOpenModal('editor', quiz)} className="bg-blue-100 text-blue-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-blue-200">Editar</button>
-                                                            <button onClick={() => openDuplicateModal(quiz)} className="bg-purple-100 text-purple-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-purple-200">Duplicar</button>
-                                                            <button onClick={() => confirmDeleteQuiz(quiz.id)} className="bg-red-100 text-red-700 font-semibold text-sm py-2 px-3 rounded-lg hover:bg-red-200">Excluir</button>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            }
+                                <div className="space-y-6">
+                                    <div className="bg-white p-6 sm:p-8 rounded-xl border border-slate-200 shadow-sm">
+                                        <div className="flex items-center justify-between mb-6">
+                                            <h2 className="text-xl font-bold">Gerenciador de Avaliações</h2>
+                                            <button onClick={() => handleOpenModal('editor', null)} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 transition shadow-md hover:shadow-lg flex items-center gap-2">
+                                                <span>+</span> Nova Avaliação
+                                            </button>
                                         </div>
-                                    )}
+
+                                        {loadingQuizzes ? (
+                                            <div className="flex justify-center p-8"><Spinner /></div>
+                                        ) : exams.length === 0 ? (
+                                            <p className="text-center text-slate-500 py-8">Nenhuma avaliação cadastrada.</p>
+                                        ) : (
+                                            <div className="space-y-4">
+                                                {/* INÍCIO DO AGRUPAMENTO (Dropdowns) */}
+                                                {groupedAndSortedExams.map((group) => {
+                                                    const isOpen = expandedSections[group.area];
+                                                    const count = group.exams.length;
+                                                    
+                                                    return (
+                                                        <div key={group.area} className="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                                                            {/* Cabeçalho do Grupo */}
+                                                            <button 
+                                                                onClick={() => toggleSection(group.area)}
+                                                                className={`w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors ${isOpen ? 'border-b border-slate-200' : ''}`}
+                                                            >
+                                                                <div className="flex items-center gap-3">
+                                                                    <div className={`p-1.5 rounded-lg font-bold text-lg w-10 h-10 flex items-center justify-center transition-colors ${isOpen ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-500'}`}>
+                                                                        {group.area.charAt(0)}
+                                                                    </div>
+                                                                    <div className="text-left">
+                                                                        <h3 className="font-bold text-slate-800">{group.area}</h3>
+                                                                        <p className="text-xs text-slate-500 font-medium">{count} Avaliaç{count !== 1 ? 'ões' : 'ão'}</p>
+                                                                    </div>
+                                                                </div>
+                                                                <div className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}>
+                                                                    <ChevronDown />
+                                                                </div>
+                                                            </button>
+
+                                                            {/* Lista de Provas (Conteúdo) */}
+                                                            {isOpen && (
+                                                                <div className="bg-slate-50/50 p-4 space-y-3">
+                                                                    {group.exams.map(quiz => (
+                                                                        <div key={quiz.id} className="bg-white p-4 rounded-lg border border-slate-200 flex flex-wrap items-center justify-between gap-4 hover:border-blue-300 transition-colors shadow-sm relative group">
+                                                                             {/* Bordinha Lateral indicando status */}
+                                                                             <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-lg ${quiz.status === 'aberta_para_todos' ? 'bg-green-500' : 'bg-red-400'}`}></div>
+
+                                                                            <div className="pl-3">
+                                                                                <p className="font-bold text-slate-800 group-hover:text-blue-700 transition-colors">{quiz.title}</p>
+                                                                                <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+                                                                                    <span className="font-medium bg-slate-100 px-2 py-0.5 rounded text-xs">{quiz.serie}</span>
+                                                                                    <span className={`px-2 py-0.5 rounded-full text-xs font-bold flex items-center gap-1 ${quiz.status === 'aberta_para_todos' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                                                                        {quiz.status === 'aberta_para_todos' ? 'Aberta' : 'Fechada'}
+                                                                                    </span>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex gap-2 flex-wrap ml-auto">
+                                                                                <button onClick={() => handleOpenModal('results', quiz)} className="bg-green-50 text-green-700 border border-green-200 font-semibold text-xs py-2 px-3 rounded-lg hover:bg-green-100 whitespace-nowrap">Resultados</button>
+                                                                                <button onClick={() => handleOpenModal('access', quiz)} className="bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold text-xs py-2 px-3 rounded-lg hover:bg-indigo-100 whitespace-nowrap">Acesso</button>
+                                                                                <button onClick={() => handleOpenModal('editor', quiz)} className="bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-xs py-2 px-3 rounded-lg hover:bg-blue-100 whitespace-nowrap">Editar</button>
+                                                                                <button onClick={() => openDuplicateModal(quiz)} className="bg-purple-50 text-purple-700 border border-purple-200 font-semibold text-xs py-2 px-3 rounded-lg hover:bg-purple-100 whitespace-nowrap">Duplicar</button>
+                                                                                <button onClick={() => confirmDeleteQuiz(quiz.id)} className="bg-red-50 text-red-700 border border-red-200 font-semibold text-xs py-2 px-3 rounded-lg hover:bg-red-100 whitespace-nowrap">Excluir</button>
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                                {/* FIM DO AGRUPAMENTO */}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                             {activePanel === 'criar-conta' && <CreateUserPanel />}
@@ -1658,9 +1796,13 @@ const AdminPanel: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     </div>
                 </div>
             </div>
-            {isQuizEditorOpen && <QuizEditorModal initialQuiz={selectedQuiz} onClose={handleCloseAllModals} />}
+            
+            {/* AGORA TODOS OS ONCLOSE chamam handleCloseAllModals, QUE ATUALIZA O DB */}
+            
+            {isQuizEditorOpen && <QuizEditorModal initialQuiz={selectedQuizId ? selectedQuiz : null} onClose={handleCloseAllModals} />}
             {isAccessControlOpen && selectedQuiz && <AccessControlModal quiz={selectedQuiz} onClose={handleCloseAllModals} />}
             {isResultsDashboardOpen && selectedQuiz && <ResultsDashboardModal quiz={selectedQuiz} onClose={handleCloseAllModals} />}
+            
             {isConfirmModalOpen && (
                 <ActionConfirmModal
                     type="confirm"

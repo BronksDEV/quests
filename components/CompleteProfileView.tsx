@@ -15,11 +15,9 @@ const CompleteProfileView: React.FC = () => {
     const [error, setError] = useState('');
     const [userId, setUserId] = useState<string | null>(null);
     
-    // ✅ NOVO: Bloqueia múltiplas inicializações
     const hasInitialized = useRef(false);
     const isSaving = useRef(false);
 
-    // ✅ CORRIGIDO: Busca o userId UMA ÚNICA VEZ
     useEffect(() => {
         if (hasInitialized.current) return;
         hasInitialized.current = true;
@@ -35,7 +33,6 @@ const CompleteProfileView: React.FC = () => {
 
                 setUserId(user.id);
 
-                // ✅ Preenche campos APENAS se o perfil já existe
                 if (profile) {
                     setNome(profile.nome_completo || '');
                     setMatricula(profile.matricula || '');
@@ -48,14 +45,12 @@ const CompleteProfileView: React.FC = () => {
         };
 
         initializeUser();
-    }, []); // ✅ Roda apenas UMA VEZ (sem dependências)
+    }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
-        // ✅ Bloqueia múltiplas submissões
         if (isSaving.current) {
-            console.log('⚠️ Salvamento já em andamento, ignorando...');
             return;
         }
         
@@ -76,9 +71,7 @@ const CompleteProfileView: React.FC = () => {
         try {
             const { data: { user } } = await supabase.auth.getUser();
             
-            console.log('💾 Salvando perfil...');
-            
-            // ✅ UPSERT (cria se não existir, atualiza se existir)
+            // Usando upsert para garantir atualização ou criação segura
             const { error: upsertError } = await supabase
                 .from('profiles')
                 .upsert({
@@ -93,24 +86,18 @@ const CompleteProfileView: React.FC = () => {
                 });
 
             if (upsertError) {
-                console.error('❌ Erro ao salvar perfil:', upsertError);
                 throw new Error(`Erro ao salvar: ${upsertError.message}`);
             }
-
-            console.log('✅ Perfil salvo com sucesso!');
             
-            // ✅ Aguarda um pouco antes de recarregar o perfil
+            // Pequeno delay para garantir propagação
             await new Promise(resolve => setTimeout(resolve, 500));
             
-            // ✅ Recarrega o perfil
             await fetchProfile();
-            
-            console.log('✅ Perfil recarregado, redirecionando...');
 
         } catch (err: any) {
             console.error('❌ Erro no handleSubmit:', err);
             setError(err.message || 'Erro ao salvar perfil.');
-            isSaving.current = false; // ✅ Libera se houver erro
+            isSaving.current = false; 
         } finally {
             setLoading(false);
         }

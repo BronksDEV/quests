@@ -15,6 +15,10 @@ interface QuizTakerProps {
 
 const QUESTIONS_PER_PAGE = 5;
 
+// ============================================================================
+// COMPONENTES AUXILIARES E VISUAIS
+// ============================================================================
+
 const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; lastSavedTime: string | null }> = ({ status, lastSavedTime }) => {
     if (status === 'saving') {
         return (
@@ -111,7 +115,6 @@ const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscr
     </div>
 );
 
-// ✅ CORRIGIDO: Modal com botão de retry
 const OfflineWarningModal: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
     <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm select-none">
         <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-l-8 border-yellow-500 animate-bounce-short">
@@ -165,6 +168,10 @@ const TermsModal: React.FC<{ onConfirm: () => void; onCancel: () => void; }> = (
     </div>
 );
 
+// ============================================================================
+// COMPONENTE PRINCIPAL
+// ============================================================================
+
 const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const profile = useAppStore((state) => state.profile);
     const [quiz, setQuiz] = useState<Omit<Prova, 'questoes'> | null>(null);
@@ -185,7 +192,6 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
     const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
 
-    // ✅ NOVO: Estado específico para erro de rede (não bloqueia aluno)
     const [isNetworkError, setIsNetworkError] = useState(false);
 
     const [showWarning, setShowWarning] = useState(false);
@@ -200,38 +206,41 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
 
     const STORAGE_KEY = profile ? `quiz_progress_${profile.id}_${examId}` : null;
 
-    // --- Inicialização de persistência de termos e página (evita pedir termos de novo)
     useEffect(() => {
         if (!profile) return;
         TERMS_KEY_REF.current = `quiz_terms_accepted_${profile.id}_${examId}`;
         PAGE_KEY_REF.current = `quiz_page_${profile.id}_${examId}`;
 
-        // restaurar aceite dos termos
-        const accepted = sessionStorage.getItem(TERMS_KEY_REF.current);
+        // ======= CORREÇÃO DO RELOAD / TELA TRAVADA =======
+        // Verifica se os termos já foram aceitos no localStorage
+        const accepted = localStorage.getItem(TERMS_KEY_REF.current);
         if (accepted === 'true') {
             setShowTerms(false);
+            setIsQuizStarted(true); 
+            // Como setIsQuizStarted vai para true, o useEffect de fullscreen (mais abaixo) 
+            // vai detectar que não está em fullscreen e exibir o alerta vermelho (FullscreenExitWarningModal),
+            // permitindo que o aluno volte à tela cheia em vez de ficar na tela branca.
         } else {
             setShowTerms(true);
         }
+        // =================================================
 
-        // restaurar página
-        const storedPage = sessionStorage.getItem(PAGE_KEY_REF.current);
+        const storedPage = localStorage.getItem(PAGE_KEY_REF.current);
         if (storedPage) {
             const p = Number(storedPage);
             if (!Number.isNaN(p)) setCurrentPage(p);
         }
     }, [profile, examId]);
 
-    // centraliza navegação e persiste página
     const goToPage = useCallback((page: number) => {
         setCurrentPage(page);
-        if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(page));
+        if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(page));
     }, []);
 
     const goNext = useCallback(() => {
         setCurrentPage(prev => {
             const next = Math.min(Math.ceil(questions.length / QUESTIONS_PER_PAGE) - 1, prev + 1);
-            if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(next));
+            if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(next));
             return next;
         });
     }, [questions.length]);
@@ -239,11 +248,14 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     const goPrev = useCallback(() => {
         setCurrentPage(prev => {
             const next = Math.max(0, prev - 1);
-            if (PAGE_KEY_REF.current) sessionStorage.setItem(PAGE_KEY_REF.current, String(next));
+            if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(next));
             return next;
         });
     }, []);
 
+    // -----------------------------------------------------------
+    // SEGURANÇA: Previne Links e Clique em imagens com Link
+    // -----------------------------------------------------------
     useEffect(() => {
         const preventLinks = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
@@ -257,11 +269,13 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         return () => document.removeEventListener('click', preventLinks, true);
     }, []);
 
-    // ✅ CORRIGIDO: Limpa erro de rede ao reconectar
+    // -----------------------------------------------------------
+    // MONITORAMENTO DE REDE
+    // -----------------------------------------------------------
     useEffect(() => {
         const handleOnline = () => {
             setIsOffline(false);
-            setIsNetworkError(false); // ✅ ADICIONA
+            setIsNetworkError(false);
         };
         const handleOffline = () => setIsOffline(true);
 
@@ -274,6 +288,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         };
     }, []);
 
+    // -----------------------------------------------------------
+    // PERSISTÊNCIA: Carregar Respostas Salvas
+    // -----------------------------------------------------------
     useEffect(() => {
         if (STORAGE_KEY) {
             const savedAnswers = localStorage.getItem(STORAGE_KEY);
@@ -289,6 +306,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [STORAGE_KEY]);
 
+    // -----------------------------------------------------------
+    // PERSISTÊNCIA: Salvar Respostas Automaticamente (Auto-Save)
+    // -----------------------------------------------------------
     useEffect(() => {
         if (STORAGE_KEY && Object.keys(answers).length > 0) {
             setSaveStatus('saving');
@@ -306,10 +326,16 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [answers, STORAGE_KEY]);
 
+    // -----------------------------------------------------------
+    // Scroll para o topo ao mudar de página
+    // -----------------------------------------------------------
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }, [currentPage]);
 
+    // -----------------------------------------------------------
+    // SEGURANÇA AVANÇADA: Bloqueio de Teclas, ContextMenu, Copy/Paste
+    // -----------------------------------------------------------
     useEffect(() => {
         const preventActions = (e: Event) => {
             e.preventDefault();
@@ -317,11 +343,14 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
             return false;
         };
         const preventKeys = (e: KeyboardEvent) => {
+            // Bloqueia F12, DevTools (Ctrl+Shift+I), Print (Ctrl+P), View Source (Ctrl+U)
             if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'p') || (e.ctrlKey && e.key === 'u')) {
                 e.preventDefault();
                 e.stopPropagation();
             }
         };
+
+        // Adiciona listeners
         document.addEventListener('contextmenu', preventActions);
         document.addEventListener('copy', preventActions);
         document.addEventListener('cut', preventActions);
@@ -329,6 +358,8 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         document.addEventListener('selectstart', preventActions);
         document.addEventListener('dragstart', preventActions);
         document.addEventListener('keydown', preventKeys);
+
+        // Remove listeners ao desmontar
         return () => {
             document.removeEventListener('contextmenu', preventActions);
             document.removeEventListener('copy', preventActions);
@@ -340,6 +371,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         };
     }, []);
 
+    // -----------------------------------------------------------
+    // Lógica de Bloqueio do Estudante
+    // -----------------------------------------------------------
     const blockStudentAndExit = useCallback(async () => {
         if (!profile || profile.role === 'admin' || isBlockingRef.current) return;
         isBlockingRef.current = true;
@@ -357,6 +391,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [profile, onFinish]);
 
+    // -----------------------------------------------------------
+    // Controle de Tela Cheia
+    // -----------------------------------------------------------
     const requestFullscreen = useCallback(async () => {
         try { await document.documentElement.requestFullscreen(); } catch (err) { console.error(err); }
     }, []);
@@ -369,6 +406,7 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
                 if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
                 return;
             }
+            // Se saiu da tela cheia, mas a prova começou e não é admin...
             if (!document.fullscreenElement && isQuizStarted && !isBlockingRef.current) {
                 setShowWarning(true);
                 setCountdown(5);
@@ -388,6 +426,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, [isQuizStarted, blockStudentAndExit, profile]);
 
+    // -----------------------------------------------------------
+    // Envio do Formulário (Submit)
+    // -----------------------------------------------------------
     const handleSubmit = useCallback(async () => {
         if (!profile) return;
 
@@ -417,9 +458,11 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
             });
             if (error) throw error;
 
+            // Limpa dados salvos ao finalizar com sucesso
             if (STORAGE_KEY) localStorage.removeItem(STORAGE_KEY);
+            if (TERMS_KEY_REF.current) localStorage.removeItem(TERMS_KEY_REF.current);
+            if (PAGE_KEY_REF.current) localStorage.removeItem(PAGE_KEY_REF.current);
 
-            // ✅ Limpa erro de rede em caso de sucesso
             setIsNetworkError(false);
 
             if (document.fullscreenElement) await document.exitFullscreen();
@@ -430,12 +473,10 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         } catch (err: any) {
             console.error("Erro ao enviar:", err);
 
-            // ✅ DETECÇÃO DE ERRO DE REDE (não bloqueia aluno)
             if (!navigator.onLine || err.message?.includes('fetch') || err.message?.includes('network') || err.message?.includes('Failed to fetch')) {
                 setIsNetworkError(true);
-                isExitingLegitimately.current = false; // Reseta flag
+                isExitingLegitimately.current = false; 
             } else {
-                // Outros erros (não relacionados à rede)
                 setError("Erro ao enviar avaliação: " + err.message);
                 setShowErrorModal(true);
                 isExitingLegitimately.current = false;
@@ -444,6 +485,9 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         }
     }, [examId, profile, answers, onFinish, questions, STORAGE_KEY, goToPage]);
 
+    // -----------------------------------------------------------
+    // Carga de Dados da Prova
+    // -----------------------------------------------------------
     useEffect(() => {
         const fetchQuiz = async () => {
             setLoading(true);
@@ -470,10 +514,13 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         fetchQuiz();
     }, [examId]);
 
+    // -----------------------------------------------------------
+    // Início da Prova
+    // -----------------------------------------------------------
     const startQuiz = async () => {
-        // Persistir aceite dos termos para evitar que o modal apareça de novo
+        // Admin pula termos e fullscreen
         if (profile?.role === 'admin') {
-            if (TERMS_KEY_REF.current) sessionStorage.setItem(TERMS_KEY_REF.current, 'true');
+            if (TERMS_KEY_REF.current) localStorage.setItem(TERMS_KEY_REF.current, 'true');
             setShowTerms(false);
             setIsQuizStarted(true);
             return;
@@ -482,17 +529,23 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         try {
             await requestFullscreen();
         } catch (err) {
-            // se o fullscreen falhar, proseguir mesmo assim, mas gravar aceite
             console.error('Erro ao entrar em fullscreen:', err);
         } finally {
-            if (TERMS_KEY_REF.current) sessionStorage.setItem(TERMS_KEY_REF.current, 'true');
+            if (TERMS_KEY_REF.current) localStorage.setItem(TERMS_KEY_REF.current, 'true');
             setShowTerms(false);
             setIsQuizStarted(true);
         }
     };
 
+    // ============================================================================
+    // RENDERIZAÇÃO
+    // ============================================================================
+
     if (loading) return <div className="flex justify-center p-12 h-96"><Spinner /></div>;
+    
+    // Se o usuário não é admin e os termos ainda devem ser mostrados
     if (showTerms && profile?.role !== 'admin') return <TermsModal onConfirm={startQuiz} onCancel={onFinish} />;
+    
     if (showSuccessAnimation) return <SubmissionSuccessAnimation />;
 
     if (showErrorModal) {
@@ -505,8 +558,24 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         return <ActionConfirmModal type="info" title="Questão em Branco" message={`Você não respondeu a questão ${missingQuestionModal.questionIndex}. Por favor, marque uma alternativa antes de enviar.`} onConfirm={() => setMissingQuestionModal({ show: false, questionIndex: -1 })} confirmText="Entendido" />
     }
 
+    // Tela de Carregamento Segura (Prevenção de Loop Infinito)
     if (!isQuizStarted && !showTerms) {
-        return <div className="flex justify-center p-12 h-96"><Spinner /><p className="ml-4">Iniciando ambiente seguro...</p></div>;
+        return (
+             <div className="flex flex-col items-center justify-center p-12 h-96 animate-fadeIn">
+                <Spinner />
+                <p className="mt-4 text-slate-600 mb-6">Iniciando ambiente seguro...</p>
+                <button 
+                    onClick={() => {
+                        // Reset de emergência caso trave: limpa o flag 'accepted' e força exibição dos termos
+                        localStorage.removeItem(TERMS_KEY_REF.current || '');
+                        setShowTerms(true);
+                    }}
+                    className="text-sm text-blue-500 hover:text-blue-700 underline"
+                >
+                    Travou nesta tela? Clique aqui para tentar de novo.
+                </button>
+            </div>
+        );
     }
 
     if (!quiz || questions.length === 0) {
@@ -524,7 +593,6 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
     return (
         <>
             {showWarning && <FullscreenExitWarningModal countdown={countdown} onRequestFullscreen={requestFullscreen} />}
-            {/* ✅ CORRIGIDO: Modal aparece SOBRE a prova quando há erro de rede */}
             {isNetworkError && <OfflineWarningModal onRetry={handleSubmit} />}
 
             <div className="w-full max-w-5xl mx-auto animate-fadeIn select-none">

@@ -52,10 +52,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                 .single();
             
             if (error) {
-                console.error('Erro ao buscar perfil:', error);
-                
                 if (error.code === 'PGRST116') {
-                    console.log('Perfil não encontrado, criando novo...');
+                    // Tenta criar silenciosamente
                     const { error: insertError } = await supabase
                         .from('profiles')
                         .insert([{ 
@@ -64,15 +62,8 @@ export const useAppStore = create<AppState>((set, get) => ({
                             role: (session.user.user_metadata?.role as 'aluno' | 'professor' | 'admin') || 'aluno'
                         }]);
                     
-                    if (insertError) {
-                        console.error('Erro ao criar perfil:', insertError);
-                    } else {
-                        const { data: newProfile } = await supabase
-                            .from('profiles')
-                            .select('*')
-                            .eq('id', session.user.id)
-                            .single();
-                        
+                    if (!insertError) {
+                        const { data: newProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
                         set({ profile: newProfile || null });
                     }
                 } else {
@@ -90,27 +81,42 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     fetchExamsAndResults: async () => {
-        const { profile } = get();
-        if (!profile) {
-            set({ exams: [], results: [] });
-            return;
-        }
+        const currentExams = get().exams;
+        if (currentExams.length === 0) set({ loading: true });
+
         try {
-            const { data: examsData, error: examsError } = await supabase.from('provas').select('*, provas_acesso_individual(student_id)');
+
+            const { data: examsData, error: examsError } = await supabase
+                .from('provas')
+                .select('*, provas_acesso_individual(student_id)')
+                .order('created_at', { ascending: false });
+
             if (examsError) throw examsError;
-            const { data: resultsData, error: resultsError } = await supabase.from('resultados').select('*').eq('student_id', profile.id);
-            if (resultsError) throw resultsError;
-            set({ exams: examsData || [], results: resultsData || [] });
+
+            // Busca resultados
+            const { profile } = get();
+            let resultsData: Resultado[] = [];
+            
+            if (profile) {
+                let query = supabase.from('resultados').select('*');
+                // Se NÃO for admin/professor, pega só os meus resultados
+                if (profile.role !== 'admin' && profile.role !== 'professor') {
+                    query = query.eq('student_id', profile.id);
+                }
+                const { data, error } = await query;
+                if (!error && data) resultsData = data;
+            }
+
+            set({ exams: examsData || [], results: resultsData || [], loading: false });
         } catch (error) {
-            console.error("Error fetching exams/results:", error);
+            console.error("Erro ao atualizar dados:", error);
+            set({ loading: false });
         }
     },
     
     fetchAllStudents: async () => {
         const { data, error } = await supabase.rpc('get_all_students');
-        if (error) {
-            console.error("Erro ao buscar todos os alunos:", error);
-        } else {
+        if (!error) {
             set({ allStudents: data || [] });
         }
     },
@@ -126,71 +132,53 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ session: null, profile: null, exams: [], results: [], allStudents: [] });
     },
 
-    // ✅ CORRIGIDO: Realtime agora escuta apenas tabelas específicas
+    // ⚡ REALTIME OTIMIZADO ⚡
     initializeRealtime: () => {
-        const currentUserId = get().session?.user?.id;
-        if (!currentUserId) return () => {};
+        const { session } = get();
+        if (!session?.user) return () => {};
 
-        const channel = supabase
-            .channel('app-changes')
-            // ✅ Escuta mudanças no próprio perfil do usuário
+        const channelName = `public:subscription:${session.user.id}:${Date.now()}`;
+        
+        console.log("📡 Conectando Realtime:", channelName);
+
+        const channel = supabase.channel(channelName)
             .on(
-                'postgres_changes', 
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'provas' },
+                (payload) => {
+                    console.log('🔔 Provas alteradas:', payload.eventType);
+                    get().fetchExamsAndResults();
+                }
+            )
+            // 2. Acessos Individuais
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'provas_acesso_individual' },
+                () => get().fetchExamsAndResults()
+            )
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'resultados' },
+                () => get().fetchExamsAndResults()
+            )
+            .on(
+                'postgres_changes',
                 { 
-                    event: '*', 
+                    event: 'UPDATE', 
                     schema: 'public', 
                     table: 'profiles',
-                    filter: `id=eq.${currentUserId}`
+                    filter: `id=eq.${session.user.id}`
                 },
-                (payload) => {
-                    console.log('✅ Perfil atualizado:', payload);
-                    get().fetchProfile();
-                }
+                () => get().fetchProfile()
             )
-            // ✅ Escuta mudanças em provas
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'provas'
-                },
-                (payload) => {
-                    console.log('✅ Prova atualizada:', payload);
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
                     get().fetchExamsAndResults();
                 }
-            )
-            // ✅ Escuta mudanças em acesso individual
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'provas_acesso_individual'
-                },
-                (payload) => {
-                    console.log('✅ Acesso individual atualizado:', payload);
-                    get().fetchExamsAndResults();
-                }
-            )
-            // ✅ Escuta mudanças nos próprios resultados
-            .on(
-                'postgres_changes',
-                {
-                    event: '*',
-                    schema: 'public',
-                    table: 'resultados',
-                    filter: `student_id=eq.${currentUserId}`
-                },
-                (payload) => {
-                    console.log('✅ Resultado atualizado:', payload);
-                    get().fetchExamsAndResults();
-                }
-            )
-            .subscribe();
+            });
 
         return () => {
-            console.log('🔌 Desconectando realtime...');
+            console.log('🔌 Desconectando Realtime...');
             supabase.removeChannel(channel);
         };
     }
