@@ -235,48 +235,31 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
         if (url) applyCommand('createLink', url);
     };
     
-const handleImage = () => {
-    const url = prompt('Insira a URL da imagem:');
-    if (!url || !editorRef.current) return;
-    
-
-    try {
-        new URL(url);
-    } catch {
-        alert('URL inválida. Por favor, insira uma URL completa começando com http:// ou https://');
-        return;
-    }
-    
-
-    editorRef.current.focus();
-    
-
-    const img = document.createElement('img');
-    img.src = url;
-    img.style.maxWidth = '100%';
-    img.style.height = 'auto';
-    img.style.display = 'block';
-    img.style.margin = '10px 0';
-    img.alt = 'Imagem inserida';
-    
-  
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-        const range = selection.getRangeAt(0);
-        range.deleteContents();
-        range.insertNode(img);
+    const handleImage = () => {
+        const url = prompt('Insira a URL da imagem:');
+        if (!url || !editorRef.current) return;
         
-        range.setStartAfter(img);
-        range.setEndAfter(img);
-        selection.removeAllRanges();
-        selection.addRange(range);
-    } else {
-        editorRef.current.appendChild(img);
-    }
-    
-    const event = new Event('input', { bubbles: true });
-    editorRef.current.dispatchEvent(event);
-};
+        try { new URL(url); } catch {
+            alert('URL inválida.'); return;
+        }
+
+        editorRef.current.focus();
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.maxWidth = '100%';
+        img.style.height = 'auto';
+        img.style.display = 'block';
+        img.style.margin = '10px 0';
+        
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+            const range = selection.getRangeAt(0);
+            range.deleteContents();
+            range.insertNode(img);
+        } else {
+            editorRef.current.appendChild(img);
+        }
+    };
     
     const handleInsertMath = (latex: string) => {
         if (editorRef.current) editorRef.current.focus();
@@ -287,42 +270,67 @@ const handleImage = () => {
     return (
         <>
             <div className="flex items-center flex-wrap gap-x-2 gap-y-1 p-2 bg-slate-100 border border-b-0 border-slate-300 rounded-t-md">
-                <div className="relative inline-block w-32">
-                    <select onChange={(e) => applyCommand('formatBlock', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-8 cursor-pointer" defaultValue="">
+                <div className="relative inline-block w-28">
+                    <select onChange={(e) => applyCommand('formatBlock', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-6 cursor-pointer" defaultValue="">
                         <option value="" disabled>Formato</option>
-                        <option value="p">Parágrafo</option>
+                        <option value="p">Normal</option>
                         <option value="h3">Título 1</option>
                         <option value="h4">Título 2</option>
                         <option value="blockquote">Citação</option>
                     </select>
                 </div>
-                <div className="relative inline-block w-32">
-                    <select onChange={(e) => applyCommand('fontName', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-8 cursor-pointer" defaultValue="">
+                <div className="relative inline-block w-28">
+                    <select onChange={(e) => applyCommand('fontName', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-6 cursor-pointer" defaultValue="">
                         <option value="" disabled>Fonte</option>
                         <option value="Inter, sans-serif">Padrão</option>
                         <option value="Arial, sans-serif">Arial</option>
                         <option value="Georgia, serif">Georgia</option>
-                        <option value="Times New Roman, serif">Times New Roman</option>
+                        <option value="Times New Roman, serif">Times New</option>
                         <option value="Verdana, sans-serif">Verdana</option>
                     </select>
                 </div>
+                
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                
                 <ToolbarButton onClick={() => applyCommand('bold')} title="Negrito"><b>B</b></ToolbarButton>
                 <ToolbarButton onClick={() => applyCommand('italic')} title="Itálico"><i>I</i></ToolbarButton>
                 <ToolbarButton onClick={() => applyCommand('underline')} title="Sublinhado"><u>U</u></ToolbarButton>
+
+                {/* NOVO: Diminuir e Aumentar Fonte */}
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <ToolbarButton onClick={() => applyCommand('decreaseFontSize')} title="Diminuir Fonte">
+                    <span className="text-xs font-bold transform scale-90">A-</span>
+                </ToolbarButton>
+                <ToolbarButton onClick={() => applyCommand('increaseFontSize')} title="Aumentar Fonte">
+                    <span className="text-sm font-bold">A+</span>
+                </ToolbarButton>
+                
+                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                
+                {/* Botões de Lista */}
                 <ToolbarButton onClick={() => applyCommand('insertUnorderedList')} title="Lista (•)">•</ToolbarButton>
                 <ToolbarButton onClick={() => applyCommand('insertOrderedList')} title="Lista (1.)">1.</ToolbarButton>
                 
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Alinhar à Esquerda">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                
+                {/* Alinhamentos - COM JUSTIFICAR */}
+                <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Esquerda">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('justifyCenter')} title="Centralizar">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M6 12h12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <ToolbarButton onClick={() => applyCommand('justifyCenter')} title="Centro">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M6 12h12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('justifyRight')} title="Alinhar à Direita">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M9 12h12M6 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                <ToolbarButton onClick={() => applyCommand('justifyRight')} title="Direita">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M9 12h12M6 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </ToolbarButton>
+                {/* NOVO: Justificar */}
+                <ToolbarButton onClick={() => applyCommand('justifyFull')} title="Justificar">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="21" y1="10" x2="3" y2="10"></line>
+                        <line x1="21" y1="6" x2="3" y2="6"></line>
+                        <line x1="21" y1="14" x2="3" y2="14"></line>
+                        <line x1="21" y1="18" x2="3" y2="18"></line>
+                    </svg>
                 </ToolbarButton>
                 
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
@@ -330,9 +338,10 @@ const handleImage = () => {
                 <ToolbarButton onClick={handleLink} title="Link">🔗</ToolbarButton>
                 <ToolbarButton onClick={handleImage} title="Imagem">🖼️</ToolbarButton>
                 <ToolbarButton onClick={() => setShowMathModal(true)} title="Fórmula Matemática"><span className="font-serif font-bold text-lg leading-none">∑</span></ToolbarButton>
+                
                 <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <ToolbarButton onClick={() => applyCommand('undo')} title="Desfazer"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h4m5 4-5-4 5 4zm-5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('redo')} title="Refazer"><svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18h4a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4h-4m-5 4 5-4-5 4zm5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                <ToolbarButton onClick={() => applyCommand('undo')} title="Desfazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h4m5 4-5-4 5 4zm-5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                <ToolbarButton onClick={() => applyCommand('redo')} title="Refazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18h4a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4h-4m-5 4 5-4-5 4zm5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
             </div>
             {showMathModal && <MathPaletteModal onClose={() => setShowMathModal(false)} onInsert={handleInsertMath} />}
         </>
