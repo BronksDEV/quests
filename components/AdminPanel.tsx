@@ -97,6 +97,7 @@ const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'di
     useEffect(() => {
         if (containerRef.current) {
             containerRef.current.innerHTML = html;
+            
             const renderMathInNode = (node: Node) => {
                 if (node.nodeType === 3 && node.textContent) {
                     const text = node.textContent;
@@ -120,18 +121,29 @@ const RenderHtmlWithMath: React.FC<{ html: string; className?: string; tag?: 'di
                         node.parentNode?.replaceChild(fragment, node);
                     }
                 } else if (node.nodeType === 1) {
-                    const tagName = (node as HTMLElement).tagName.toLowerCase();
+                    const element = node as HTMLElement;
+                    const tagName = element.tagName.toLowerCase();
+                    
+                    // IMPORTANTE: Preserva estilos inline (incluindo text-indent)
+                    if (element.hasAttribute('style')) {
+                        const styleAttr = element.getAttribute('style');
+                        if (styleAttr) {
+                            element.setAttribute('style', styleAttr);
+                        }
+                    }
+                    
                     if (tagName !== 'script' && tagName !== 'style' && tagName !== 'textarea') {
-                        Array.from(node.childNodes).forEach(child => renderMathInNode(child));
+                        Array.from(element.childNodes).forEach(child => renderMathInNode(child));
                     }
                 }
             };
+            
             renderMathInNode(containerRef.current);
         }
     }, [html]);
 
     const Tag = tag;
-    return <Tag ref={containerRef as any} className={`prose prose-sm max-w-none ${className}`} />;
+    return <Tag ref={containerRef as any} className={`prose prose-sm max-w-none ${className || ''}`} />;
 };
 
 // ============================================================================
@@ -223,18 +235,31 @@ const MathPaletteModal: React.FC<{ onClose: () => void; onInsert: (latex: string
 const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | null> }> = ({ editorRef }) => {
     const [showMathModal, setShowMathModal] = useState(false);
     
-    // Função auxiliar para reaplicar o foco antes de executar o comando
-    // Isso é crucial para que os Selects funcionem corretamente
     const applyCommand = (command: string, arg?: string) => {
         if (!editorRef.current) return;
-        
-        // Recupera o foco para o editor antes de disparar o comando
         editorRef.current.focus();
         
-        // Executa o comando
-        // setTimeout ajuda a garantir que o evento de clique/change do select termine antes do comando rodar
         setTimeout(() => {
             document.execCommand(command, false, arg);
+        }, 0);
+    };
+
+    // NOVA FUNÇÃO: Aplicar formatação de parágrafo corretamente
+    const applyParagraphFormat = (format: string) => {
+        if (!editorRef.current) return;
+        editorRef.current.focus();
+        
+        setTimeout(() => {
+            if (format === 'p') {
+                // Para parágrafo normal, remove qualquer formatação de bloco
+                document.execCommand('formatBlock', false, '<div>');
+                // Depois aplica o parágrafo
+                setTimeout(() => {
+                    document.execCommand('formatBlock', false, '<p>');
+                }, 10);
+            } else {
+                document.execCommand('formatBlock', false, `<${format}>`);
+            }
         }, 0);
     };
 
@@ -275,27 +300,39 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
         setShowMathModal(false);
     };
 
-    // Estilos comuns para os selects
     const selectStyle = "w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1.5 pl-2 pr-6 cursor-pointer font-medium text-slate-700";
 
     return (
         <>
             <div className="flex items-center flex-wrap gap-x-2 gap-y-2 p-2.5 bg-slate-100 border border-b-0 border-slate-300 rounded-t-md">
                 
-                {/* 1. SELETOR DE FORMATO (PARÁGRAFO/TÍTULO) */}
+          {/* 1. SELETOR DE FORMATO (PARÁGRAFO/TÍTULO) */}
                 <div className="relative inline-block w-32">
                     <select 
-                        // Usamos onMouseDown/onChange trick ou apenas onChange com focus no editor
                         onChange={(e) => {
-                            applyCommand('formatBlock', e.target.value);
-                            // Reseta o select visualmente para permitir selecionar o mesmo item se o usuário mudar de linha
+                            const format = e.target.value;
+                            if (!editorRef.current) return;
+                            
+                            editorRef.current.focus();
+                            
+                            setTimeout(() => {
+                                if (format === 'indent') {
+                                    document.execCommand('indent', false);
+                                } else if (format === 'outdent') {
+                                    document.execCommand('outdent', false);
+                                } else {
+                                    document.execCommand('formatBlock', false, `<${format}>`);
+                                }
+                            }, 0);
+                            
                             e.target.value = ""; 
                         }} 
                         className={selectStyle} 
                         defaultValue=""
                     >
                         <option value="" disabled>Formatação</option>
-                        <option value="p">Normal (¶)</option>
+                        <option value="indent">→ Recuo de Parágrafo</option>
+                        <option value="outdent">← Remover Recuo</option>
                         <option value="h3">Título 1</option>
                         <option value="h4">Título 2</option>
                         <option value="blockquote">Citação</option>
@@ -323,7 +360,7 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
                     </select>
                 </div>
 
-                {/* 3. SELETOR DE TAMANHO (CORRIGIDO PARA NUMÉRICO) */}
+                {/* 3. SELETOR DE TAMANHO */}
                 <div className="relative inline-block w-32">
                     <select 
                         onChange={(e) => {
@@ -355,18 +392,142 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
 
                 <div className="w-px h-6 bg-slate-300 mx-2 hidden sm:block"></div>
                 
-                {/* 5. ALINHAMENTOS (COM JUSTIFICAR FUNCIONAL) */}
+{/* 5. ALINHAMENTOS */}
                 <div className="flex gap-1 bg-white border border-slate-200 rounded-md p-0.5 shadow-sm">
-                    <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Esquerda">
+                    <ToolbarButton 
+                        onClick={() => {
+                            if (!editorRef.current) return;
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            // Salva a seleção atual
+                            const range = selection.getRangeAt(0);
+                            
+                            // Se não há texto selecionado, aplica em tudo
+                            if (selection.isCollapsed) {
+                                const allElements = editorRef.current.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                allElements.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'left';
+                                });
+                            } else {
+                                // Pega todos os elementos dentro da seleção
+                                const container = range.commonAncestorContainer;
+                                const parentEl = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                // Aplica no elemento pai
+                                if (parentEl && parentEl.matches('p, div, h3, h4, blockquote, pre')) {
+                                    parentEl.style.textAlign = 'left';
+                                }
+                                
+                                // E também nos filhos
+                                const children = parentEl?.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                children?.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'left';
+                                });
+                            }
+                        }} 
+                        title="Alinhar à Esquerda"
+                    >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => applyCommand('justifyCenter')} title="Centro">
+                    
+                    <ToolbarButton 
+                        onClick={() => {
+                            if (!editorRef.current) return;
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            const range = selection.getRangeAt(0);
+                            
+                            if (selection.isCollapsed) {
+                                const allElements = editorRef.current.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                allElements.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'center';
+                                });
+                            } else {
+                                const container = range.commonAncestorContainer;
+                                const parentEl = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                if (parentEl && parentEl.matches('p, div, h3, h4, blockquote, pre')) {
+                                    parentEl.style.textAlign = 'center';
+                                }
+                                
+                                const children = parentEl?.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                children?.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'center';
+                                });
+                            }
+                        }} 
+                        title="Centralizar"
+                    >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M6 12h12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => applyCommand('justifyRight')} title="Direita">
+                    
+                    <ToolbarButton 
+                        onClick={() => {
+                            if (!editorRef.current) return;
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            const range = selection.getRangeAt(0);
+                            
+                            if (selection.isCollapsed) {
+                                const allElements = editorRef.current.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                allElements.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'right';
+                                });
+                            } else {
+                                const container = range.commonAncestorContainer;
+                                const parentEl = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                if (parentEl && parentEl.matches('p, div, h3, h4, blockquote, pre')) {
+                                    parentEl.style.textAlign = 'right';
+                                }
+                                
+                                const children = parentEl?.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                children?.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'right';
+                                });
+                            }
+                        }} 
+                        title="Alinhar à Direita"
+                    >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M9 12h12M6 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                     </ToolbarButton>
-                    <ToolbarButton onClick={() => applyCommand('justifyFull')} title="Justificar">
+                    
+                    <ToolbarButton 
+                        onClick={() => {
+                            if (!editorRef.current) return;
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            const range = selection.getRangeAt(0);
+                            
+                            if (selection.isCollapsed) {
+                                const allElements = editorRef.current.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                allElements.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'justify';
+                                });
+                            } else {
+                                const container = range.commonAncestorContainer;
+                                const parentEl = container.nodeType === 3 ? container.parentElement : container as HTMLElement;
+                                
+                                if (parentEl && parentEl.matches('p, div, h3, h4, blockquote, pre')) {
+                                    parentEl.style.textAlign = 'justify';
+                                }
+                                
+                                const children = parentEl?.querySelectorAll('p, div, h3, h4, blockquote, pre');
+                                children?.forEach((el: Element) => {
+                                    (el as HTMLElement).style.textAlign = 'justify';
+                                });
+                            }
+                        }} 
+                        title="Justificar"
+                    >
                         <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <line x1="21" y1="10" x2="3" y2="10"></line>
                             <line x1="21" y1="6" x2="3" y2="6"></line>
@@ -985,8 +1146,8 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                     </select>
                   </div>
                 </div>
-
-                {/* FULL WIDTH: Enunciado / Texto de Apoio (toolbar + editor) */}
+                
+ {/* FULL WIDTH: Enunciado / Texto de Apoio (toolbar + editor) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Enunciado / Texto de Apoio</label>
                   <RichTextToolbar editorRef={longTextRef} />
@@ -994,7 +1155,113 @@ const QuestionEditorModal: React.FC<{ quizId: number; question: Questao | null; 
                     ref={longTextRef} 
                     key={question?.id || 'new-question'}  
                     suppressContentEditableWarning={true}
-                    onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)} 
+                    onInput={(e: FormEvent<HTMLDivElement>) => handleContentChange(e.currentTarget.innerHTML)}
+                    onPaste={(e: React.ClipboardEvent<HTMLDivElement>) => {
+                        const items = e.clipboardData.items;
+                        let hasImage = false;
+                        
+                        for (let i = 0; i < items.length; i++) {
+                            const item = items[i];
+                            
+                            if (item.type.indexOf('image') !== -1) {
+                                e.preventDefault();
+                                hasImage = true;
+                                
+                                const blob = item.getAsFile();
+                                if (blob) {
+                                    const reader = new FileReader();
+                                    reader.onload = (event) => {
+                                        if (event.target?.result && longTextRef.current) {
+                                            longTextRef.current.focus();
+                                            
+                                            const img = document.createElement('img');
+                                            img.src = event.target.result as string;
+                                            img.style.maxWidth = '100%';
+                                            img.style.height = 'auto';
+                                            img.style.display = 'block';
+                                            img.style.margin = '10px 0';
+                                            
+                                            const selection = window.getSelection();
+                                            if (selection && selection.rangeCount > 0) {
+                                                const range = selection.getRangeAt(0);
+                                                range.deleteContents();
+                                                range.insertNode(img);
+                                                range.setStartAfter(img);
+                                                range.setEndAfter(img);
+                                                selection.removeAllRanges();
+                                                selection.addRange(range);
+                                            } else {
+                                                longTextRef.current.appendChild(img);
+                                            }
+                                        }
+                                    };
+                                    reader.readAsDataURL(blob);
+                                }
+                                break;
+                            }
+                        }
+                        
+                        if (!hasImage) {
+                            e.preventDefault();
+                            const text = e.clipboardData.getData('text/plain');
+                            document.execCommand('insertText', false, text);
+                        }
+                    }}
+                    onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+                        if (e.key === 'Tab' && !e.shiftKey) {
+                            e.preventDefault();
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            let node = selection.anchorNode;
+                            
+                            if (node && node.nodeType === 3) {
+                                node = node.parentElement;
+                            }
+                            
+                            let blockElement = node as HTMLElement;
+                            while (blockElement && blockElement !== e.currentTarget) {
+                                const tagName = blockElement.tagName;
+                                if (tagName === 'P' || tagName === 'DIV' || tagName === 'H3' || 
+                                    tagName === 'H4' || tagName === 'BLOCKQUOTE' || tagName === 'PRE') {
+                                    
+                                    const currentIndent = parseFloat(blockElement.style.textIndent || '0');
+                                    blockElement.style.textIndent = `${currentIndent + 2}em`;
+                                    return;
+                                }
+                                blockElement = blockElement.parentElement as HTMLElement;
+                            }
+                        }
+                        else if (e.key === 'Tab' && e.shiftKey) {
+                            e.preventDefault();
+                            
+                            const selection = window.getSelection();
+                            if (!selection || selection.rangeCount === 0) return;
+                            
+                            let node = selection.anchorNode;
+                            
+                            if (node && node.nodeType === 3) {
+                                node = node.parentElement;
+                            }
+                            
+                            let blockElement = node as HTMLElement;
+                            while (blockElement && blockElement !== e.currentTarget) {
+                                const tagName = blockElement.tagName;
+                                if (tagName === 'P' || tagName === 'DIV' || tagName === 'H3' || 
+                                    tagName === 'H4' || tagName === 'BLOCKQUOTE' || tagName === 'PRE') {
+                                    
+                                    const currentIndent = parseFloat(blockElement.style.textIndent || '0');
+                                    if (currentIndent > 0) {
+                                        blockElement.style.textIndent = `${currentIndent - 2}em`;
+                                    }
+                                    return;
+                                }
+                                blockElement = blockElement.parentElement as HTMLElement;
+                            }
+                        }
+                    }}
+
                     contentEditable="true" 
                     data-placeholder="Digite o enunciado aqui..." 
                     className="border rounded-md p-4 min-h-[300px] max-h-[500px] overflow-y-auto border-slate-300 shadow-sm resize-y focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
