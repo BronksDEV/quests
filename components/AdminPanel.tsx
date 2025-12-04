@@ -223,11 +223,19 @@ const MathPaletteModal: React.FC<{ onClose: () => void; onInsert: (latex: string
 const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | null> }> = ({ editorRef }) => {
     const [showMathModal, setShowMathModal] = useState(false);
     
+    // Função auxiliar para reaplicar o foco antes de executar o comando
+    // Isso é crucial para que os Selects funcionem corretamente
     const applyCommand = (command: string, arg?: string) => {
-        if (editorRef.current) {
-            editorRef.current.focus();
-        }
-        document.execCommand(command, false, arg);
+        if (!editorRef.current) return;
+        
+        // Recupera o foco para o editor antes de disparar o comando
+        editorRef.current.focus();
+        
+        // Executa o comando
+        // setTimeout ajuda a garantir que o evento de clique/change do select termine antes do comando rodar
+        setTimeout(() => {
+            document.execCommand(command, false, arg);
+        }, 0);
     };
 
     const handleLink = () => {
@@ -267,81 +275,127 @@ const RichTextToolbar: React.FC<{ editorRef: React.RefObject<HTMLDivElement | nu
         setShowMathModal(false);
     };
 
+    // Estilos comuns para os selects
+    const selectStyle = "w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1.5 pl-2 pr-6 cursor-pointer font-medium text-slate-700";
+
     return (
         <>
-            <div className="flex items-center flex-wrap gap-x-2 gap-y-1 p-2 bg-slate-100 border border-b-0 border-slate-300 rounded-t-md">
-                <div className="relative inline-block w-28">
-                    <select onChange={(e) => applyCommand('formatBlock', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-6 cursor-pointer" defaultValue="">
-                        <option value="" disabled>Formato</option>
-                        <option value="p">Normal</option>
+            <div className="flex items-center flex-wrap gap-x-2 gap-y-2 p-2.5 bg-slate-100 border border-b-0 border-slate-300 rounded-t-md">
+                
+                {/* 1. SELETOR DE FORMATO (PARÁGRAFO/TÍTULO) */}
+                <div className="relative inline-block w-32">
+                    <select 
+                        // Usamos onMouseDown/onChange trick ou apenas onChange com focus no editor
+                        onChange={(e) => {
+                            applyCommand('formatBlock', e.target.value);
+                            // Reseta o select visualmente para permitir selecionar o mesmo item se o usuário mudar de linha
+                            e.target.value = ""; 
+                        }} 
+                        className={selectStyle} 
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Formatação</option>
+                        <option value="p">Normal (¶)</option>
                         <option value="h3">Título 1</option>
                         <option value="h4">Título 2</option>
                         <option value="blockquote">Citação</option>
+                        <option value="pre">Código</option>
                     </select>
                 </div>
-                <div className="relative inline-block w-28">
-                    <select onChange={(e) => applyCommand('fontName', e.target.value)} className="w-full text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition bg-white py-1 pl-2 pr-6 cursor-pointer" defaultValue="">
+
+                {/* 2. SELETOR DE FONTE */}
+                <div className="relative inline-block w-32">
+                    <select 
+                        onChange={(e) => {
+                            applyCommand('fontName', e.target.value);
+                            e.target.value = "";
+                        }} 
+                        className={selectStyle} 
+                        defaultValue=""
+                    >
                         <option value="" disabled>Fonte</option>
                         <option value="Inter, sans-serif">Padrão</option>
                         <option value="Arial, sans-serif">Arial</option>
                         <option value="Georgia, serif">Georgia</option>
                         <option value="Times New Roman, serif">Times New</option>
                         <option value="Verdana, sans-serif">Verdana</option>
+                        <option value="Courier New, monospace">Monospace</option>
+                    </select>
+                </div>
+
+                {/* 3. SELETOR DE TAMANHO (CORRIGIDO PARA NUMÉRICO) */}
+                <div className="relative inline-block w-32">
+                    <select 
+                        onChange={(e) => {
+                            applyCommand('fontSize', e.target.value);
+                            e.target.value = "";
+                        }} 
+                        className={selectStyle} 
+                        defaultValue=""
+                    >
+                        <option value="" disabled>Tamanho</option>
+                        <option value="1">1 (Muito Peq.)</option>
+                        <option value="2">2 (Pequeno)</option>
+                        <option value="3">3 (Normal)</option>
+                        <option value="4">4 (Médio)</option>
+                        <option value="5">5 (Grande)</option>
+                        <option value="6">6 (Muito Grd.)</option>
+                        <option value="7">7 (Gigante)</option>
                     </select>
                 </div>
                 
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                <div className="w-px h-6 bg-slate-300 mx-2 hidden sm:block"></div>
                 
-                <ToolbarButton onClick={() => applyCommand('bold')} title="Negrito"><b>B</b></ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('italic')} title="Itálico"><i>I</i></ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('underline')} title="Sublinhado"><u>U</u></ToolbarButton>
+                {/* 4. BOTÕES DE ESTILO */}
+                <div className="flex gap-1">
+                    <ToolbarButton onClick={() => applyCommand('bold')} title="Negrito"><b>B</b></ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('italic')} title="Itálico"><i>I</i></ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('underline')} title="Sublinhado"><u>U</u></ToolbarButton>
+                </div>
 
-                {/* NOVO: Diminuir e Aumentar Fonte */}
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <ToolbarButton onClick={() => applyCommand('decreaseFontSize')} title="Diminuir Fonte">
-                    <span className="text-xs font-bold transform scale-90">A-</span>
-                </ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('increaseFontSize')} title="Aumentar Fonte">
-                    <span className="text-sm font-bold">A+</span>
-                </ToolbarButton>
+                <div className="w-px h-6 bg-slate-300 mx-2 hidden sm:block"></div>
                 
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
+                {/* 5. ALINHAMENTOS (COM JUSTIFICAR FUNCIONAL) */}
+                <div className="flex gap-1 bg-white border border-slate-200 rounded-md p-0.5 shadow-sm">
+                    <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Esquerda">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('justifyCenter')} title="Centro">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M6 12h12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('justifyRight')} title="Direita">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M9 12h12M6 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    </ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('justifyFull')} title="Justificar">
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <line x1="21" y1="10" x2="3" y2="10"></line>
+                            <line x1="21" y1="6" x2="3" y2="6"></line>
+                            <line x1="21" y1="14" x2="3" y2="14"></line>
+                            <line x1="21" y1="18" x2="3" y2="18"></line>
+                        </svg>
+                    </ToolbarButton>
+                </div>
                 
-                {/* Botões de Lista */}
-                <ToolbarButton onClick={() => applyCommand('insertUnorderedList')} title="Lista (•)">•</ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('insertOrderedList')} title="Lista (1.)">1.</ToolbarButton>
+                <div className="w-px h-6 bg-slate-300 mx-2 hidden sm:block"></div>
+
+                {/* 6. LISTAS E MEDIA */}
+                <div className="flex gap-1">
+                    <ToolbarButton onClick={() => applyCommand('insertUnorderedList')} title="Lista (•)">•</ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('insertOrderedList')} title="Lista (1.)">1.</ToolbarButton>
+                </div>
                 
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                
-                {/* Alinhamentos - COM JUSTIFICAR */}
-                <ToolbarButton onClick={() => applyCommand('justifyLeft')} title="Esquerda">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M3 12h12M3 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('justifyCenter')} title="Centro">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M6 12h12M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('justifyRight')} title="Direita">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18M9 12h12M6 18h15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </ToolbarButton>
-                {/* NOVO: Justificar */}
-                <ToolbarButton onClick={() => applyCommand('justifyFull')} title="Justificar">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="21" y1="10" x2="3" y2="10"></line>
-                        <line x1="21" y1="6" x2="3" y2="6"></line>
-                        <line x1="21" y1="14" x2="3" y2="14"></line>
-                        <line x1="21" y1="18" x2="3" y2="18"></line>
-                    </svg>
-                </ToolbarButton>
-                
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                
-                <ToolbarButton onClick={handleLink} title="Link">🔗</ToolbarButton>
-                <ToolbarButton onClick={handleImage} title="Imagem">🖼️</ToolbarButton>
-                <ToolbarButton onClick={() => setShowMathModal(true)} title="Fórmula Matemática"><span className="font-serif font-bold text-lg leading-none">∑</span></ToolbarButton>
-                
-                <div className="w-px h-5 bg-slate-300 mx-1"></div>
-                <ToolbarButton onClick={() => applyCommand('undo')} title="Desfazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h4m5 4-5-4 5 4zm-5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
-                <ToolbarButton onClick={() => applyCommand('redo')} title="Refazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18h4a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4h-4m-5 4 5-4-5 4zm5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                <div className="flex gap-1 ml-1">
+                    <ToolbarButton onClick={handleLink} title="Link">🔗</ToolbarButton>
+                    <ToolbarButton onClick={handleImage} title="Imagem">🖼️</ToolbarButton>
+                    <ToolbarButton onClick={() => setShowMathModal(true)} title="Fórmula Matemática">
+                        <span className="font-serif font-bold text-lg leading-none">∑</span>
+                    </ToolbarButton>
+                </div>
+
+                <div className="flex gap-1 ml-auto border-l border-slate-300 pl-2">
+                    <ToolbarButton onClick={() => applyCommand('undo')} title="Desfazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 18H6a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4h4m5 4-5-4 5 4zm-5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                    <ToolbarButton onClick={() => applyCommand('redo')} title="Refazer"><svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M14 18h4a4 4 0 0 0 4-4V6a4 4 0 0 0-4-4h-4m-5 4 5-4-5 4zm5 4v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></ToolbarButton>
+                </div>
             </div>
             {showMathModal && <MathPaletteModal onClose={() => setShowMathModal(false)} onInsert={handleInsertMath} />}
         </>
