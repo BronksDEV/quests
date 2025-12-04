@@ -8,97 +8,107 @@ import type { Prova } from '../types';
 import ActionConfirmModal from './ActionConfirmModal';
 
 const StudentView: React.FC = () => {
-    // Acesso à Store Global
     const profile = useAppStore((state) => state.profile);
     const exams = useAppStore((state) => state.exams);
     const results = useAppStore((state) => state.results);
     const loading = useAppStore((state) => state.loading);
     
-    // Actions necessárias 
     const fetchExamsAndResults = useAppStore((state) => state.fetchExamsAndResults);
     const fetchProfile = useAppStore((state) => state.fetchProfile);
     
-    // Estados Locais
     const [activeTab, setActiveTab] = useState<string>('Todas as Áreas');
     const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
     const [showBlockedModal, setShowBlockedModal] = useState(false);
     const [examToStart, setExamToStart] = useState<Prova | null>(null);
-    const [tick, setTick] = useState(Date.now());
+    const [dataVersion, setDataVersion] = useState(0);
 
-    // config do Realtime
     useEffect(() => {
-        let mounted = true;
-        const initData = async () => {
-             if (profile?.id) {
-                 await fetchProfile();
-                 await fetchExamsAndResults();
-             }
-        };
-        initData();
+        if (profile?.id) {
+            fetchProfile();
+            fetchExamsAndResults();
+        }
+    }, [profile?.id]);
 
-      
-        const tickInterval = setInterval(() => setTick(Date.now()), 1000);
-
+    useEffect(() => {
         if (!profile?.id) return;
 
+        let mounted = true;
 
-        let reloadTimer: NodeJS.Timeout;
-        const safeReload = () => {
+        const forceReload = async () => {
             if (!mounted) return;
-            clearTimeout(reloadTimer);
-            reloadTimer = setTimeout(async () => {
-                await fetchProfile();
-                await fetchExamsAndResults();
-            }, 500);
+            await fetchProfile();
+            await fetchExamsAndResults();
+            setDataVersion(prev => prev + 1);
         };
 
-        const globalChannel = supabase.channel('global-changes')
+        const globalChannel = supabase
+            .channel(`global-exams-${profile.id}-${Date.now()}`)
             .on(
                 'postgres_changes',
                 { event: '*', schema: 'public', table: 'provas' },
-                () => { 
-                    console.log('Realtime: Alteração em Provas detectada.');
-                    safeReload(); 
-                }
+                forceReload
             )
             .subscribe();
 
-        const personalChannel = supabase.channel(`personal-${profile.id}`)
+        const accessChannel = supabase
+            .channel(`access-individual-${profile.id}-${Date.now()}`)
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'provas_acesso_individual', filter: `student_id=eq.${profile.id}` },
-                safeReload
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'provas_acesso_individual'
+                },
+                forceReload
             )
+            .subscribe();
+
+        const resultsChannel = supabase
+            .channel(`results-student-${profile.id}-${Date.now()}`)
             .on(
                 'postgres_changes',
-                { event: '*', schema: 'public', table: 'resultados', filter: `student_id=eq.${profile.id}` },
-                safeReload
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'resultados', 
+                    filter: `student_id=eq.${profile.id}` 
+                },
+                forceReload
             )
+            .subscribe();
+
+        const profileChannel = supabase
+            .channel(`profile-status-${profile.id}-${Date.now()}`)
             .on(
                 'postgres_changes',
-                { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${profile.id}` },
+                { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'profiles', 
+                    filter: `id=eq.${profile.id}` 
+                },
                 async (payload) => {
-                    await fetchProfile(); 
+                    await fetchProfile();
                     
                     if (payload.new.is_blocked) {
                         setShowBlockedModal(true);
                         setExamToStart(null);
                         setActiveQuizId(null);
-                    } else if (payload.new.is_blocked === false && payload.old.is_blocked === true) {
-                        safeReload(); 
                     }
+                    
+                    setDataVersion(prev => prev + 1);
                 }
             )
             .subscribe();
 
         return () => {
             mounted = false;
-            clearInterval(tickInterval);
-            clearTimeout(reloadTimer);
             supabase.removeChannel(globalChannel);
-            supabase.removeChannel(personalChannel);
+            supabase.removeChannel(accessChannel);
+            supabase.removeChannel(resultsChannel);
+            supabase.removeChannel(profileChannel);
         };
-    }, [fetchExamsAndResults, fetchProfile, profile?.id]);
+    }, [profile?.id, fetchExamsAndResults, fetchProfile]);
 
     const submittedExamIds = useMemo(() => {
         return new Set(results.map(r => r.prova_id));
@@ -118,9 +128,8 @@ const StudentView: React.FC = () => {
             const status = getExamStatus(exam, profile, submittedExamIds);
             return { ...exam, computedStatus: status };
         });
-    }, [exams, profile, submittedExamIds, tick]); 
+    }, [exams, profile, submittedExamIds, dataVersion]);
 
-    // Extração das Áreas
     const availableAreas = useMemo(() => {
         const areas = new Set<string>();
         processedExams.forEach(exam => { if (exam.area) areas.add(exam.area); });
@@ -172,30 +181,39 @@ const StudentView: React.FC = () => {
     }, [processedExams, activeTab]);
 
     const handleStartQuiz = async (exam: Prova) => {
-        if (profile?.is_blocked && profile.role !== 'admin') {
+        await fetchProfile();
+        await fetchExamsAndResults();
+        
+        const freshProfile = useAppStore.getState().profile;
+        const freshExams = useAppStore.getState().exams;
+        const freshResults = useAppStore.getState().results;
+        
+        if (freshProfile?.is_blocked && freshProfile.role !== 'admin') {
             setShowBlockedModal(true);
             return;
         }
 
-        if (profile?.role !== 'admin') {
-            const { data: serverProfile } = await supabase
-                .from('profiles')
-                .select('is_blocked')
-                .eq('id', profile!.id)
-                .single();
-
-            if (serverProfile?.is_blocked) {
-                await fetchProfile(); 
-                setShowBlockedModal(true);
-                return; 
-            }
+        const freshExam = freshExams.find(e => e.id === exam.id);
+        if (!freshExam) {
+            alert('Esta avaliação não está mais disponível.');
+            return;
         }
 
-        const currentStatus = getExamStatus(exam, profile!, submittedExamIds);
+        const freshSubmitted = new Set(freshResults.map(r => r.prova_id));
+        const currentStatus = getExamStatus(freshExam, freshProfile!, freshSubmitted);
 
-        if (currentStatus === 'completed') return alert('Você já concluiu esta avaliação.');
-        if (currentStatus === 'locked_time') return alert('Aguarde o horário de início.');
-        if (currentStatus === 'locked_permission' || currentStatus === 'expired') return alert('Avaliação indisponível no momento.');
+        if (currentStatus === 'completed') {
+            alert('Você já concluiu esta avaliação.');
+            return;
+        }
+        if (currentStatus === 'locked_time') {
+            alert('Aguarde o horário de início.');
+            return;
+        }
+        if (currentStatus === 'locked_permission' || currentStatus === 'expired') {
+            alert('Avaliação indisponível no momento.');
+            return;
+        }
 
         setExamToStart(exam); 
     };
@@ -276,7 +294,7 @@ const StudentView: React.FC = () => {
                                 key={exam.id}
                                 exam={exam}
                                 status={(exam as any).computedStatus} 
-                                onClick={() => handleStartQuiz(exam)} // Chama a função assíncrona
+                                onClick={() => handleStartQuiz(exam)}
                             />
                         ))}
                     </div>

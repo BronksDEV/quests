@@ -1,15 +1,11 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './services/supabase';
 import { Spinner } from './components/common';
 import { useAppStore, isProfileComplete } from './stores/useAppStore';
-import type { Profile } from './types';
-
-// Lazy loading
-const LoginModal = lazy(() => import('./components/LoginModal'));
-const AdminPanel = lazy(() => import('./components/AdminPanel'));
-const StudentView = lazy(() => import('./components/StudentView'));
-const QuizTaker = lazy(() => import('./components/QuizTaker'));
-const CompleteProfileView = lazy(() => import('./components/CompleteProfileView'));
+import StudentView from './components/StudentView';
+import LoginModal from './components/LoginModal';
+import AdminPanel from './components/AdminPanel';
+import CompleteProfileView from './components/CompleteProfileView';
 
 const Header: React.FC = () => {
     const { profile, logout } = useAppStore();
@@ -19,12 +15,12 @@ const Header: React.FC = () => {
     const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
     const profileMenuRef = useRef<HTMLDivElement>(null);
 
-    const handleLogout = useCallback(async () => {
+    const handleLogout = async () => {
         setIsLoggingOut(true);
         await logout();
         setIsLoggingOut(false);
         setProfileMenuOpen(false);
-    }, [logout]);
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -83,18 +79,14 @@ const Header: React.FC = () => {
                     </div>
                 </div>
             </header>
-            <Suspense fallback={<div className="flex justify-center p-4"><Spinner /></div>}>
-                {isLoginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
-                {isAdminPanelOpen && <AdminPanel onClose={() => setAdminPanelOpen(false)} />}
-            </Suspense>
+            {isLoginModalOpen && <LoginModal onClose={() => setLoginModalOpen(false)} />}
+            {isAdminPanelOpen && <AdminPanel onClose={() => setAdminPanelOpen(false)} />}
         </>
     );
 };
 
 function App() {
     const { session, profile, loading, setSession, fetchProfile, initializeRealtime } = useAppStore();
-    const [currentView, setCurrentView] = useState<'dashboard' | 'quiz_taker'>('dashboard');
-    const [activeExamId, setActiveExamId] = useState<number | null>(null);
 
     useEffect(() => {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -115,51 +107,41 @@ function App() {
         };
     }, [setSession, fetchProfile, initializeRealtime]);
 
-    const startExam = useCallback((examId: number) => {
-        setActiveExamId(examId);
-        setCurrentView('quiz_taker');
-    }, []);
-
-    const endExam = useCallback(() => {
-        setActiveExamId(null);
-        setCurrentView('dashboard');
-        useAppStore.getState().fetchExamsAndResults();
-    }, []);
-
-    const renderMainContent = () => {
-        if (loading) {
-            return (
-                <div className="flex flex-col items-center justify-center p-12 h-96">
-                    <Spinner /><p className="mt-4 text-slate-500">Carregando...</p>
-                </div>
-            );
-        }
-
-        if (!session) {
-            return (
-                <div className="text-center py-20 animate-fadeIn">
-                    <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                       <svg className="w-10 h-10 text-blue-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </div>
-                    <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">Portal de Avaliações 2025</h2>
-                    <p className="text-lg text-slate-600 mt-2 max-w-xl mx-auto">Faça o login com suas credenciais para acessar as provas agendadas para sua turma.</p>
-                </div>
-            );
-        }
-        
-        if (currentView === 'quiz_taker' && activeExamId) {
-            return <Suspense fallback={<Spinner />}><QuizTaker examId={activeExamId} onFinish={endExam} /></Suspense>;
-        }
-        
-        return <Suspense fallback={<Spinner />}><StudentView onStartExam={startExam} /></Suspense>;
-    };
-
-    // IMPORTANTE: Verifica se precisa completar perfil APENAS quando session existe e loading acabou
     if (session && !loading && !isProfileComplete(profile)) {
+        return <CompleteProfileView />;
+    }
+
+    if (loading) {
         return (
-            <Suspense fallback={<div className="flex justify-center p-12"><Spinner /></div>}>
-                <CompleteProfileView />
-            </Suspense>
+            <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="w-full max-w-7xl mx-auto flex-grow p-4 sm:p-6 lg:p-8">
+                    <div className="flex flex-col items-center justify-center p-12 h-96">
+                        <Spinner />
+                        <p className="mt-4 text-slate-500">Carregando...</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    if (!session) {
+        return (
+            <div className="min-h-screen flex flex-col">
+                <Header />
+                <main className="w-full max-w-7xl mx-auto flex-grow p-4 sm:p-6 lg:p-8">
+                    <div className="text-center py-20 animate-fadeIn">
+                        <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                           <svg className="w-10 h-10 text-blue-600" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                        <h2 className="text-4xl font-extrabold tracking-tight text-slate-900">Portal de Avaliações 2025</h2>
+                        <p className="text-lg text-slate-600 mt-2 max-w-xl mx-auto">Faça o login com suas credenciais para acessar as provas agendadas para sua turma.</p>
+                    </div>
+                </main>
+                <footer className="py-8 text-sm text-slate-500 text-center border-t border-slate-200">
+                    COLÉGIO ESTADUAL JOSÉ ABÍLIO © 2025
+                </footer>
+            </div>
         );
     }
     
@@ -167,7 +149,7 @@ function App() {
         <div className="min-h-screen flex flex-col">
             <Header />
             <main className="w-full max-w-7xl mx-auto flex-grow p-4 sm:p-6 lg:p-8">
-                {renderMainContent()}
+                <StudentView />
             </main>
             <footer className="py-8 text-sm text-slate-500 text-center border-t border-slate-200">
                 COLÉGIO ESTADUAL JOSÉ ABÍLIO © 2025

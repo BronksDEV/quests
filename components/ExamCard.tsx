@@ -48,7 +48,6 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, status, onClick }) => {
 
     const isClickable = status === 'available';
 
-    // Estado visual based on status (atualiza automaticamente quando status muda via prop)
     const baseClasses = "relative w-full h-72 p-6 rounded-2xl transition-all duration-300 flex flex-col text-center justify-between overflow-hidden shadow-lg transform";
     
     const stateClasses = isClickable
@@ -81,4 +80,4 @@ const ExamCard: React.FC<ExamCardProps> = ({ exam, status, onClick }) => {
     );
 };
 
-export default React.memo(ExamCard);
+export default ExamCard;
