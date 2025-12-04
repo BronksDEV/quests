@@ -3,6 +3,12 @@ import { supabase } from '../services/supabase';
 import type { Prova, Profile, Resultado } from '../types';
 import type { Session } from '@supabase/supabase-js';
 
+export const isProfileComplete = (profile: Profile | null): boolean => {
+    if (!profile) return false;
+    if (profile.role === 'admin' || profile.role === 'professor') return true;
+    return !!(profile.nome_completo && profile.matricula && profile.turma);
+};
+
 export interface AppState {
     session: Session | null;
     profile: Profile | null;
@@ -18,12 +24,6 @@ export interface AppState {
     signOut: () => Promise<void>;
     logout: () => Promise<void>;
 }
-
-export const isProfileComplete = (profile: Profile | null): boolean => {
-    if (!profile) return false;
-    if (profile.role === 'admin' || profile.role === 'professor') return true;
-    return !!(profile.nome_completo && profile.matricula && profile.turma);
-};
 
 export const useAppStore = create<AppState>((set, get) => ({
     session: null,
@@ -43,7 +43,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
         
         try {
-            set({ loading: true });
+            // se já existir perfil carregado, não dá reload
+            if (!get().profile) set({ loading: true });
             
             const { data, error } = await supabase
                 .from('profiles')
@@ -52,8 +53,10 @@ export const useAppStore = create<AppState>((set, get) => ({
                 .single();
             
             if (error) {
+                console.error('Erro ao buscar perfil:', error);
+                
+                // criar perfil se não existir
                 if (error.code === 'PGRST116') {
-                    // Tenta criar silenciosamente
                     const { error: insertError } = await supabase
                         .from('profiles')
                         .insert([{ 
@@ -63,7 +66,12 @@ export const useAppStore = create<AppState>((set, get) => ({
                         }]);
                     
                     if (!insertError) {
-                        const { data: newProfile } = await supabase.from('profiles').select('*').eq('id', session.user.id).single();
+                        const { data: newProfile } = await supabase
+                            .from('profiles')
+                            .select('*')
+                            .eq('id', session.user.id)
+                            .single();
+                        
                         set({ profile: newProfile || null });
                     }
                 } else {
@@ -73,7 +81,7 @@ export const useAppStore = create<AppState>((set, get) => ({
                 set({ profile: data });
             }
         } catch (error) {
-            console.error('Erro crítico ao buscar perfil:', error);
+            console.error('Erro crítico no profile:', error);
             set({ profile: null });
         } finally {
             set({ loading: false });
@@ -81,11 +89,10 @@ export const useAppStore = create<AppState>((set, get) => ({
     },
 
     fetchExamsAndResults: async () => {
-        const currentExams = get().exams;
-        if (currentExams.length === 0) set({ loading: true });
+        const { profile } = get();
+        if (!profile) return;
 
         try {
-
             const { data: examsData, error: examsError } = await supabase
                 .from('provas')
                 .select('*, provas_acesso_individual(student_id)')
@@ -93,32 +100,23 @@ export const useAppStore = create<AppState>((set, get) => ({
 
             if (examsError) throw examsError;
 
-            // Busca resultados
-            const { profile } = get();
-            let resultsData: Resultado[] = [];
-            
-            if (profile) {
-                let query = supabase.from('resultados').select('*');
-                // Se NÃO for admin/professor, pega só os meus resultados
-                if (profile.role !== 'admin' && profile.role !== 'professor') {
-                    query = query.eq('student_id', profile.id);
-                }
-                const { data, error } = await query;
-                if (!error && data) resultsData = data;
-            }
+            // Busca apenas os resultados do usuário logado
+            const { data: resultsData, error: resultsError } = await supabase
+                .from('resultados')
+                .select('*')
+                .eq('student_id', profile.id);
 
-            set({ exams: examsData || [], results: resultsData || [], loading: false });
+            if (resultsError) throw resultsError;
+
+            set({ exams: examsData || [], results: resultsData || [] });
         } catch (error) {
-            console.error("Erro ao atualizar dados:", error);
-            set({ loading: false });
+            console.error("Erro no sync de provas:", error);
         }
     },
     
     fetchAllStudents: async () => {
         const { data, error } = await supabase.rpc('get_all_students');
-        if (!error) {
-            set({ allStudents: data || [] });
-        }
+        if (!error) set({ allStudents: data || [] });
     },
 
     signOut: async () => {
@@ -132,54 +130,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         set({ session: null, profile: null, exams: [], results: [], allStudents: [] });
     },
 
-    // ⚡ REALTIME OTIMIZADO ⚡
     initializeRealtime: () => {
-        const { session } = get();
-        if (!session?.user) return () => {};
-
-        const channelName = `public:subscription:${session.user.id}:${Date.now()}`;
-        
-        console.log("📡 Conectando Realtime:", channelName);
-
-        const channel = supabase.channel(channelName)
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'provas' },
-                (payload) => {
-                    console.log('🔔 Provas alteradas:', payload.eventType);
-                    get().fetchExamsAndResults();
-                }
-            )
-            // 2. Acessos Individuais
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'provas_acesso_individual' },
-                () => get().fetchExamsAndResults()
-            )
-            .on(
-                'postgres_changes',
-                { event: '*', schema: 'public', table: 'resultados' },
-                () => get().fetchExamsAndResults()
-            )
-            .on(
-                'postgres_changes',
-                { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'profiles',
-                    filter: `id=eq.${session.user.id}`
-                },
-                () => get().fetchProfile()
-            )
-            .subscribe((status) => {
-                if (status === 'SUBSCRIBED') {
-                    get().fetchExamsAndResults();
-                }
-            });
-
-        return () => {
-            console.log('🔌 Desconectando Realtime...');
-            supabase.removeChannel(channel);
-        };
+        return () => {}; 
     }
 }));

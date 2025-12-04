@@ -451,144 +451,134 @@ const StudentAccessRow = React.memo(({ student, hasIndividualAccess, onToggleAcc
 const AccessControlModal: React.FC<{ quiz: Prova; onClose: () => void }> = ({ quiz, onClose }) => {
     const allStudents = useAppStore((state) => state.allStudents);
     const fetchAllStudents = useAppStore((state) => state.fetchAllStudents);
-    const fetchExamsAndResults = useAppStore((state) => state.fetchExamsAndResults); 
     
     const [accessList, setAccessList] = useState<Set<string>>(new Set());
     const [filter, setFilter] = useState('');
     const [debouncedFilter, setDebouncedFilter] = useState('');
     const [loading, setLoading] = useState(true);
     
+    // UI Otimista
     const [quizStatus, setQuizStatus] = useState(quiz.status);
     const [savingStatus, setSavingStatus] = useState(false);
 
+    // Efeito para carregar dados iniciais e Configurar REALTIME
     useEffect(() => {
-        if (quiz.status !== quizStatus) {
-            setQuizStatus(quiz.status);
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [quiz.status]);
+        let isMounted = true;
 
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => { document.body.style.overflow = ''; };
-    }, []);
+        const load = async () => {
+            setLoading(true);
+            await fetchAllStudents(); // Pega estado atual dos bloqueios
+            
+            const { data, error } = await supabase
+                .from('provas_acesso_individual')
+                .select('student_id')
+                .eq('prova_id', quiz.id);
+            
+            if (isMounted) {
+                if (!error && data) setAccessList(new Set(data.map(a => a.student_id)));
+                setLoading(false);
+            }
+        };
+        load();
 
-    const quizSeriesPrefix = quiz.serie.charAt(0);
-
-    const fetchAccessList = useCallback(async () => {
-        const { data, error } = await supabase.from('provas_acesso_individual').select('student_id').eq('prova_id', quiz.id);
-        if (error) {
-            console.error('Erro ao buscar lista de acesso:', error);
-            setAccessList(new Set());
-        } else {
-            setAccessList(new Set(data.map(a => a.student_id)));
-        }
-    }, [quiz.id]);
-    
-    useEffect(() => {
-        setLoading(true);
-        Promise.all([fetchAllStudents(), fetchAccessList()]).finally(() => setLoading(false));
-
-        const channel = supabase
-            .channel(`access-control-modal-realtime-${quiz.id}`)
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'provas_acesso_individual', filter: `prova_id=eq.${quiz.id}` }, () => { fetchAccessList(); })
+        // 🟢 CANAL REALTIME DO ADMIN
+        const accessChannel = supabase.channel(`admin-access-ctrl-${quiz.id}`)
+            // Escuta tabela de acesso individual (mudança nas provas)
+            .on(
+                'postgres_changes', 
+                { event: '*', schema: 'public', table: 'provas_acesso_individual', filter: `prova_id=eq.${quiz.id}` }, 
+                (payload) => {
+                    setAccessList(prev => {
+                        const next = new Set(prev);
+                        if (payload.eventType === 'INSERT') next.add(payload.new.student_id);
+                        if (payload.eventType === 'DELETE') next.delete(payload.old.student_id);
+                        return next;
+                    });
+                }
+            )
+            // 🟢 ESCUTA TABELA DE PERFIL (CRÍTICO: Atualiza Botão Bloqueado/Desbloqueado em tempo real)
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'profiles' },
+                () => { 
+                    console.log('Perfil de aluno alterado. Atualizando lista...');
+                    fetchAllStudents(); // Recarrega para ver quem está bloqueado/desbloqueado
+                }
+            )
             .subscribe();
 
-        return () => { supabase.removeChannel(channel); };
-    }, [fetchAllStudents, fetchAccessList, quiz.id]);
-    
+        return () => { 
+            isMounted = false; 
+            supabase.removeChannel(accessChannel); 
+        };
+    }, [quiz.id, fetchAllStudents]);
+
     useEffect(() => {
         const handler = setTimeout(() => { setDebouncedFilter(filter); }, 250);
         return () => clearTimeout(handler);
     }, [filter]);
-    
+
     const filteredStudents = useMemo(() => {
-        const relevantStudents = allStudents.filter(s => s.turma?.startsWith(quizSeriesPrefix));
-        if (!debouncedFilter) return relevantStudents;
-        const lowerFilter = debouncedFilter.toLowerCase();
-        return relevantStudents.filter(s => s.nome_completo?.toLowerCase().includes(lowerFilter) || s.matricula?.includes(lowerFilter));
-    }, [debouncedFilter, allStudents, quizSeriesPrefix]);
-    
+        const prefix = quiz.serie.charAt(0);
+        const relevant = allStudents.filter(s => s.turma?.startsWith(prefix));
+        if (!debouncedFilter) return relevant;
+        const lower = debouncedFilter.toLowerCase();
+        return relevant.filter(s => s.nome_completo?.toLowerCase().includes(lower) || s.matricula?.includes(lower));
+    }, [debouncedFilter, allStudents, quiz.serie]);
+
+    // Actions
     const toggleGlobalStatus = async () => {
-        if (savingStatus) return; 
-        
-        const oldStatus = quizStatus;
-        const newStatus = quizStatus === 'aberta_para_todos' ? 'fechada' : 'aberta_para_todos';
-        
-        setQuizStatus(newStatus);
-        setSavingStatus(true);
-        
-        const { error } = await supabase.from('provas').update({ status: newStatus }).eq('id', quiz.id);
-        
-        if (error) {
-            alert("Erro: " + error.message);
-            setQuizStatus(oldStatus);
-        } else {
-            fetchExamsAndResults();
-        }
-        
+        if (savingStatus) return;
+        const oldS = quizStatus;
+        const newS = quizStatus === 'aberta_para_todos' ? 'fechada' : 'aberta_para_todos';
+        setQuizStatus(newS); setSavingStatus(true);
+        const { error } = await supabase.from('provas').update({ status: newS }).eq('id', quiz.id);
+        if (error) setQuizStatus(oldS);
         setSavingStatus(false);
     };
 
-    const toggleIndividualAccess = useCallback(async (studentId: string, shouldGrant: boolean) => {
-        const originalAccessList = new Set(accessList);
+    const toggleIndividualAccess = async (studentId: string, shouldGrant: boolean) => {
+        const orig = new Set(accessList);
         setAccessList(prev => {
-            const next = new Set(prev);
-            if (shouldGrant) next.add(studentId); else next.delete(studentId);
-            return next;
+            const n = new Set(prev);
+            if (shouldGrant) n.add(studentId); else n.delete(studentId);
+            return n;
         });
         const { error } = await supabase.rpc('manage_individual_access', { p_prova_id: quiz.id, p_student_id: studentId, p_grant: shouldGrant });
-        if (error) {
-            alert("Erro: " + error.message);
-            setAccessList(originalAccessList);
-        }
-    }, [quiz.id, accessList]);
+        if (error) { alert(error.message); setAccessList(orig); }
+    };
     
-    const unblockStudent = useCallback(async (studentId: string) => {
-        setLoading(true);
+    const unblockStudent = async (studentId: string) => {
         const { error } = await supabase.from('profiles').update({ is_blocked: false }).eq('id', studentId);
         if (error) alert("Erro: " + error.message);
-        else await fetchAllStudents();
-        setAccessList(prev => {
-            const next = new Set(prev);
-            next.delete(studentId);
-            return next;
-        });
-        setLoading(false);
-    }, [fetchAllStudents]);
+    };
 
     return (
-        <div className="fixed inset-0 bg-slate-900/60 z-50 flex items-center justify-center p-4 modal-backdrop">
+        <div className="fixed inset-0 bg-slate-900/60 z-[100] flex items-center justify-center p-4 modal-backdrop">
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col modal-content-anim">
-                <header className="p-4 border-b flex items-center justify-between">
-                    <div>
-                        <h2 className="text-xl font-bold">Controle de Acesso: {quiz.title}</h2>
-                        <p className="text-sm text-slate-500">{quiz.serie} - {quiz.area}</p>
-                    </div>
-                    <button onClick={onClose}><CloseIcon /></button>
+                <header className="p-4 border-b flex items-center justify-between bg-slate-50 rounded-t-xl">
+                    <div><h2 className="text-xl font-bold text-slate-800">Controle de Acesso</h2><p className="text-sm text-slate-500">{quiz.title} • {quiz.serie}</p></div>
+                    <button onClick={onClose}><CloseIcon className="w-6 h-6 text-slate-400 hover:text-slate-600"/></button>
                 </header>
+                
                 <div className="p-6 flex-grow overflow-y-auto bg-slate-50 space-y-6">
-                    <div className="bg-white p-4 rounded-lg border shadow-sm">
-                        <h3 className="font-semibold mb-2">Status Global da Avaliação</h3>
-                        <div className="flex items-center justify-between">
-                            <span className={`font-bold ${quizStatus === 'aberta_para_todos' ? 'text-green-600' : 'text-red-600'}`}>
-                                {quizStatus === 'aberta_para_todos' ? 'Aberta para Todos' : 'Fechada'}
-                            </span>
-                             <button onClick={toggleGlobalStatus} disabled={savingStatus} className={`px-4 py-2 text-sm font-semibold text-white rounded-lg shadow-sm transition flex items-center gap-2 ${quizStatus === 'aberta_para_todos' ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
-                                {savingStatus && <Spinner size="16px" color="#fff"/>}
-                                {quizStatus === 'aberta_para_todos' ? 'Fechar Prova' : 'Abrir para Todos'}
-                             </button>
-                        </div>
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                        <div><h3 className="font-semibold text-slate-800">Status Global</h3><p className="text-sm text-slate-500">Visibilidade da turma.</p></div>
+                        <button onClick={toggleGlobalStatus} disabled={savingStatus} className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-all ${quizStatus==='aberta_para_todos'?'bg-red-500 hover:bg-red-600':'bg-green-600 hover:bg-green-700'}`}>
+                            {savingStatus ? <Spinner size="16px" color="#fff"/> : (quizStatus==='aberta_para_todos' ? 'Fechar Prova' : 'Abrir para Todos')}
+                        </button>
                     </div>
-                    <div className="bg-white p-4 rounded-lg border shadow-sm">
-                        <h3 className="font-semibold mb-2">Acesso Individual dos Alunos</h3>
-                        <input type="text" value={filter} onChange={e => setFilter(e.target.value)} className="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="🔎︎ Buscar aluno..." />
-                        <div className="mt-4 space-y-2 max-h-80 overflow-y-auto pr-2">
+
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                        <h3 className="font-semibold text-slate-800 mb-4">Gestão Individual</h3>
+                        <input type="text" value={filter} onChange={e=>setFilter(e.target.value)} className="w-full pl-4 py-2 rounded-lg border-slate-300 shadow-sm mb-4 focus:ring-2 focus:ring-blue-200" placeholder="Buscar aluno..." />
+                        
+                        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-1">
                              {loading ? <div className="flex justify-center p-8"><Spinner /></div> : 
-                                filteredStudents.length === 0 ? <p className="text-center text-slate-500 py-4">Nenhum aluno encontrado.</p> :
+                                filteredStudents.length === 0 ? <p className="text-center text-slate-500 py-8">Nenhum aluno.</p> :
                                 filteredStudents.map(student => (
                                     <StudentAccessRow
-                                        key={`${student.id}-${student.is_blocked ? 'b' : 'u'}-${accessList.has(student.id) ? 'a' : 'n'}`}
+                                        key={student.id}
                                         student={student}
                                         hasIndividualAccess={accessList.has(student.id)}
                                         onToggleAccess={toggleIndividualAccess}

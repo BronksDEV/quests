@@ -7,15 +7,12 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("As variáveis de ambiente do Supabase (VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY) não foram encontradas.");
 }
 
-// Classe de Storage Híbrido (Resistente a suspensão de aba e refresh)
 class HybridStorage {
   private prefix = 'supabase.auth.token';
 
   getItem(key: string): string | null {
-    // 1. Tenta sessionStorage (Memória rápida da aba)
     let item = window.sessionStorage.getItem(key);
     
-    // 2. Se falhar, busca no localStorage (Disco, persiste a crash/refresh)
     if (!item) {
       item = window.localStorage.getItem(this.prefix);
     }
@@ -24,7 +21,6 @@ class HybridStorage {
   }
 
   setItem(key: string, value: string): void {
-    // Salva em ambos para redundância
     window.sessionStorage.setItem(key, value);
     window.localStorage.setItem(this.prefix, value);
   }
@@ -40,14 +36,13 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     persistSession: true,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    storage: new HybridStorage(), // Uso do storage customizado
+    storage: new HybridStorage(), 
     storageKey: 'sb-auth-token'
   }
 });
 
 export const SUPABASE_BUCKET_NAME = "quest-images";
 
-// Renovação preventiva periódica (Backup do Heartbeat)
 setInterval(async () => {
   const { data: { session } } = await supabase.auth.getSession();
   if (session) {

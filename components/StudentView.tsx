@@ -13,7 +13,10 @@ const StudentView: React.FC = () => {
     const exams = useAppStore((state) => state.exams);
     const results = useAppStore((state) => state.results);
     const loading = useAppStore((state) => state.loading);
+    
+    // Actions necessárias 
     const fetchExamsAndResults = useAppStore((state) => state.fetchExamsAndResults);
+    const fetchProfile = useAppStore((state) => state.fetchProfile);
     
     // Estados Locais
     const [activeTab, setActiveTab] = useState<string>('Todas as Áreas');
@@ -22,26 +25,33 @@ const StudentView: React.FC = () => {
     const [examToStart, setExamToStart] = useState<Prova | null>(null);
     const [tick, setTick] = useState(Date.now());
 
-    // Configuração Robusta do Realtime (Solução do F5)
+    // config do Realtime
     useEffect(() => {
-        fetchExamsAndResults(); // Carga inicial imediata
+        let mounted = true;
+        const initData = async () => {
+             if (profile?.id) {
+                 await fetchProfile();
+                 await fetchExamsAndResults();
+             }
+        };
+        initData();
 
-        // Timer do relógio visual
+      
         const tickInterval = setInterval(() => setTick(Date.now()), 1000);
 
         if (!profile?.id) return;
 
-        // Função de debounce para evitar race-condition (quando o evento chega antes do banco persistir)
+
         let reloadTimer: NodeJS.Timeout;
         const safeReload = () => {
+            if (!mounted) return;
             clearTimeout(reloadTimer);
-            // Aguarda 500ms após o evento para garantir que o banco de dados finalizou a escrita
-            reloadTimer = setTimeout(() => {
-                fetchExamsAndResults();
+            reloadTimer = setTimeout(async () => {
+                await fetchProfile();
+                await fetchExamsAndResults();
             }, 500);
         };
 
-        // Canal 1: Dados Globais (Provas) - Sem filtro de usuário
         const globalChannel = supabase.channel('global-changes')
             .on(
                 'postgres_changes',
@@ -53,7 +63,6 @@ const StudentView: React.FC = () => {
             )
             .subscribe();
 
-        // Canal 2: Dados Pessoais (Resultados, Acessos, Bloqueios) - Filtrado por ID
         const personalChannel = supabase.channel(`personal-${profile.id}`)
             .on(
                 'postgres_changes',
@@ -68,49 +77,50 @@ const StudentView: React.FC = () => {
             .on(
                 'postgres_changes',
                 { event: 'UPDATE', schema: 'public', table: 'profiles', filter: `id=eq.${profile.id}` },
-                (payload) => {
-                    // Logica específica de bloqueio para não depender só do reload
-                    if (payload.new.is_blocked !== payload.old.is_blocked) {
-                        if (payload.new.is_blocked) setShowBlockedModal(true);
-                        else safeReload();
+                async (payload) => {
+                    await fetchProfile(); 
+                    
+                    if (payload.new.is_blocked) {
+                        setShowBlockedModal(true);
+                        setExamToStart(null);
+                        setActiveQuizId(null);
+                    } else if (payload.new.is_blocked === false && payload.old.is_blocked === true) {
+                        safeReload(); 
                     }
                 }
             )
             .subscribe();
 
         return () => {
+            mounted = false;
             clearInterval(tickInterval);
             clearTimeout(reloadTimer);
             supabase.removeChannel(globalChannel);
             supabase.removeChannel(personalChannel);
         };
-    }, [fetchExamsAndResults, profile?.id]);
+    }, [fetchExamsAndResults, fetchProfile, profile?.id]);
 
-    // Cache para O(1) lookups de provas já feitas
     const submittedExamIds = useMemo(() => {
         return new Set(results.map(r => r.prova_id));
     }, [results]);
 
-    // Processamento e Filtragem das Provas para a UI
     const processedExams = useMemo(() => {
         if (!profile) return [];
 
         let filteredExams = exams;
 
-        // Se aluno (não admin/professor), filtra pela turma exata
         if (profile.role !== 'admin' && profile.role !== 'professor') {
             if (!profile.turma) return [];
             filteredExams = exams.filter(e => e.serie === profile.turma);
         }
 
-        // Calcula o status dinâmico com base no 'tick' atual
         return filteredExams.map(exam => {
             const status = getExamStatus(exam, profile, submittedExamIds);
             return { ...exam, computedStatus: status };
         });
-    }, [exams, profile, submittedExamIds, tick]); // Dependência 'tick' garante atualização do texto de contagem
+    }, [exams, profile, submittedExamIds, tick]); 
 
-    // Extração das Áreas disponíveis para Tabs
+    // Extração das Áreas
     const availableAreas = useMemo(() => {
         const areas = new Set<string>();
         processedExams.forEach(exam => { if (exam.area) areas.add(exam.area); });
@@ -134,21 +144,18 @@ const StudentView: React.FC = () => {
         return [];
     }, [processedExams]);
 
-    // Correção automática de aba selecionada
     useEffect(() => {
         if (availableAreas.length > 0 && !availableAreas.includes(activeTab)) {
             setActiveTab('Todas as Áreas');
         }
     }, [availableAreas, activeTab]);
 
-    // Lista Final filtrada por aba e ordenada
     const displayList = useMemo(() => {
         const filtered = activeTab === 'Todas as Áreas' 
             ? processedExams 
             : processedExams.filter(e => e.area === activeTab);
 
         return filtered.sort((a, b) => {
-            // Ordem de prioridade visual: Disponível -> Futuro -> Bloqueado -> Feito -> Expirado
             const w: Record<string, number> = { 
                 available: 0, 
                 locked_time: 1, 
@@ -160,16 +167,28 @@ const StudentView: React.FC = () => {
             const wB = w[b.computedStatus] ?? 99;
             if (wA !== wB) return wA - wB;
             
-            // Secundário: Mais recente primeiro
             return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         });
     }, [processedExams, activeTab]);
 
-    // Ações de Usuário
-    const handleStartQuiz = (exam: Prova) => {
+    const handleStartQuiz = async (exam: Prova) => {
         if (profile?.is_blocked && profile.role !== 'admin') {
             setShowBlockedModal(true);
             return;
+        }
+
+        if (profile?.role !== 'admin') {
+            const { data: serverProfile } = await supabase
+                .from('profiles')
+                .select('is_blocked')
+                .eq('id', profile!.id)
+                .single();
+
+            if (serverProfile?.is_blocked) {
+                await fetchProfile(); 
+                setShowBlockedModal(true);
+                return; 
+            }
         }
 
         const currentStatus = getExamStatus(exam, profile!, submittedExamIds);
@@ -178,7 +197,7 @@ const StudentView: React.FC = () => {
         if (currentStatus === 'locked_time') return alert('Aguarde o horário de início.');
         if (currentStatus === 'locked_permission' || currentStatus === 'expired') return alert('Avaliação indisponível no momento.');
 
-        setExamToStart(exam); // Abre modal de confirmação
+        setExamToStart(exam); 
     };
 
     const executeStart = () => {
@@ -257,7 +276,7 @@ const StudentView: React.FC = () => {
                                 key={exam.id}
                                 exam={exam}
                                 status={(exam as any).computedStatus} 
-                                onClick={handleStartQuiz}
+                                onClick={() => handleStartQuiz(exam)} // Chama a função assíncrona
                             />
                         ))}
                     </div>

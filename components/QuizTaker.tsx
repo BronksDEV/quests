@@ -7,6 +7,7 @@ import ActionConfirmModal from './ActionConfirmModal';
 import SubmissionSuccessAnimation from './SubmissionSuccessAnimation';
 import katex from 'katex';
 import 'katex/dist/katex.min.css';
+import DOMPurify from 'dompurify'; // PROTEÇÃO XSS OBRIGATÓRIA
 
 interface QuizTakerProps {
     examId: number;
@@ -17,16 +18,28 @@ const QUESTIONS_PER_PAGE = 5;
 
 // ========================== COMPONENTES AUXILIARES ==========================
 
+// FIX DE SEGURANÇA: RenderHtmlWithMath agora sanitiza HTML antes de injetar
 const RenderHtmlWithMath = React.memo(({ html, className, tag = 'div' }: { html: string; className?: string; tag?: 'div' | 'span' }) => {
     const containerRef = useRef<HTMLElement>(null);
     const lastHtmlRef = useRef<string>('');
 
+    // Sanitiza o HTML para evitar scripts maliciosos (XSS)
+    const sanitizedHtml = useMemo(() => {
+        return DOMPurify.sanitize(html, {
+            ADD_TAGS: ['span', 'div', 'p', 'b', 'i', 'u', 'img', 'br', 'sub', 'sup'], // Lista branca estrita
+            ADD_ATTR: ['src', 'alt', 'class', 'style'],
+            FORBID_TAGS: ['script', 'iframe', 'object', 'embed', 'form'],
+            FORBID_ATTR: ['onerror', 'onload', 'onclick', 'onmouseover']
+        });
+    }, [html]);
+
     useEffect(() => {
-        if (!containerRef.current || lastHtmlRef.current === html) return;
+        if (!containerRef.current || lastHtmlRef.current === sanitizedHtml) return;
         
-        lastHtmlRef.current = html;
-        containerRef.current.innerHTML = html;
+        lastHtmlRef.current = sanitizedHtml;
+        containerRef.current.innerHTML = sanitizedHtml;
         
+        // Renderiza matemática DEPOIS de sanitizar o HTML
         const renderMathInNode = (node: Node) => {
             if (node.nodeType === 3 && node.textContent) {
                 const text = node.textContent;
@@ -56,22 +69,24 @@ const RenderHtmlWithMath = React.memo(({ html, className, tag = 'div' }: { html:
         };
         renderMathInNode(containerRef.current);
         
-        const links = containerRef.current.querySelectorAll('a');
-        links.forEach(link => {
-            link.style.pointerEvents = 'none';
+        // Bloqueia cliques em links injetados
+        containerRef.current.querySelectorAll('a').forEach(link => {
+            link.style.pointerEvents = 'none'; 
             link.style.cursor = 'default';
-            link.style.textDecoration = 'none';
-            link.style.color = 'inherit';
+            link.removeAttribute('href');
             link.onclick = (e) => e.preventDefault();
         });
+        
+        // Previne drag-and-drop de imagens para fora
+        containerRef.current.querySelectorAll('img').forEach(img => {
+            img.style.pointerEvents = 'none';
+        });
 
-        return () => {
-            if (containerRef.current) containerRef.current.innerHTML = '';
-        };
-    }, [html]);
+        return () => { if (containerRef.current) containerRef.current.innerHTML = ''; };
+    }, [sanitizedHtml]);
 
     const Tag = tag;
-    return <Tag ref={containerRef as any} className={className} />;
+    return <Tag ref={containerRef as any} className={className} onCopy={(e: any) => e.preventDefault()} />;
 });
 
 const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; lastSavedTime: string | null }> = ({ status, lastSavedTime }) => {
@@ -85,9 +100,9 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
     }
     if (status === 'error') {
         return (
-            <div className="flex items-center gap-2 text-red-600 bg-red-50 px-4 py-2 rounded-lg border border-red-200 shadow-sm animate-pulse">
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span className="text-xs font-bold uppercase">Não salvo (Offline)</span>
+            <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200 shadow-sm">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                <span className="text-xs font-bold uppercase">Offline - Salvo Local</span>
             </div>
         );
     }
@@ -102,104 +117,165 @@ const SaveStatusIndicator: React.FC<{ status: 'saved' | 'saving' | 'error'; last
     );
 };
 
-const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscreen: () => void; }> = ({ countdown, onRequestFullscreen }) => (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-red-950/70 backdrop-blur-md select-none">
-        <div className="text-center text-white p-8 max-w-lg mx-auto bg-slate-800/50 rounded-xl shadow-2xl border border-slate-700">
-            <h2 className="text-4xl font-bold text-red-400">Atenção!</h2>
-            <p className="mt-4 text-lg">Você saiu do modo de tela cheia. Sua prova será bloqueada em:</p>
-            <p className="text-7xl font-mono font-bold my-4 text-red-300">{countdown}</p>
-            <button onClick={onRequestFullscreen} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg transition-transform hover:scale-105 shadow-lg">Voltar à Tela Cheia</button>
-            <p className="text-slate-400 mt-4 text-sm">Retorne imediatamente para evitar o bloqueio.</p>
+const FullscreenExitWarningModal: React.FC<{ countdown: number; onRequestFullscreen: () => void }> = ({ countdown, onRequestFullscreen }) => (
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-red-950/90 backdrop-blur-md select-none">
+        <div className="text-center text-white p-8 max-w-lg mx-auto bg-slate-800/90 rounded-xl shadow-2xl border border-red-500/50">
+            <h2 className="text-4xl font-bold text-red-400 mb-2">⚠️ ATENÇÃO!</h2>
+            <p className="mt-4 text-xl">Você saiu do modo de tela cheia.</p>
+            <p className="text-base text-gray-300">Retorne imediatamente ou sua prova será bloqueada e enviada automaticamente.</p>
+            <p className="text-8xl font-mono font-bold my-6 text-red-500">{countdown}</p>
+            <button onClick={onRequestFullscreen} className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-lg text-lg transition-transform hover:scale-105 shadow-lg w-full">RETORNAR À PROVA AGORA</button>
         </div>
     </div>
 );
 
-const OfflineWarningModal: React.FC<{ onRetry: () => void }> = ({ onRetry }) => (
-    <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm select-none">
-        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-l-8 border-yellow-500 animate-bounce-short">
-            <h3 className="text-2xl font-bold text-slate-800 text-center">Sem Conexão com a Internet</h3>
-            <p className="text-slate-600 mt-2 text-center">Não é possível enviar a prova agora. Suas respostas estão salvas.</p>
-            <button onClick={onRetry} className="mt-6 w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700">Tentar Enviar Novamente</button>
-        </div>
-    </div>
-);
+const OfflineWarningModal: React.FC<{ onRetry: () => void }> = ({ onRetry }) => {
+    useEffect(() => {
+        const handleOnline = () => { onRetry(); };
+        window.addEventListener('online', handleOnline);
+        return () => window.removeEventListener('online', handleOnline);
+    }, [onRetry]);
 
-const TermsModal: React.FC<{ onConfirm: () => void; onCancel: () => void; }> = ({ onConfirm, onCancel }) => (
-    <div className="fixed inset-0 bg-slate-900/80 z-[100] flex items-center justify-center p-4 select-none" style={{ backdropFilter: 'blur(8px)' }}>
-        <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg modal-content-anim border border-slate-200">
-            <h2 className="text-2xl font-bold text-slate-800 text-center">Termos da Avaliação</h2>
-            <div className="prose prose-sm max-w-none mt-4 text-slate-600 max-h-60 overflow-y-auto pr-3">
-                <p>Ao iniciar esta avaliação, você concorda com os seguintes termos:</p>
-                <ul>
-                    <li>Prova em <strong>modo tela cheia</strong> obrigatório.</li>
-                    <li>Sair da tela cheia ou usar atalhos (Alt+Tab) causará bloqueio.</li>
-                    <li>Bloqueio de copiar, colar e botão direito do mouse.</li>
-                    <li>Progresso salvo automaticamente no dispositivo.</li>
-                </ul>
-            </div>
-            <div className="mt-8 flex justify-between items-center gap-4">
-                <button onClick={onCancel} className="w-full bg-slate-200 text-slate-700 font-semibold py-3 px-4 rounded-lg hover:bg-slate-300">Cancelar</button>
-                <button onClick={onConfirm} className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-700">Concordo. Iniciar.</button>
+    return (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/90 backdrop-blur-sm select-none">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md border-l-8 border-yellow-500 text-center animate-bounce-short">
+                <h3 className="text-2xl font-bold text-slate-800">Sem Conexão com a Internet</h3>
+                <div className="my-6 flex justify-center"><Spinner size="40px" /></div>
+                <p className="text-slate-600 text-lg mb-2">Seus dados estão salvos localmente.</p>
+                <p className="text-sm text-slate-400 mb-6">Aguardando reconexão para envio seguro...</p>
+                <button onClick={onRetry} className="w-full bg-blue-100 text-blue-700 font-bold py-2 px-4 rounded hover:bg-blue-200">Tentar Enviar Agora</button>
             </div>
         </div>
-    </div>
-);
+    );
+};
+
+// FIX DE UI: Termos mais sérios com Checkbox obrigatório
+const TermsModal: React.FC<{ onConfirm: () => void; onCancel: () => void; }> = ({ onConfirm, onCancel }) => {
+    const [agreed, setAgreed] = useState(false);
+    return (
+        <div className="fixed inset-0 bg-slate-900/90 z-[100] flex items-center justify-center p-4 select-none backdrop-blur-sm">
+            <div className="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg modal-content-anim border-t-4 border-blue-600">
+                <div className="flex flex-col items-center mb-6">
+                    <div className="p-3 bg-blue-50 rounded-full mb-3"><span className="text-3xl">🛡️</span></div>
+                    <h2 className="text-2xl font-bold text-slate-800 text-center">Ambiente Seguro de Avaliação</h2>
+                </div>
+                
+                <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 text-sm text-slate-700 mb-6">
+                    <p className="font-bold mb-2">Protocolos de Segurança Ativos:</p>
+                    <ul className="space-y-2 list-disc pl-5">
+                        <li>A prova deve ser realizada obrigatoriamente em <strong>Tela Cheia</strong>.</li>
+                        <li>Trocar de aba, minimizar o navegador ou abrir outros programas acionará o <strong>Bloqueio Automático</strong>.</li>
+                        <li>Cópia, Cola e Menu de Contexto (botão direito) estão <strong>Desativados</strong>.</li>
+                        <li>Sua atividade de conexão e foco está sendo monitorada.</li>
+                    </ul>
+                </div>
+
+                <label className="flex items-start gap-3 p-3 cursor-pointer hover:bg-slate-50 rounded transition-colors mb-6">
+                    <input type="checkbox" checked={agreed} onChange={e => setAgreed(e.target.checked)} className="mt-1 w-5 h-5 text-blue-600 rounded focus:ring-blue-500" />
+                    <span className="text-sm text-slate-600">
+                        Declaro que li as regras acima, sou o titular desta conta e comprometo-me a realizar a avaliação sem consultas externas indevidas.
+                    </span>
+                </label>
+
+                <div className="flex justify-between gap-4">
+                    <button onClick={onCancel} className="w-1/3 bg-white border border-slate-300 text-slate-700 font-bold py-3 rounded-lg hover:bg-slate-50 transition">Voltar</button>
+                    <button 
+                        onClick={onConfirm} 
+                        disabled={!agreed}
+                        className="w-2/3 bg-blue-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg hover:shadow-xl flex justify-center items-center gap-2"
+                    >
+                        <span>Confirmar e Iniciar</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
 
 // ========================== COMPONENTE PRINCIPAL ==========================
 
 const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
+    // Hooks / Store
     const profile = useAppStore((state) => state.profile);
+    
+    // Ref segura para chamar onFinish mesmo se closure estiver velha
+    const onFinishRef = useRef(onFinish);
+    useEffect(() => { onFinishRef.current = onFinish; }, [onFinish]);
+
+    // Data State
     const [quiz, setQuiz] = useState<Omit<Prova, 'questoes'> | null>(null);
     const [questions, setQuestions] = useState<StudentQuestao[]>([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [answers, setAnswers] = useState<{ [key: number]: string }>({});
+    
+    // UI State
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [error, setError] = useState('');
     const [isQuizStarted, setIsQuizStarted] = useState(false);
     const [showTerms, setShowTerms] = useState(true);
+    const [isSubmittingLockdown, setIsSubmittingLockdown] = useState(false);
+    
+    // Modals & Warnings
     const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
     const [showErrorModal, setShowErrorModal] = useState(false);
     const [showBlockedModal, setShowBlockedModal] = useState(false);
     const [missingQuestionModal, setMissingQuestionModal] = useState<{ show: boolean, questionIndex: number }>({ show: false, questionIndex: -1 });
+    const [isOfflineWaitMode, setIsOfflineWaitMode] = useState(false);
     const [showSessionWarning, setShowSessionWarning] = useState(false);
-
+    const [errorMessage, setErrorMessage] = useState('');
     const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved');
     const [lastSavedTime, setLastSavedTime] = useState<string | null>(null);
-    const [isNetworkError, setIsNetworkError] = useState(false);
 
+    // Fullscreen / Anticheat State
     const [showWarning, setShowWarning] = useState(false);
     const [countdown, setCountdown] = useState(5);
-    
-    // Referências de Controle
+
+    // Refs Lógica
     const countdownIntervalRef = useRef<number | null>(null);
     const isBlockingRef = useRef(false);
     const isExitingLegitimately = useRef(false);
-    const fullscreenViolationsRef = useRef(0);
     const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
     const lastActivityRef = useRef(Date.now());
     const sessionRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isSubmittingRef = useRef(false);
 
-    // Chaves LocalStorage
+    // Reference para acessar estado mais atual dentro de EventListeners
+    const latestStateRef = useRef({
+        isQuizStarted,
+        isBlockingRef: isBlockingRef.current,
+        isExitingLegitimately: isExitingLegitimately.current,
+        isSubmittingLockdown,
+        profileRole: profile?.role
+    });
+
+    useEffect(() => {
+        latestStateRef.current = {
+            isQuizStarted,
+            isBlockingRef: isBlockingRef.current,
+            isExitingLegitimately: isExitingLegitimately.current,
+            isSubmittingLockdown,
+            profileRole: profile?.role
+        };
+    }, [isQuizStarted, isSubmittingLockdown, profile]);
+
+    // Storage Keys
     const TERMS_KEY_REF = useRef<string | null>(null);
     const PAGE_KEY_REF = useRef<string | null>(null);
     const STORAGE_KEY = profile ? `quiz_progress_${profile.id}_${examId}` : null;
 
-    const MAX_VIOLATIONS = 1;
-
+    // --- 1. Inicialização ---
     useEffect(() => {
         if (!profile) return;
         TERMS_KEY_REF.current = `quiz_terms_accepted_${profile.id}_${examId}`;
         PAGE_KEY_REF.current = `quiz_page_${profile.id}_${examId}`;
 
+        // Verifica se já aceitou (Recovery mode)
         const accepted = localStorage.getItem(TERMS_KEY_REF.current);
         if (accepted === 'true') {
             setShowTerms(false);
+            // Pequeno delay para permitir que o DOM renderize antes de pedir fullscreen se necessário
             setTimeout(() => {
                 setIsQuizStarted(true);
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen().catch(() => {});
-                }
             }, 100);
         } else {
             setShowTerms(true);
@@ -209,354 +285,555 @@ const QuizTaker: React.FC<QuizTakerProps> = ({ examId, onFinish }) => {
         if (storedPage) setCurrentPage(Number(storedPage) || 0);
     }, [profile, examId]);
 
-    // ------------------- HEARTBEAT (PROTEÇÃO CONTRA SESSÃO) -------------------
-    useEffect(() => {
-        const handleActivity = () => { lastActivityRef.current = Date.now(); };
 
-        document.addEventListener('click', handleActivity);
-        document.addEventListener('keydown', handleActivity);
-        document.addEventListener('touchstart', handleActivity);
-
-        // Verifica atividade a cada 5min e renova sessão se usuário estiver ativo
-        sessionRefreshIntervalRef.current = setInterval(async () => {
-            const timeSinceLastActivity = Date.now() - lastActivityRef.current;
-            if (timeSinceLastActivity < 5 * 60 * 1000) {
-                const { data: { session } } = await supabase.auth.getSession();
-                if (session) await supabase.auth.refreshSession();
-            }
-        }, 5 * 60 * 1000);
-
-        return () => {
-            document.removeEventListener('click', handleActivity);
-            document.removeEventListener('keydown', handleActivity);
-            document.removeEventListener('touchstart', handleActivity);
-            if (sessionRefreshIntervalRef.current) clearInterval(sessionRefreshIntervalRef.current);
-        };
-    }, []);
-
-    // ------------------- DETECTOR DE PERDA DE SESSÃO -------------------
-    useEffect(() => {
-        const checkSession = setInterval(async () => {
-            const { data: { session }, error } = await supabase.auth.getSession();
-            
-            if (!session || error) {
-                if (STORAGE_KEY && Object.keys(answers).length > 0) {
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
-                    localStorage.setItem(STORAGE_KEY + '_backup', JSON.stringify({ answers, timestamp: Date.now(), page: currentPage }));
-                }
-                setShowSessionWarning(true);
-            }
-        }, 30000); // Check a cada 30s
-
-        return () => clearInterval(checkSession);
-    }, [answers, currentPage, STORAGE_KEY]);
-
-    // ------------------- NAVEGAÇÃO -------------------
-    const goToPage = useCallback((page: number) => {
-        setCurrentPage(page);
-        if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(page));
-    }, []);
-
-    const goNext = useCallback(() => {
-        setCurrentPage(prev => {
-            const next = Math.min(Math.ceil(questions.length / QUESTIONS_PER_PAGE) - 1, prev + 1);
-            if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(next));
-            return next;
-        });
-    }, [questions.length]);
-
-    const goPrev = useCallback(() => {
-        setCurrentPage(prev => {
-            const next = Math.max(0, prev - 1);
-            if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(next));
-            return next;
-        });
-    }, []);
-
-    // ------------------- SEGURANÇA TECLAS/CLIQUES -------------------
-    useEffect(() => {
-        const prevent = (e: Event) => { e.preventDefault(); e.stopPropagation(); return false; };
-        const preventKeys = (e: KeyboardEvent) => {
-            if (e.key === 'F12' || (e.ctrlKey && (e.key === 'I' || e.key === 'p' || e.key === 'u'))) { e.preventDefault(); }
-        };
-        document.addEventListener('contextmenu', prevent);
-        document.addEventListener('copy', prevent);
-        document.addEventListener('paste', prevent);
-        document.addEventListener('keydown', preventKeys);
-        return () => {
-            document.removeEventListener('contextmenu', prevent);
-            document.removeEventListener('copy', prevent);
-            document.removeEventListener('paste', prevent);
-            document.removeEventListener('keydown', preventKeys);
-        };
-    }, []);
-
-    // ------------------- AUTO-SAVE -------------------
-    useEffect(() => {
-        if (STORAGE_KEY && Object.keys(answers).length > 0) {
-            setSaveStatus('saving');
-            if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-            
-            saveTimerRef.current = setTimeout(() => {
-                try {
-                    const existingData = localStorage.getItem(STORAGE_KEY);
-                    const parsedExisting = existingData ? JSON.parse(existingData) : {};
-                    const mergedAnswers = { ...parsedExisting, ...answers };
-                    
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedAnswers));
-                    setSaveStatus('saved');
-                    setLastSavedTime(new Date().toLocaleTimeString());
-                } catch { setSaveStatus('error'); }
-            }, 600);
-        }
-        return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-    }, [answers, STORAGE_KEY]);
-
-    useEffect(() => { window.scrollTo({ top: 0, behavior: 'smooth' }); }, [currentPage]);
-
-    // ------------------- BLOQUEIO DE ALUNO -------------------
+    // --- 2. Monitor de Tela Cheia e Anticheat ---
     const blockStudentAndExit = useCallback(async () => {
+        // Ignora administradores ou se já estiver em processo de bloqueio
         if (!profile || profile.role === 'admin' || isBlockingRef.current) return;
+        
         isBlockingRef.current = true;
         if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
         
         try {
-            if (navigator.onLine) await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile.id);
-            if (document.fullscreenElement) {
-                isExitingLegitimately.current = true;
-                await document.exitFullscreen();
+            // Tenta bloquear no servidor
+            if (navigator.onLine) {
+                 await supabase.from('profiles').update({ is_blocked: true }).eq('id', profile.id);
             }
+            
+            // Força saída de tela cheia limpa
+            if (document.fullscreenElement) {
+                latestStateRef.current.isExitingLegitimately = true;
+                isExitingLegitimately.current = true;
+                await document.exitFullscreen().catch(() => {});
+            }
+            
+            // Exibe modal bloqueante (a Store ouvirá o evento do Realtime depois e reforçará)
             setShowBlockedModal(true);
-        } catch { onFinish(); }
-    }, [profile, onFinish]);
+            
+            // Força um submit das respostas atuais para não perder tudo? (Opcional, arriscado se fraude)
+            // Aqui optamos por apenas bloquear.
+            
+        } catch { 
+            // Fallback
+            onFinishRef.current(); 
+        }
+    }, [profile]);
 
     const requestFullscreen = useCallback(async () => {
-        try { await document.documentElement.requestFullscreen(); } catch (err) { console.error(err); }
+        try { 
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+            }
+        } catch (e) {
+            console.error("Fullscreen blocked:", e);
+        }
     }, []);
 
     useEffect(() => {
         const handleFullscreenChange = () => {
-            if (isExitingLegitimately.current || profile?.role === 'admin') return;
+            const state = latestStateRef.current;
             
-            if (document.fullscreenElement) {
-                setShowWarning(false);
-                if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+            // Ignora se for admin, ou se for saída autorizada (botão de enviar), ou bloqueio em curso
+            if (state.isExitingLegitimately || state.profileRole === 'admin' || state.isSubmittingLockdown || state.isBlockingRef) {
                 return;
             }
-            
-            if (!document.fullscreenElement && isQuizStarted && !isBlockingRef.current) {
-                fullscreenViolationsRef.current++;
 
-                if (fullscreenViolationsRef.current > MAX_VIOLATIONS) {
-                    setShowWarning(true);
-                    setCountdown(5);
-                    countdownIntervalRef.current = window.setInterval(() => {
-                        setCountdown(prev => {
-                            if (prev <= 1) {
-                                if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
-                                blockStudentAndExit();
-                                return 0;
-                            }
-                            return prev - 1;
-                        });
-                    }, 1000);
-                } else {
-                    alert("⚠️ ATENÇÃO: Você saiu do modo tela cheia!\n\nRetorne imediatamente. A próxima saída resultará em bloqueio.");
-                    requestFullscreen();
+            const isFullscreenNow = !!document.fullscreenElement;
+
+            if (isFullscreenNow) {
+                // Voltou para tela cheia: cancela contagem
+                setShowWarning(false);
+                if (countdownIntervalRef.current) {
+                    clearInterval(countdownIntervalRef.current);
+                    countdownIntervalRef.current = null;
                 }
+            } else if (state.isQuizStarted) {
+                // Saiu da tela cheia indevidamente
+                if (countdownIntervalRef.current !== null) return; // Já está contando
+
+                setShowWarning(true);
+                setCountdown(5); // Reset
+
+                countdownIntervalRef.current = window.setInterval(() => {
+                    setCountdown(prev => {
+                        if (prev <= 1) {
+                            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+                            countdownIntervalRef.current = null;
+                            blockStudentAndExit();
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }, 1000);
             }
         };
-        
+
         document.addEventListener('fullscreenchange', handleFullscreenChange);
-        if (isQuizStarted && !document.fullscreenElement && profile?.role !== 'admin' && !showTerms) {
-             setShowWarning(true);
-             setCountdown(5);
+        
+        // Check inicial tardio para pegar F5 refresh
+        const checkInitial = () => {
+            const state = latestStateRef.current;
+            if (state.isQuizStarted && !document.fullscreenElement && state.profileRole !== 'admin' && !showTerms) {
+                handleFullscreenChange();
+            }
+        };
+        setTimeout(checkInitial, 800); // Aumentei o delay para garantir carregamento
+
+        return () => {
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+        };
+    }, [blockStudentAndExit, showTerms]);
+
+    // --- 3. Monitor de Sessão ---
+    useEffect(() => {
+        const handleActivity = () => { lastActivityRef.current = Date.now(); };
+        window.addEventListener('mousemove', handleActivity); // Adicionado mousemove
+        window.addEventListener('click', handleActivity);
+        window.addEventListener('keydown', handleActivity);
+        
+        sessionRefreshIntervalRef.current = setInterval(async () => {
+            // Se ativo nos ultimos 10 min, refresh token
+            if (Date.now() - lastActivityRef.current < 10 * 60 * 1000) {
+                const { data } = await supabase.auth.getSession();
+                if (data.session) await supabase.auth.refreshSession();
+            }
+        }, 5 * 60 * 1000);
+        
+        return () => {
+            window.removeEventListener('mousemove', handleActivity);
+            window.removeEventListener('click', handleActivity);
+            window.removeEventListener('keydown', handleActivity);
+            if (sessionRefreshIntervalRef.current) clearInterval(sessionRefreshIntervalRef.current);
+        };
+    }, []);
+
+    // Verificador de Token Valido (Caso seja revogado)
+    useEffect(() => {
+        const check = setInterval(async () => {
+            const { data, error } = await supabase.auth.getSession();
+            if (!data.session || error) {
+                // Salva progresso emergencial
+                if (STORAGE_KEY && Object.keys(answers).length > 0) localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+                setShowSessionWarning(true);
+            }
+        }, 30000);
+        return () => clearInterval(check);
+    }, [answers, STORAGE_KEY]);
+
+    // --- 4. Persistência Local ---
+    useEffect(() => {
+        if (STORAGE_KEY && Object.keys(answers).length > 0) {
+            setSaveStatus('saving');
+            if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+            saveTimerRef.current = setTimeout(() => {
+                try {
+                    // Aqui poderia ter criptografia, mas por performance mantemos JSON puro
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(answers));
+                    setSaveStatus('saved');
+                    setLastSavedTime(new Date().toLocaleTimeString());
+                } catch {
+                    setSaveStatus('error');
+                }
+            }, 600); // Debounce de 600ms
         }
-        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    }, [isQuizStarted, blockStudentAndExit, profile, showTerms, requestFullscreen]);
+        return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+    }, [answers, STORAGE_KEY]);
 
-    // ------------------- SUBMISSÃO -------------------
+    // --- 5. Bloqueio de Atalhos e Teclado ---
+    useEffect(() => {
+        const preventDefault = (e: Event) => e.preventDefault();
+        
+        const preventKeys = (e: KeyboardEvent) => {
+            const k = e.key.toLowerCase();
+            // Bloqueia F12, Ctrl+P (Print), Ctrl+Shift+I (DevTools), Ctrl+U (Source)
+            if (
+                e.key === 'F12' || 
+                (e.ctrlKey && (k === 'p' || k === 'u' || k === 's' || k === 'f')) ||
+                (e.ctrlKey && e.shiftKey && (k === 'i' || k === 'c' || k === 'j')) ||
+                e.metaKey // Bloqueia tecla windows/command para evitar minimizar
+            ) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        };
+
+        // Bloqueia Menu Contexto e Seleção
+        document.addEventListener('contextmenu', preventDefault);
+        document.addEventListener('selectstart', preventDefault); // Bloqueia seleção de texto
+        document.addEventListener('copy', preventDefault);
+        document.addEventListener('paste', preventDefault);
+        document.addEventListener('cut', preventDefault);
+        document.addEventListener('keydown', preventKeys);
+
+        return () => { 
+            document.removeEventListener('contextmenu', preventDefault);
+            document.removeEventListener('selectstart', preventDefault);
+            document.removeEventListener('copy', preventDefault);
+            document.removeEventListener('paste', preventDefault);
+            document.removeEventListener('cut', preventDefault);
+            document.removeEventListener('keydown', preventKeys); 
+        };
+    }, []);
+
+    // --- 6. Fetch Inicial de Dados ---
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            try {
+                // Fetch Prova
+                const { data: qData, error: e1 } = await supabase.from('provas').select('*').eq('id', examId).single();
+                if(e1) throw e1;
+                setQuiz(qData);
+                
+                // Fetch Questões (Seguro pela View)
+                const { data: qQuest, error: e2 } = await supabase.from('student_questions_view').select('*').eq('prova_id', examId);
+                if(e2) throw e2;
+                
+                const sorted = (qQuest || []).sort((a, b) => (a.question_order ?? 99) - (b.question_order ?? 99));
+                setQuestions(sorted);
+                
+                // Recupera Respostas
+                if (STORAGE_KEY) {
+                    try { 
+                        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+                        setAnswers(saved); 
+                        setLastSavedTime(new Date().toLocaleTimeString()); 
+                    } catch {}
+                }
+            } catch (err: any) { 
+                console.error(err);
+                setErrorMessage(err.message || 'Erro ao carregar dados da prova.'); 
+                setShowErrorModal(true); 
+            } finally { 
+                setLoading(false); 
+            }
+        };
+        fetchData();
+    }, [examId, STORAGE_KEY]);
+
+
+    // --- 7. Envio (Submit) ---
     const handleSubmit = useCallback(async () => {
-        if (!profile) return;
-        if (!navigator.onLine) { setIsNetworkError(true); return; }
+        if (!profile || isSubmittingRef.current) return;
 
-        const missingQuestionIndex = questions.findIndex(q => !answers[q.id] || answers[q.id].trim() === '');
-        if (missingQuestionIndex !== -1) {
-            const targetPage = Math.floor(missingQuestionIndex / QUESTIONS_PER_PAGE);
-            goToPage(targetPage);
-            setMissingQuestionModal({ show: true, questionIndex: missingQuestionIndex + 1 });
+        // Check preenchimento
+        const missing = questions.findIndex(q => !answers[q.id] || !answers[q.id].trim());
+        if (missing !== -1) {
+            const t = Math.floor(missing/QUESTIONS_PER_PAGE);
+            setCurrentPage(t);
+            setMissingQuestionModal({ show: true, questionIndex: missing + 1 });
+            return;
+        }
+
+        // Offline mode check
+        if (!navigator.onLine) {
+            setIsOfflineWaitMode(true);
+            isSubmittingRef.current = false;
             return;
         }
 
         setSubmitting(true);
-        isExitingLegitimately.current = true;
+        isSubmittingRef.current = true; // Lock de ref para evitar duplos cliques
+        isExitingLegitimately.current = true; // Flag para ignorar detector de fullscreen
+        latestStateRef.current.isExitingLegitimately = true;
+        setIsSubmittingLockdown(true);
 
         try {
+            // Check duplo se já enviou
+            const { data: exist } = await supabase.from('resultados').select('id').eq('prova_id', examId).eq('student_id', profile.id).maybeSingle();
+            
+            if (exist) {
+                alert("Esta prova já consta como enviada no sistema.");
+                // Limpeza segura
+                cleanupLocalData();
+                onFinishRef.current();
+                return;
+            }
+
+            // INSERT principal
             const { error } = await supabase.from('resultados').insert({ 
                 prova_id: examId, 
                 student_id: profile.id, 
                 respostas: answers 
+                // Metadata extra poderia ir aqui se a tabela suportar (ex: fullscreen_breaches)
             });
-            if (error) throw error;
 
-            if (STORAGE_KEY) localStorage.removeItem(STORAGE_KEY);
-            if (TERMS_KEY_REF.current) localStorage.removeItem(TERMS_KEY_REF.current);
-            if (PAGE_KEY_REF.current) localStorage.removeItem(PAGE_KEY_REF.current);
+            if (error && error.code !== '23505') throw error; // Ignora duplicidade se acontecer
 
-            if (document.fullscreenElement) await document.exitFullscreen();
+            cleanupLocalData();
+            
+            // Exit Fullscreen apenas se der certo
+            if (document.fullscreenElement) {
+                await document.exitFullscreen().catch(()=>{});
+            }
+
             setShowSuccessAnimation(true);
-            setTimeout(() => onFinish(), 3000);
+            setIsOfflineWaitMode(false);
+            
+            // Timeout para animação terminar
+            setTimeout(() => onFinishRef.current(), 3500);
+
         } catch (err: any) {
-            setIsNetworkError(true);
+            // Reverte travas se der erro (ex: internet caiu no meio do request)
             setSubmitting(false);
+            setIsSubmittingLockdown(false);
+            isSubmittingRef.current = false;
+            latestStateRef.current.isExitingLegitimately = false;
             isExitingLegitimately.current = false;
+
+            if (!navigator.onLine || err.message?.includes('fetch') || err.message?.includes('network')) {
+                setIsOfflineWaitMode(true);
+            } else {
+                setErrorMessage('Ocorreu um erro ao enviar. Tente novamente em instantes. \n' + err.message);
+                setShowErrorModal(true);
+            }
         }
-    }, [examId, profile, answers, onFinish, questions, STORAGE_KEY, goToPage]);
+    }, [examId, profile, answers, questions, STORAGE_KEY]);
 
-    // ------------------- CARGA DE DADOS -------------------
-    useEffect(() => {
-        const fetch = async () => {
-            setLoading(true);
-            try {
-                const { data: qData } = await supabase.from('provas').select('*').eq('id', examId).single();
-                setQuiz(qData);
-                const { data: qQuest } = await supabase.from('student_questions_view').select('*').eq('prova_id', examId);
-                const sortedQ = (qQuest || []).sort((a, b) => {
-                    const orderA = a.question_order ?? Infinity;
-                    const orderB = b.question_order ?? Infinity;
-                    if (orderA !== orderB) return orderA - orderB;
-                    return a.id - b.id; 
-                });
-                setQuestions(sortedQ);
-
-                if (STORAGE_KEY) {
-                    const savedAnswers = localStorage.getItem(STORAGE_KEY);
-                    if (savedAnswers) {
-                        try {
-                            const parsed = JSON.parse(savedAnswers);
-                            setAnswers(parsed);
-                            setLastSavedTime(new Date().toLocaleTimeString());
-                        } catch (e) { console.error(e); }
-                    }
-                }
-            } catch { setError('Erro ao carregar dados da avaliação.'); } finally { setLoading(false); }
-        };
-        fetch();
-    }, [examId, STORAGE_KEY]);
-
-    const startQuiz = async () => {
-        if (profile?.role === 'admin') {
-            if(TERMS_KEY_REF.current) localStorage.setItem(TERMS_KEY_REF.current, 'true');
-            setShowTerms(false);
-            setIsQuizStarted(true);
-            return;
-        }
-        if(TERMS_KEY_REF.current) localStorage.setItem(TERMS_KEY_REF.current, 'true');
-        setShowTerms(false);
-        setTimeout(async () => {
-            try { await requestFullscreen(); } catch (e) { console.error(e); }
-            setIsQuizStarted(true); 
-        }, 100);
+    const cleanupLocalData = () => {
+        localStorage.removeItem(STORAGE_KEY!);
+        localStorage.removeItem(TERMS_KEY_REF.current!);
+        localStorage.removeItem(PAGE_KEY_REF.current!);
     };
 
-    if (loading) return <div className="flex justify-center p-12 h-96"><Spinner /></div>;
-    if (showErrorModal) return <ActionConfirmModal type="warning" title="Erro" message={error} onConfirm={() => setShowErrorModal(false)} confirmText="OK" />;
-    if (showBlockedModal) return <ActionConfirmModal type="warning" title="Bloqueado" message="Acesso bloqueado." onConfirm={onFinish} confirmText="OK" />;
-    if (showSuccessAnimation) return <SubmissionSuccessAnimation />;
-    if (showTerms && profile?.role !== 'admin') return <TermsModal onConfirm={startQuiz} onCancel={onFinish} />;
-    if (missingQuestionModal.show) return <ActionConfirmModal type="info" title="Atenção" message={`A questão ${missingQuestionModal.questionIndex} não foi respondida.`} onConfirm={() => setMissingQuestionModal({show:false, questionIndex:-1})} confirmText="OK" />;
 
-    // Estado Limbo / Recovery
-    if (!isQuizStarted && !showTerms) {
-        return (
-             <div className="flex flex-col items-center justify-center p-12 h-96 animate-fadeIn">
-                <Spinner />
-                <p className="mt-4 text-slate-600 mb-6">Iniciando ambiente seguro...</p>
-                <button 
-                    onClick={() => { localStorage.removeItem(TERMS_KEY_REF.current || ''); setShowTerms(true); }}
-                    className="text-sm text-blue-500 hover:text-blue-700 underline"
-                >
-                    Não carregou? Clique aqui para reiniciar.
+    // --- 8. Controle de Início ---
+    const startQuiz = async () => {
+        if (!profile) return;
+        
+        try {
+            // FIX CRÍTICO: RequestFullscreen DEVE ser direto aqui
+            if (profile.role !== 'admin') {
+                await document.documentElement.requestFullscreen();
+            }
+
+            // Marca termo como aceito
+            if (TERMS_KEY_REF.current) localStorage.setItem(TERMS_KEY_REF.current, 'true');
+            
+            setShowTerms(false);
+            setIsQuizStarted(true); // Renderiza o conteúdo
+            
+        } catch (error) {
+            console.error(error);
+            alert("A avaliação exige que a tela esteja cheia. Autorize o modo Tela Cheia do seu navegador para continuar.");
+        }
+    };
+
+    // Navegação
+    const goToPage = (page: number) => {
+        const safe = Math.max(0, Math.min(page, Math.ceil(questions.length/QUESTIONS_PER_PAGE)-1));
+        setCurrentPage(safe);
+        if (PAGE_KEY_REF.current) localStorage.setItem(PAGE_KEY_REF.current, String(safe));
+        // Rola pro topo
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- Renderização Condicional ---
+
+    if (loading) return <div className="flex justify-center items-center h-screen bg-white"><div className="flex flex-col items-center gap-3"><Spinner size="40px"/><span className="text-slate-500">Preparando prova...</span></div></div>;
+    
+    // Tratamento de Sessão Perdida
+    if (showSessionWarning) return (
+        <div className="fixed inset-0 z-[300] bg-slate-900/90 flex items-center justify-center p-4">
+            <div className="bg-white rounded-xl p-8 max-w-md text-center border-t-4 border-red-500 shadow-2xl">
+                <h2 className="text-2xl font-bold mb-4 text-slate-800">Sessão Expirada</h2>
+                <p className="text-slate-600 mb-6">Por segurança, precisamos reconectar sua conta. Suas respostas atuais estão salvas localmente.</p>
+                <button onClick={()=>window.location.reload()} className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-bold w-full transition">
+                    Recarregar Página
                 </button>
             </div>
-        );
-    }
+        </div>
+    );
 
-    if (!quiz || questions.length === 0) return <ActionConfirmModal type="info" title="Erro" message="Prova indisponível." onConfirm={onFinish} confirmText="Voltar" />;
+    // Modal de Bloqueio Definitivo
+    if (showBlockedModal) return (
+        <ActionConfirmModal 
+            type="warning" 
+            title="Avaliação Interrompida" 
+            message="Violação de segurança detectada ou bloqueio administrativo aplicado. O acesso a esta prova foi suspenso." 
+            confirmText="Sair da Prova" 
+            onConfirm={onFinish}
+            // Remove botão cancelar para obrigar saída
+        />
+    );
 
-    const startIndex = currentPage * QUESTIONS_PER_PAGE;
-    const questionsOnPage = questions.slice(startIndex, startIndex + QUESTIONS_PER_PAGE);
+    // Termos de Uso (Estado inicial)
+    if (showTerms && profile?.role !== 'admin') return <TermsModal onConfirm={startQuiz} onCancel={onFinish} />;
+
+    // Animação de Sucesso
+    if (showSuccessAnimation) return <SubmissionSuccessAnimation />;
+    
+    // Avisos menores
+    if (missingQuestionModal.show) return (
+        <ActionConfirmModal 
+            type="info" 
+            title="Questão em branco" 
+            message={`Você esqueceu de responder a Questão ${missingQuestionModal.questionIndex}.`} 
+            confirmText="Vou corrigir" 
+            onConfirm={() => {
+                setMissingQuestionModal({show:false, questionIndex:-1});
+                // Rolar até a questão
+                // Logica extra poderia vir aqui para focar no elemento
+            }} 
+        />
+    );
+    
+    if (showErrorModal) return (
+        <ActionConfirmModal 
+            type="warning" 
+            title="Erro de Envio" 
+            message={errorMessage} 
+            confirmText="Tentar Novamente" 
+            onConfirm={() => setShowErrorModal(false)} 
+        />
+    );
+
+    // Render de Segurança de "Ambiente Preparando" (se saiu do termo mas state n mudou)
+    if (!isQuizStarted && !showTerms) return (
+        <div className="flex flex-col items-center justify-center h-screen bg-slate-50 animate-fadeIn">
+            <Spinner />
+            <p className="mt-4 text-slate-600">Configurando ambiente seguro...</p>
+        </div>
+    );
+
+    if (!quiz) return <ActionConfirmModal type="info" title="Prova Indisponível" message="Não foi possível carregar os dados desta prova." onConfirm={onFinish} confirmText="Voltar" />;
+
+    // --- Renderização Principal (Paginação) ---
+    const startIdx = currentPage * QUESTIONS_PER_PAGE;
+    const qOnPage = questions.slice(startIdx, startIdx + QUESTIONS_PER_PAGE);
 
     return (
-        <>
-            {showWarning && <FullscreenExitWarningModal countdown={countdown} onRequestFullscreen={requestFullscreen} />}
-            {isNetworkError && <OfflineWarningModal onRetry={handleSubmit} />}
+        <div className="min-h-screen bg-slate-100 select-none pb-20"> {/* BG e Select None Global */}
             
-            {showSessionWarning && (
-                <div className="fixed inset-0 z-[300] bg-red-900/90 flex items-center justify-center p-4">
-                    <div className="bg-white rounded-xl p-8 max-w-md text-center border-4 border-red-500">
-                        <h2 className="text-2xl font-bold text-red-600 mb-4">⚠️ Sessão Expirada</h2>
-                        <p className="mb-4 text-slate-700 font-semibold">
-                            Sua conexão de segurança expirou. Mas não se preocupe! 
-                            <br/>Suas respostas estão salvas no seu dispositivo.
-                        </p>
-                        <p className="mb-6 text-sm text-slate-500">Faça login novamente para continuar exatamente de onde parou.</p>
-                        <button onClick={() => window.location.reload()} className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold shadow-lg transition">
-                            Fazer Login Novamente
-                        </button>
-                    </div>
-                </div>
-            )}
+            {showWarning && <FullscreenExitWarningModal countdown={countdown} onRequestFullscreen={requestFullscreen} />}
+            {isOfflineWaitMode && <OfflineWarningModal onRetry={handleSubmit} />}
 
-            <div className="w-full max-w-5xl mx-auto animate-fadeIn select-none">
-                <header className="mb-6 bg-white p-5 rounded-xl shadow-md border border-slate-200/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="w-full max-w-4xl mx-auto pt-6 px-4">
+                
+                {/* Header Fixo/Stick */}
+                <header className="mb-6 bg-white p-4 sm:p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sticky top-4 z-10">
                     <div>
-                        <h1 className="text-2xl font-bold text-slate-900">{quiz.title}</h1>
-                        <p className="text-sm font-semibold text-blue-600 mt-1">{quiz.area}</p>
-                        <div className="mt-2 flex flex-col text-sm text-slate-500">
-                            <span className="font-bold uppercase text-slate-700">{profile?.nome_completo}</span>
-                            <span>Matrícula: {profile?.matricula} • Turma: {profile?.turma}</span>
+                        <h1 className="text-lg sm:text-xl font-bold text-slate-800">{quiz.title}</h1>
+                        <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
+                            <span className="bg-slate-100 px-2 py-0.5 rounded text-xs font-semibold uppercase">{quiz.serie}</span>
+                            <span>{quiz.area}</span>
                         </div>
                     </div>
-                    <div className="text-right flex flex-col items-end">
-                        <p className="text-xs font-bold uppercase text-slate-400 mb-1">Progresso</p>
-                        <p className="text-3xl font-bold text-slate-800">{startIndex + 1}-{Math.min(startIndex + QUESTIONS_PER_PAGE, questions.length)}<span className="text-slate-400 text-xl">/{questions.length}</span></p>
-                        <SaveStatusIndicator status={saveStatus} lastSavedTime={lastSavedTime} />
+                    
+                    <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                         <div className="text-right">
+                             <SaveStatusIndicator status={saveStatus} lastSavedTime={lastSavedTime} />
+                         </div>
+                         <div className="bg-slate-100 rounded-lg px-3 py-1 text-center">
+                            <span className="text-xs text-slate-500 font-bold block">QUESTÃO</span>
+                            <span className="text-xl font-bold text-blue-600">{startIdx + 1}</span>
+                            <span className="text-slate-400 text-sm"> / {questions.length}</span>
+                        </div>
                     </div>
                 </header>
 
-                <main className="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200/80">
-                    {questionsOnPage.map((question) => (
-                        <fieldset key={question.id} className="mb-10 last:mb-2">
-                            <legend className="font-semibold text-lg px-2 -mb-3 text-slate-800">{question.title}</legend>
-                            <div className="border rounded-lg p-5 pt-7 bg-slate-50/50">
-                                <div className="mb-5 text-slate-800"><RenderHtmlWithMath html={question.long_text || ''} /></div>
-                                <div className={`grid grid-cols-1 ${question.image_url_1 && question.image_url_2 ? 'sm:grid-cols-2' : ''} gap-4 my-5`}>
-                                    {question.image_url_1 && <img src={question.image_url_1} className="border rounded-md w-full shadow-sm" alt="" />}
-                                    {question.image_url_2 && <img src={question.image_url_2} className="border rounded-md w-full shadow-sm" alt="" />}
+                {/* Lista de Questões */}
+                <main className="space-y-6">
+                    {qOnPage.map((q, index) => {
+                        const globalIndex = startIdx + index;
+                        const isAnswered = !!answers[q.id]?.trim();
+                        
+                        return (
+                            <div key={q.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                <div className="bg-slate-50 px-5 py-3 border-b border-slate-100 flex justify-between items-center">
+                                    <h3 className="font-bold text-slate-700">Questão {q.question_order ?? (globalIndex + 1)}</h3>
+                                    {isAnswered && <span className="text-xs font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded border border-green-100">Respondida</span>}
                                 </div>
-                                <div className="mt-5 space-y-3">
-                                    {(question.alternativas || []).map(alt => (
-                                        <label key={alt.id} className={`flex items-start p-4 border rounded-lg cursor-pointer transition-all ${answers[question.id!] === alt.letter ? 'bg-blue-50 border-blue-400 ring-1' : 'bg-white hover:border-blue-300'}`}>
-                                            <input type="radio" checked={answers[question.id!] === alt.letter} onChange={() => setAnswers(p => ({ ...p, [question.id!]: alt.letter }))} className="mr-4 mt-1" />
-                                            <div className="flex-1 text-slate-700 flex items-center"><span className="font-bold mr-2">{alt.letter})</span><RenderHtmlWithMath html={alt.text} tag="span" /></div>
-                                        </label>
-                                    ))}
+                                
+                                <div className="p-5 sm:p-6">
+                                    {/* Enunciado Sanitizado */}
+                                    <div className="mb-6 text-slate-800 leading-relaxed text-lg question-content">
+                                        <RenderHtmlWithMath html={q.long_text || ''} />
+                                    </div>
+                                    
+                                    {/* Imagens */}
+                                    {(q.image_url_1 || q.image_url_2) && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                                            {q.image_url_1 && <img src={q.image_url_1} className="rounded-lg border shadow-sm w-full object-contain max-h-[400px]" alt="Imagem de apoio 1" />}
+                                            {q.image_url_2 && <img src={q.image_url_2} className="rounded-lg border shadow-sm w-full object-contain max-h-[400px]" alt="Imagem de apoio 2" />}
+                                        </div>
+                                    )}
+
+                                    {/* Alternativas */}
+                                    <div className="space-y-3 mt-4">
+                                        {q.alternativas?.map(alt => {
+                                            const isSelected = answers[q.id] === alt.letter;
+                                            return (
+                                                <label 
+                                                    key={alt.id} 
+                                                    className={`
+                                                        flex p-4 border-2 rounded-lg cursor-pointer transition-all duration-200 group
+                                                        ${isSelected 
+                                                            ? 'bg-blue-50 border-blue-500 shadow-md transform scale-[1.01]' 
+                                                            : 'bg-white border-slate-100 hover:border-blue-200 hover:bg-slate-50'
+                                                        }
+                                                    `}
+                                                >
+                                                    <input 
+                                                        type="radio" 
+                                                        name={`question_${q.id}`}
+                                                        checked={isSelected} 
+                                                        onChange={() => setAnswers(prev => ({ ...prev, [q.id]: alt.letter }))} 
+                                                        className="mt-1.5 w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300" 
+                                                    />
+                                                    <div className="ml-3 flex gap-2">
+                                                        <span className={`font-bold ${isSelected ? 'text-blue-700' : 'text-slate-500 group-hover:text-blue-500'}`}>{alt.letter})</span>
+                                                        <div className={isSelected ? 'text-slate-800' : 'text-slate-600'}>
+                                                            <RenderHtmlWithMath html={alt.text} tag="span" />
+                                                        </div>
+                                                    </div>
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             </div>
-                        </fieldset>
-                    ))}
-
-                    <div className="mt-10 pt-6 border-t border-slate-200 flex justify-between">
-                        <button onClick={goPrev} disabled={currentPage === 0} className="bg-white border border-slate-300 px-6 py-2.5 rounded-lg disabled:opacity-50">Anterior</button>
-                        {currentPage === Math.ceil(questions.length / QUESTIONS_PER_PAGE) - 1 ? 
-                            <button onClick={handleSubmit} disabled={submitting} className="bg-green-600 text-white px-8 py-2.5 rounded-lg flex items-center gap-2">{submitting && <Spinner size="20px" color="#fff" />} Finalizar</button> :
-                            <button onClick={goNext} className="bg-blue-600 text-white px-6 py-2.5 rounded-lg">Próxima</button>
-                        }
-                    </div>
+                        );
+                    })}
                 </main>
+
+                {/* Navegação Inferior */}
+                <div className="sticky bottom-4 z-20 mt-8">
+                     <div className="bg-white/90 backdrop-blur shadow-lg border border-slate-200 p-4 rounded-xl flex justify-between items-center max-w-4xl mx-auto">
+                        <button 
+                            onClick={() => goToPage(currentPage - 1)} 
+                            disabled={currentPage === 0} 
+                            className="px-6 py-2.5 border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                        >
+                            ← Anterior
+                        </button>
+                        
+                        <div className="text-sm font-semibold text-slate-400 hidden sm:block">
+                            Página {currentPage + 1} de {Math.ceil(questions.length / QUESTIONS_PER_PAGE)}
+                        </div>
+
+                        {currentPage === Math.ceil(questions.length / QUESTIONS_PER_PAGE) - 1 ? (
+                            <button 
+                                onClick={handleSubmit} 
+                                disabled={submitting} 
+                                className="px-8 py-2.5 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition flex items-center gap-2 transform active:scale-95"
+                            >
+                                {submitting && <Spinner size="20px" color="#fff" />} 
+                                <span>Finalizar e Entregar</span>
+                            </button>
+                        ) : (
+                            <button 
+                                onClick={() => goToPage(currentPage + 1)} 
+                                className="px-8 py-2.5 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 shadow-md hover:shadow-lg transition flex items-center gap-2"
+                            >
+                                Próxima →
+                            </button>
+                        )}
+                    </div>
+                </div>
             </div>
-        </>
+        </div>
     );
 };
 
